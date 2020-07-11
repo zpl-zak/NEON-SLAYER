@@ -148,7 +148,7 @@ exit /B 0
 exit /B 0
 
 :open_in_vs
-	start code\neon86.sln
+	start code\Lines.sln
 exit /B 0
 
 

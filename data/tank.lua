@@ -4,6 +4,8 @@ local tankMaterial
 
 local tankBody, tankCanon, tankCanonMat, trailPosNode
 
+BOUNDS_PUSHBACK = 1
+
 function initTankModel()
     tankModel = Model("tank.fbx", false, false)
     local tankNode = tankModel:getRootNode()
@@ -66,22 +68,22 @@ function updateTanks(dt)
       t.crotm = t.rot
       
       if t.pos:x() <= 0 then
-        t.vel:x(-t.vel:x())
+        t.vel:x(-t.vel:x() + BOUNDS_PUSHBACK)
         t.pos:x(t.pos:x()+t.vel:x())
       end
       
       if t.pos:z() <= 0 then
-        t.vel:z(-t.vel:z())
+        t.vel:z(-t.vel:z() + BOUNDS_PUSHBACK)
         t.pos:x(t.pos:x()+t.vel:x())
       end
       
       if t.pos:x() >= WORLD_SIZE*WORLD_TILES[1] then
-        t.vel:x(-t.vel:x())
+        t.vel:x(-t.vel:x() - BOUNDS_PUSHBACK)
         t.pos:x(t.pos:x()+t.vel:x())
       end
       
       if t.pos:z() >= WORLD_SIZE*WORLD_TILES[2] then
-        t.vel:z(-t.vel:z())
+        t.vel:z(-t.vel:z() - BOUNDS_PUSHBACK)
         t.pos:z(t.pos:z()+t.vel:z())
       end
   

@@ -171,6 +171,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
+      <AdditionalLibraryDirectories>..\deps\assimp;..\..\deps\d3d9;..\deps;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /Y/R "$(SolutionDir)..\Build\$(TargetName).dll" "$(SolutionDir)..\data\"</Command>
