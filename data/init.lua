@@ -51,7 +51,7 @@ function _init()
   light:enable(true, 0)
 
   -- Set up network update event
-  net.set_update(function (entity_id, x, y, z, r)
+  net.setUpdate(function (entity_id, x, y, z, r)
     if tanks[entity_id] == nil then
       addTank(entity_id)
     end
@@ -62,6 +62,10 @@ function _init()
     tank.heading = r
   
     -- LogString("_net_tankupdate: " .. entity_id .. " pos: " .. x .. " " .. y .. " " .. z)
+  end)
+
+  net.setCollide(function(killer_id)
+    LogString("BOOM WE GOT KILLED BY " .. killer_id)
   end)
 end
 
@@ -77,7 +81,7 @@ function _update(dt)
   end
 
   if GetKeyDown("1") then
-    net.server_start()
+    net.serverStart()
     net.connect("localhost")
   end
 
@@ -112,6 +116,8 @@ function _render()
   light:setDirection(Vector(-0.6,-1,-0.7))
   drawWorld()
   drawTanks()
+  local wmat = Matrix():scale(WORLD_TILES[1], WORLD_TILES[1], WORLD_TILES[1])
+  boundsMesh:draw(wmat)
 end
 
 function _render2d()

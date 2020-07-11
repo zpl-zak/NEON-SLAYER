@@ -85,9 +85,9 @@ function updateTanks(dt)
         t.pos:z(t.pos:z()+t.vel:z())
       end
   
-      if t.pos:y() < -100 then
-        t.pos:y(15)
-        t.vel:y(1)
+      if t.pos:y() < -0 then
+        t.pos:y(-0)
+        t.vel:y(0)
       end
 
     for _, t in pairs(tanks) do

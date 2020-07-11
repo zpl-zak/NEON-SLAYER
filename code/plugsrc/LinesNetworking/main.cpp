@@ -11,11 +11,14 @@
 
 #include <lua/lua.hpp>
 
+#pragma comment (lib, "d3dx9.lib")
+
 ENetHost *server = NULL;
 ENetHost *client = NULL;
 ENetPeer *client_peer = NULL;
 
 INT tankupdateref = 0;
+INT tankcollideref = 0;
 
 static INT ne_server_start(lua_State* L) {
     if (server) {
@@ -97,14 +100,41 @@ static INT ne_disconnect(lua_State* L) {
     return 1;
 }
 
+#define MAX_TRAILS 140
+
+typedef struct {
+    float x, y, z;
+} ne_vec3;
+
 typedef struct {
     float x, y, z, r;
+    ne_vec3 tail[MAX_TRAILS];
+    int tail_end;
+    ENetPeer* peer;
 } ne_data;
-
 
 std::unordered_map<uint64_t, ne_data> ne_server_data;
 
-void ne_server_update() {
+bool ne_check_collision(ne_vec3 a, ne_vec3 b, float cx, float cy, float cz) {
+    float r = 5.f;
+
+    D3DXVECTOR3 o = D3DXVECTOR3(a.x, a.y, a.z);
+    D3DXVECTOR3 l = D3DXVECTOR3(b.x, b.y, b.z);
+    D3DXVECTOR3 c = D3DXVECTOR3(cx, cy, cz);
+
+    auto f = l - c;
+    return D3DXVec3LengthSq(&f) < (r * r);
+    /*
+    #define sq(a) (a*a)
+    auto f = o - c;
+    float delta = sq(D3DXVec3Dot(&l, &f)) - (D3DXVec3LengthSq(&f) - sq(r));
+    auto t = std::string("delta: "); t += std::to_string(delta);
+    OutputDebugStringA(t.c_str());
+    return delta >= 0;
+    #undef sq*/
+}
+
+void ne_server_update(lua_State* L) {
     ENetEvent event = {0};
     while (enet_host_service(server, &event, 2) > 0) {
         switch (event.type) {
@@ -113,7 +143,7 @@ void ne_server_update() {
                 uint16_t entity_id = event.peer->incomingPeerID;
 
                 /* allocate and store entity data in the data part of peer */
-                ne_data _ent = {0};
+                ne_data _ent = { 0 }; _ent.peer = event.peer;
                 ne_server_data[entity_id] = _ent;
             } break;
             case ENET_EVENT_TYPE_DISCONNECT:
@@ -130,6 +160,12 @@ void ne_server_update() {
                 char *buffer = (char *)event.packet->data;
                 int offset = 0;
 
+                if (ne_server_data[entity_id].x != 0) {
+                    ne_vec3 pos = {ne_server_data[entity_id].x, ne_server_data[entity_id].y, ne_server_data[entity_id].z};
+                    ne_server_data[entity_id].tail_end = (ne_server_data[entity_id].tail_end+1) % MAX_TRAILS;
+                    ne_server_data[entity_id].tail[ne_server_data[entity_id].tail_end] = pos;
+                }
+
                 float x = *(float*)(buffer + offset); offset += sizeof(float);
                 float y = *(float*)(buffer + offset); offset += sizeof(float);
                 float z = *(float*)(buffer + offset); offset += sizeof(float);
@@ -145,6 +181,43 @@ void ne_server_update() {
             } break;
 
             case ENET_EVENT_TYPE_NONE: break;
+        }
+    }
+
+    /* check collisions */
+    for (auto it = ne_server_data.begin(); it != ne_server_data.end(); ++it) {
+        uint16_t entity_id = it->first;
+        ne_data *data = &it->second;
+        uint16_t killer_id = -1;
+        bool collided = false;
+
+        for (auto it2 = ne_server_data.begin(); it2 != ne_server_data.end() && !collided; ++it2) {
+            //if (entity_id == it2->first) continue;
+
+            int tail_offset = 25;
+            int tail = it2->second.tail_end-tail_offset < 0 ? MAX_TRAILS-tail_offset : it2->second.tail_end-tail_offset;
+            for (int i = 0, s = tail; i < MAX_TRAILS; ++i) {
+                s = (s-1) < 0 ? MAX_TRAILS-1 : s-1;
+                //int index_pre = index_cur-1 < 0 ? MAX_TRAILS-1 : index_cur-1;
+                if (ne_check_collision(it2->second.tail[s], it2->second.tail[s], data->x, data->y, data->z)) {
+                    collided = true;
+                    killer_id = it2->first;
+                    break;
+                }
+            }
+        }
+
+        if (collided) {
+            char buffer[512] = { 0 };
+            *((uint16_t*)(buffer)+0) = 2;
+            *((uint16_t*)(buffer)+1) = killer_id;
+
+            /* create packet with actual length, and send it */
+            ENetPacket* packet = enet_packet_create(buffer, sizeof(uint16_t)*2, ENET_PACKET_FLAG_RELIABLE);
+            enet_peer_send(data->peer, 0, packet);
+
+            /* handle player death and respawn */
+            //OutputDebugStringA("a player have collided with somth");
         }
     }
 
@@ -176,7 +249,8 @@ void ne_server_update() {
             count++;
         }
 
-        *(uint32_t*)(buffer) = count;
+        *((uint16_t*)(buffer)+0) = 1;
+        *((uint16_t*)(buffer)+1) = count;
 
         if (offset > 0) {
             /* create packet with actual length, and send it */
@@ -206,34 +280,51 @@ void ne_client_update(lua_State* L) {
                 /* handle a newly received event */
                 int offset = 0;
                 char *buffer = (char *)event.packet->data;
-                int count = *(uint32_t*)(buffer); offset += sizeof(uint32_t);
+                int packetid = *((uint16_t*)(buffer)+0);
 
-                for (int i = 0; i < count; ++i) {
-                    uint16_t entity_id = *(uint16_t*)(buffer + offset); offset += sizeof(uint16_t);
-                    float x = *(float*)(buffer + offset); offset += sizeof(float);
-                    float y = *(float*)(buffer + offset); offset += sizeof(float);
-                    float z = *(float*)(buffer + offset); offset += sizeof(float);
-                    float r = *(float*)(buffer + offset); offset += sizeof(float);
+                if (packetid == 1) {
+                    int count = *((uint16_t*)(buffer)+1); offset += sizeof(uint32_t);
 
-                    // OutputDebugStringA("update: %ld: [%f %f %f] %f\n", entity_id, x, y, z, r);
+                    for (int i = 0; i < count; ++i) {
+                        uint16_t entity_id = *(uint16_t*)(buffer + offset); offset += sizeof(uint16_t);
+                        float x = *(float*)(buffer + offset); offset += sizeof(float);
+                        float y = *(float*)(buffer + offset); offset += sizeof(float);
+                        float z = *(float*)(buffer + offset); offset += sizeof(float);
+                        float r = *(float*)(buffer + offset); offset += sizeof(float);
 
-                    lua_rawgeti(L, LUA_REGISTRYINDEX, tankupdateref);
+                        // OutputDebugStringA("update: %ld: [%f %f %f] %f\n", entity_id, x, y, z, r);
+
+                        lua_rawgeti(L, LUA_REGISTRYINDEX, tankupdateref);
+                        lua_pushvalue(L, 1);
+
+                        if (!lua_isfunction(L, -1))
+                            goto ne_srv_clenaup;
+
+                        lua_pushnumber(L, entity_id);
+                        lua_pushnumber(L, x);
+                        lua_pushnumber(L, y);
+                        lua_pushnumber(L, z);
+                        lua_pushnumber(L, r);
+
+                        lua_pcall(L, 5, 0, 0);
+
+                        tankupdateref = luaL_ref(L, LUA_REGISTRYINDEX);
+                    }
+                }
+                else if (packetid == 2) {
+                    int killer_id = *((uint16_t*)(buffer)+1);
+
+                    lua_rawgeti(L, LUA_REGISTRYINDEX, tankcollideref);
                     lua_pushvalue(L, 1);
 
                     if (!lua_isfunction(L, -1))
-                        continue;
+                        goto ne_srv_clenaup;
 
-                    lua_pushnumber(L, entity_id);
-                    lua_pushnumber(L, x);
-                    lua_pushnumber(L, y);
-                    lua_pushnumber(L, z);
-                    lua_pushnumber(L, r);
-
-                    lua_pcall(L, 5, 0, 0);
-
-                    tankupdateref = luaL_ref(L, LUA_REGISTRYINDEX);
+                    lua_pushnumber(L, killer_id);
+                    lua_pcall(L, 1, 0, 0);
+                    tankcollideref = luaL_ref(L, LUA_REGISTRYINDEX);
                 }
-
+ne_srv_clenaup:
                 /* Clean up the packet now that we're done using it. */
                 enet_packet_destroy(event.packet);
             } break;
@@ -244,7 +335,7 @@ void ne_client_update(lua_State* L) {
 }
 
 static INT ne_update(lua_State* L) {
-    if (server) ne_server_update();
+    if (server) ne_server_update(L);
     if (client) ne_client_update(L);
     lua_pushnumber(L, 1);
     return 1;
@@ -284,14 +375,20 @@ static INT ne_setupdate(lua_State* L) {
     return 0;
 }
 
+static INT ne_setcollide(lua_State* L) {
+    tankcollideref = luaL_ref(L, LUA_REGISTRYINDEX);
+    return 0;
+}
+
 static const luaL_Reg networkplugin[] = {
-    {"server_start", ne_server_start},
-    {"server_stop", ne_server_stop},
+    {"serverStart", ne_server_start},
+    {"serverStop", ne_server_stop},
     {"connect", ne_connect},
     {"disconnect", ne_disconnect},
     {"update", ne_update},
     {"send", ne_send},
-    {"set_update", ne_setupdate},
+    {"setUpdate", ne_setupdate},
+    {"setCollide", ne_setcollide},
     ENDF
 };
 

@@ -1,5 +1,7 @@
+boundsMesh = nil
+
 local terrain, terrainMaterial, backdropModel, boundsMaterial, gradientMaterial
-local boundsMesh, gradientMesh, sunMesh, sunGlareMesh
+local gradientMesh, sunMesh, sunGlareMesh
 local bdMesh = {}
 
 world = {}
@@ -82,5 +84,4 @@ function drawWorld()
     for i=#bdMesh,1,-1 do
         bdMesh[i]:draw(wmat)
     end
-    boundsMesh:draw(wmat)
 end
