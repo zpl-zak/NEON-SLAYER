@@ -8,11 +8,21 @@ float time;
 float4 ambience;
 float3 campos;
 TLIGHT sun;
+texture active_tile;
 
 // Our global sampler state for the diffuse texture
 sampler2D colorMap = sampler_state
 {
 	Texture = <diffuseTex>;
+    MipFilter = ANISOTROPIC;
+    MinFilter = ANISOTROPIC;
+    MagFilter = ANISOTROPIC;
+    MaxAnisotropy = 16;
+};
+
+sampler2D activeTileMap = sampler_state
+{
+    Texture = <active_tile>;
     MipFilter = ANISOTROPIC;
     MinFilter = ANISOTROPIC;
     MagFilter = ANISOTROPIC;
@@ -57,6 +67,7 @@ VS_OUTPUT VS_Main(VS_INPUT IN)
     float4 sunColor = float4(0.3, 0.15, 0.2, 1);
 
     OUT.flatColor = sunColor * pow(saturate(dot(r,v)), 2.0);
+    OUT.position.y += frac(sin(time + dot(OUT.worldPos.xy, float2(12.9898,78.233))) * 43758.5453)*4;
 
     return OUT;
 }
@@ -66,12 +77,14 @@ VS_OUTPUT VS_Main(VS_INPUT IN)
 float4 PS_Main(VS_OUTPUT IN) : COLOR
 {
     float4 OUT = float4(0,0,0,1);
-    float4 brightPart = tex2D(colorMap, IN.texCoord * float2(10,10) /* + float2(1,1)*time */);
+    float4 texInactive = tex2D(colorMap, IN.texCoord * float2(10,10));
+    float4 texActive = tex2D(activeTileMap, IN.texCoord * float2(10,10))*0.75;
+    float4 brightPart = lerp(texInactive, texActive, max(0, IN.depth*sin(time/2)+log(-cos(time/2))+1));
 
     float4 colorNear = float4(0.5, 0.2, 0.4, 1);
-    float4 colorFar = max(float4(0.1, 0.2, 0.4, 1), float4(0.1, 0.2, 0.4, 1)*sin(time*0.5)*2)*0.5;
+    float4 colorFar = max(float4(0.1, 0.2, 0.4, 1), float4(0.1, 0.2, 0.4, 1)) /**sin(time*0.5)*2)*0.5*/;
     float4 colorMin = float4(0.05, 0.05, 0.1, 1);
-    float4 iterm = lerp(colorNear, colorFar*1.5, IN.depth)*2.5;
+    float4 iterm = lerp(colorNear, colorFar, IN.depth)*2.5;
 
     float3 n = normalize(IN.normal);
     float3 l = normalize(-sun.Direction);

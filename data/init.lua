@@ -1,7 +1,8 @@
 local net = require "linesnetworking"
 
 time = 0
-local testFont
+titleFont = nil
+uiFont = nil
 player = {}
 testAI = {}
 light = {}
@@ -14,6 +15,7 @@ cols = require "collisions"
 
 world = nil
 
+dofile("ui.lua")
 dofile("trail.lua")
 dofile("tank.lua")
 dofile("world.lua")
@@ -23,7 +25,8 @@ local testSnd
 
 function _init()
   RegisterFontFile("slkscr.ttf")
-  testFont = Font("Silkscreen", 36, 1, false)
+  titleFont = Font("Silkscreen", 36, 1, false)
+  uiFont = Font("Silkscreen", 14, 1, false)
   testSnd = Sound("test.wav")
   testSnd:setVolume(65)
   testSnd:loop(true)
@@ -67,7 +70,10 @@ function _init()
   net.setCollide(function(killer_id)
     LogString("BOOM WE GOT KILLED BY " .. killer_id)
   end)
+
+  ui.init()
 end
+
 
 function _update(dt)
   net.update()
@@ -102,6 +108,8 @@ function _update(dt)
   player:update(dt, net)
 
   time = time + dt
+
+  ui.input()
 end
 
 
@@ -121,10 +129,13 @@ function _render()
 end
 
 function _render2d()
-  testFont:drawText(0xFFFFFFFF, [[
-WASD - move
-shift - brake
-  ]], 15, 30)
+--   titleFont:drawText(0xFFFFFFFF, [[
+-- WASD - move
+-- shift - brake
+--   ]], 15, 30)
+
+
+  ui.draw()
 end
 
 function updateTestAI()

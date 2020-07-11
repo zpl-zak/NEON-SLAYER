@@ -9,10 +9,12 @@ local terrainShader
 
 function initWorld()
     terrain = Model("terrain.fbx")
-    terrainMaterial = Material("tile.png")
+    terrainMaterial = Material("tile_base.png")
     terrainMaterial:setDiffuse(0x815192)
     terrainMaterial:setPower(120)
     terrain:getMeshes()[1]:setMaterial(0, terrainMaterial)
+
+    terrainMaterial:loadFile("tile_active.png", 42)
 
     boundsMaterial = Material("bounds.png")
     boundsMaterial:setShaded(false)
@@ -70,6 +72,7 @@ function drawWorld()
     terrainShader:setFloat("time", time)
     terrainShader:setVector3("campos", player.pos:neg())
     terrainShader:setLight("sun", light)
+    terrainShader:setTexture("active_tile", terrainMaterial:getHandle(42))
     terrainShader:commit()
     for _, w in pairs(world.shapes) do
         terrain:draw(w.pos)
