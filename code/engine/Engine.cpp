@@ -200,8 +200,9 @@ LRESULT CEngine::ProcessEvents(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 
         case WM_CHAR:
         {
-            if (wParam >= 0x20) {
-                VM->KeyPress(wParam);
+            if (wParam >= 0x20) 
+            {
+                VM->CharInput((DWORD)wParam);
             }
         } break;
 

@@ -210,12 +210,12 @@ VOID CVirtualMachine::Resize(RECT res)
 	CheckVMErrors(r);
 }
 
-VOID CVirtualMachine::KeyPress(DWORD key)
+VOID CVirtualMachine::CharInput(DWORD key)
 {
 	if (!mLuaVM || mPlayKind != PLAYKIND_PLAYING)
 		return;
 
-	lua_getglobal(mLuaVM, "_keyPress");
+	lua_getglobal(mLuaVM, "_charInput");
 
 	if (!lua_isfunction(mLuaVM, -1))
 		return;

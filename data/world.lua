@@ -9,19 +9,19 @@ world = {}
 local terrainShader
 
 function initWorld()
-    terrain = Model("terrain.fbx")
-    terrainMaterial = Material("tile_base.png")
+    terrain = Model("assets/terrain.fbx")
+    terrainMaterial = Material("assets/tile_base.png")
     terrainMaterial:setDiffuse(0x815192)
     terrainMaterial:setPower(120)
     terrain:getMeshes()[1]:setMaterial(0, terrainMaterial)
 
-    terrainMaterial:loadFile("tile_active.png", ACTIVE_TILE_TEX_SLOT)
+    terrainMaterial:loadFile("assets/tile_active.png", ACTIVE_TILE_TEX_SLOT)
 
-    boundsMaterial = Material("bounds.png")
+    boundsMaterial = Material("assets/bounds.png")
     boundsMaterial:setShaded(false)
     boundsMaterial:alphaIsTransparency(true)
 
-    gradientMaterial = Material("gradient.png")
+    gradientMaterial = Material("assets/gradient.png")
     gradientMaterial:setShaded(false)
     
     world = cols.newWorld()
@@ -36,9 +36,9 @@ function initWorld()
         end
     end
     
-    terrainShader = Effect("terrain.fx")
+    terrainShader = Effect("fx/terrain.fx")
 
-    backdropModel = Model("backdrop.fbx")
+    backdropModel = Model("assets/backdrop.fbx")
     backdropRoot = backdropModel:getRootNode()
     boundsMesh = backdropRoot:findNode("bounds")
     gradientMesh = backdropRoot:findNode("gradient")

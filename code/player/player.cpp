@@ -25,7 +25,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
     rect.right = 1600;
     rect.bottom = 900;
 
-    hWnd = BuildWindow(hInstance, nCmdShow, "NeonClass", "LINES GAME", rect);
+    hWnd = BuildWindow(hInstance, nCmdShow, "NeonClass", "NEON SLAYER", rect);
     CenterWindow(hWnd);
 
     if (!ENGINE->Init(hWnd, rect))

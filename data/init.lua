@@ -29,8 +29,8 @@ dofile("player.lua")
 local testSnd
 
 function _init()
-  RegisterFontFile("slkscr.ttf")
-  testSnd = Sound("test.wav")
+  RegisterFontFile("assets/slkscr.ttf")
+  testSnd = Sound("assets/test.wav")
   testSnd:setVolume(100)
   testSnd:loop(true)
   testSnd:play()
@@ -113,7 +113,7 @@ function _update(dt)
   -- state.update(dt)
 end
 
-function _keyPress(key)
+function _charInput(key)
   -- ui.input(key)
   -- state.input(key)
 end

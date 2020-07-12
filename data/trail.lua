@@ -3,7 +3,7 @@ MAX_TRAILS = 150.0
 TRAIL_TIME = 0.05
 
 function setupTrail()
-    trailMaterial = Material("trail.png")
+    trailMaterial = Material("assets/trail.png")
     trailMaterial:setDiffuse(255,0,0)
     trailMaterial:setEmission(255,0,0)
     trailMaterial:setAmbient(255,0,0)

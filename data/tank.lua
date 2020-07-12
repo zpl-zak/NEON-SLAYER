@@ -7,7 +7,7 @@ local tankBody, tankCanon, tankCanonMat, trailPosNode
 BOUNDS_PUSHBACK = 1
 
 function initTankModel()
-    tankModel = Model("tank.fbx", false, false)
+    tankModel = Model("assets/tank.fbx", false, false)
     local tankNode = tankModel:getRootNode()
     tankBody = tankNode:findNode("body")
     trailPosNode = tankNode:findNode("trailpos")
