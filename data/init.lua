@@ -28,7 +28,7 @@ function _init()
   titleFont = Font("Silkscreen", 36, 1, false)
   uiFont = Font("Silkscreen", 14, 1, false)
   testSnd = Sound("test.wav")
-  testSnd:setVolume(65)
+  testSnd:setVolume(100)
   testSnd:loop(true)
   testSnd:play()
   
