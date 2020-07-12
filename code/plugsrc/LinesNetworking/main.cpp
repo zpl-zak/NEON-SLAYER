@@ -29,9 +29,10 @@ static INT ne_server_start(lua_State* L) {
     }
 
     ENetAddress address = {0};
+    int port = luaL_checkinteger(L, 1);
 
     address.host = ENET_HOST_ANY; /* Bind the server to the default localhost.     */
-    address.port = 27020; /* Bind the server to port . */
+    address.port = port; /* Bind the server to port . */
 
     /* create a server */
     server = enet_host_create(&address, 32, 2, 0, 0);
@@ -68,8 +69,9 @@ static INT ne_connect(lua_State* L) {
     }
 
     const char* hoststr = luaL_checkstring(L, 1);
+    int port = luaL_checkinteger(L, 2);
 
-    ENetAddress address = {0}; address.port = 27020;
+    ENetAddress address = {0}; address.port = port;
     enet_address_set_host(&address, hoststr);
 
     client = enet_host_create(NULL, 1, 2, 0, 0);

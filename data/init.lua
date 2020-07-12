@@ -1,8 +1,6 @@
 net = require "linesnetworking"
 
 time = 0
-titleFont = nil
-uiFont = nil
 player = {}
 testAI = {}
 light = {}
@@ -15,7 +13,14 @@ cols = require "collisions"
 
 world = nil
 
-dofile("ui.lua")
+local state = require("code/state")
+local MenuState = require("code/states/menu")
+local GameState = require("code/states/game")
+
+-- dofile("code/ui.lua")
+-- dofile("code/state.lua")
+-- dofile("code/states/menu.lua")
+-- dofile("code/states/game.lua")
 dofile("trail.lua")
 dofile("tank.lua")
 dofile("world.lua")
@@ -25,8 +30,6 @@ local testSnd
 
 function _init()
   RegisterFontFile("slkscr.ttf")
-  titleFont = Font("Silkscreen", 36, 1, false)
-  uiFont = Font("Silkscreen", 14, 1, false)
   testSnd = Sound("test.wav")
   testSnd:setVolume(100)
   testSnd:loop(true)
@@ -71,28 +74,25 @@ function _init()
     LogString("BOOM WE GOT KILLED BY " .. killer_id)
   end)
 
-  ui.init()
+  -- ui.init()
+  -- state.add("menu", createMenu())
+  -- state.add("game", createGame())
+  -- state.switch("menu")
+  state:add("menu", MenuState())
+  state:add("game", GameState())
+  state:switch("menu")
 end
 
 
 function _update(dt)
   net.update()
 
-  if GetKeyDown(KEY_ESCAPE) then
-      ExitGame()
-  end
+  -- if GetKeyDown(KEY_ESCAPE) then
+  --     ExitGame()
+  -- end
 
   if GetKey(KEY_CONTROL) and GetKeyDown("R") then
       RestartGame()
-  end
-
-  if GetKeyDown("1") then
-    net.serverStart()
-    net.connect("localhost")
-  end
-
-  if GetKeyDown("2") then
-    net.connect("inlife.no-ip.org")
   end
 
   -- if IsFocused() then
@@ -109,11 +109,13 @@ function _update(dt)
 
   time = time + dt
 
-  ui.input()
+  -- ui.update()
+  -- state.update(dt)
 end
 
 function _keyPress(key)
-  ui.keypress(key)
+  -- ui.input(key)
+  -- state.input(key)
 end
 
 function _render()
@@ -129,6 +131,7 @@ function _render()
   drawTanks()
   local wmat = Matrix():scale(WORLD_TILES[1], WORLD_TILES[1], WORLD_TILES[1])
   boundsMesh:draw(wmat)
+  -- state.draw()
 end
 
 function _render2d()
@@ -138,7 +141,7 @@ function _render2d()
 --   ]], 15, 30)
 
 
-  ui.draw()
+  -- state.draw2d()
 end
 
 function updateTestAI()
