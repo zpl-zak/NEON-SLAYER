@@ -3,6 +3,7 @@ boundsMesh = nil
 local terrain, terrainMaterial, backdropModel, boundsMaterial, gradientMaterial
 local gradientMesh, sunMesh, sunGlareMesh
 local bdMesh = {}
+local ACTIVE_TILE_TEX_SLOT = 42
 
 world = {}
 local terrainShader
@@ -14,7 +15,7 @@ function initWorld()
     terrainMaterial:setPower(120)
     terrain:getMeshes()[1]:setMaterial(0, terrainMaterial)
 
-    terrainMaterial:loadFile("tile_active.png", 42)
+    terrainMaterial:loadFile("tile_active.png", ACTIVE_TILE_TEX_SLOT)
 
     boundsMaterial = Material("bounds.png")
     boundsMaterial:setShaded(false)
@@ -27,10 +28,11 @@ function initWorld()
     
     local meshNode = terrain:getRootNode():findNode("terrain")
     local mesh = meshNode:getMeshParts()[1][1]
+    local baseCols = cols.newTriangleMeshFromPart(mesh, meshNode:getFinalTransform():translate(Vector3()))
     
     for i=0,(WORLD_TILES[1]-1),1 do
         for j=0,(WORLD_TILES[2]-1),1 do
-            addTile(meshNode, mesh, Vector3(WORLD_SIZE*i,0,WORLD_SIZE*j))
+            addTile(baseCols, Vector3(WORLD_SIZE*i,0,WORLD_SIZE*j))
         end
     end
     
@@ -59,8 +61,14 @@ function initWorld()
     sunGlareMesh:getMeshes()[1]:getMaterial(1):setAlphaRef(0)
 end
 
-function addTile(meshNode, mesh, pos)
-    local terrainMesh = cols.newTriangleMeshFromPart(mesh, meshNode:getFinalTransform():translate(pos))
+function addTile(col, pos)
+    local b = col.bounds
+
+    local terrainMesh = setmetatable({
+        tris = col.tris,
+        mat = col.mat,
+        bounds = cols.newBox({b.min-pos, b.max-pos})
+    }, col.__index)
     terrainMesh.pos = Matrix():translate(pos)
 
     world:addCollision(terrainMesh)
@@ -72,7 +80,7 @@ function drawWorld()
     terrainShader:setFloat("time", time)
     terrainShader:setVector3("campos", player.pos:neg())
     terrainShader:setLight("sun", light)
-    terrainShader:setTexture("active_tile", terrainMaterial:getHandle(42))
+    terrainShader:setTexture("active_tile", terrainMaterial:getHandle(ACTIVE_TILE_TEX_SLOT))
     terrainShader:commit()
     for _, w in pairs(world.shapes) do
         terrain:draw(w.pos)
