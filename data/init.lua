@@ -1,4 +1,4 @@
-local net = require "linesnetworking"
+net = require "linesnetworking"
 
 time = 0
 titleFont = nil
@@ -82,7 +82,7 @@ function _update(dt)
       ExitGame()
   end
 
-  if GetKeyDown("R") then
+  if GetKey(KEY_CONTROL) and GetKeyDown("R") then
       RestartGame()
   end
 
@@ -95,13 +95,13 @@ function _update(dt)
     net.connect("inlife.no-ip.org")
   end
 
-  if IsFocused() then
-    ShowCursor(false)
-    SetCursorMode(CURSORMODE_CENTERED)
-  else
-    ShowCursor(true)
-    SetCursorMode(CURSORMODE_DEFAULT)
-  end
+  -- if IsFocused() then
+  --   ShowCursor(false)
+  --   SetCursorMode(CURSORMODE_CENTERED)
+  -- else
+  --   ShowCursor(true)
+  --   SetCursorMode(CURSORMODE_DEFAULT)
+  -- end
 
   updateTanks(dt)
   -- updateTestAI()
@@ -112,6 +112,9 @@ function _update(dt)
   ui.input()
 end
 
+function _keyPress(key)
+  ui.keypress(key)
+end
 
 function _render()
   EnableLighting(true)

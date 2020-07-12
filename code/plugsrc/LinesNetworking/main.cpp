@@ -4,6 +4,7 @@
 
 #include <NeonEngine.h>
 #include <lua_macros.h>
+#include <shellapi.h>
 
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 #define ENET_IMPLEMENTATION
@@ -380,6 +381,11 @@ static INT ne_setcollide(lua_State* L) {
     return 0;
 }
 
+static INT ne_openlink(lua_State *L) {
+    ShellExecuteA(0, 0, "https://discord.gg/eBQ4QHX", 0, 0 , SW_SHOW);
+    return 0;
+}
+
 static const luaL_Reg networkplugin[] = {
     {"serverStart", ne_server_start},
     {"serverStop", ne_server_stop},
@@ -389,6 +395,7 @@ static const luaL_Reg networkplugin[] = {
     {"send", ne_send},
     {"setUpdate", ne_setupdate},
     {"setCollide", ne_setcollide},
+    {"openLink", ne_openlink},
     ENDF
 };
 
