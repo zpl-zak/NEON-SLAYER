@@ -13,6 +13,7 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/matrix4x4.h>
+#include <assimp/postprocess.h>
 #include <sstream>
 
 #ifndef _DEBUG
@@ -21,12 +22,22 @@
 #pragma comment (lib, "assimpd.lib")
 #endif
 
+#define MESHIMPORT_FLAGS \
+    aiProcess_ConvertToLeftHanded |\
+    aiProcess_Triangulate |\
+    aiProcess_CalcTangentSpace |\
+    aiProcess_FlipUVs |\
+    aiProcess_SplitLargeMeshes |\
+    0
+
+extern aiMatrix4x4 ComputeFinalTransformation(const aiNode* node);
+
 VOID CSceneLoader::LoadNodesRecursively(const aiScene* impScene, const aiNode* impNode, CScene* scene, CNode* node, BOOL loadMaterials)
 {
     aiMatrix4x4 mat = impNode->mTransformation;
     mat = mat.Transpose();
 
-    CNode* newNode = new CNode(mat, impNode->mName);
+    CNode* newNode = new CNode(*(D3DXMATRIX*)&mat, impNode->mName.C_Str());
     node->AddNode(newNode);
 
     if (node != scene)
@@ -80,7 +91,7 @@ VOID CSceneLoader::LoadNodesRecursively(const aiScene* impScene, const aiNode* i
         {
             if (lastMesh)
             {
-                lastMesh->SetName(lastMeshName);
+                lastMesh->SetName(lastMeshName.C_Str());
                 scene->AddMesh(lastMesh);
                 newNode->AddMesh(lastMesh);
             }
@@ -97,7 +108,7 @@ VOID CSceneLoader::LoadNodesRecursively(const aiScene* impScene, const aiNode* i
 
     if (lastMesh)
     {
-        lastMesh->SetName(lastMeshName);
+        lastMesh->SetName(lastMeshName.C_Str());
         scene->AddMesh(lastMesh);
         newNode->AddMesh(lastMesh);
     }
@@ -121,9 +132,26 @@ VOID CSceneLoader::LoadNodesRecursively(const aiScene* impScene, const aiNode* i
     }
 }
 
-VOID CSceneLoader::LoadScene(const aiScene* impScene, CScene* scene, BOOL loadMaterials, BOOL optimizeMeshes)
+BOOL CSceneLoader::LoadScene(LPCSTR modelPath, CScene* scene, BOOL loadMaterials, BOOL optimizeMeshes)
 {
-    LoadNodesRecursively(impScene, impScene->mRootNode, scene, scene, loadMaterials);
+    Assimp::Importer imp;
+    imp.SetPropertyInteger(AI_CONFIG_PP_SLM_VERTEX_LIMIT, 32762);
+
+    DWORD meshFlags = MESHIMPORT_FLAGS;
+
+    if (optimizeMeshes)
+    {
+        meshFlags |= aiProcess_PreTransformVertices
+            | aiProcess_RemoveRedundantMaterials;
+    }
+
+    const aiScene* model = imp.ReadFile(FILESYSTEM->ResourcePath(RESOURCEKIND_USER, modelPath), meshFlags);
+
+    if (!model)
+        return FALSE;
+
+    LoadNodesRecursively(model, model->mRootNode, scene, scene, loadMaterials);
+    return TRUE;
 }
 
 CFaceGroup* CSceneLoader::LoadFaceGroup(const aiScene* scene, const aiMesh* mesh, BOOL loadMaterials)
@@ -281,16 +309,8 @@ CLight* CSceneLoader::LoadLight(const aiNode* impNode, const aiLight* impLight)
         break;
     }
 
-    lit->SetName(impNode->mName);
+    lit->SetName(impNode->mName.C_Str());
     return lit;
-}
-
-aiMatrix4x4 CSceneLoader::ComputeFinalTransformation(const aiNode* node)
-{
-    if (!node->mParent)
-        return aiMatrix4x4();
-
-    return node->mTransformation * ComputeFinalTransformation(node->mParent);
 }
 
 VOID CSceneLoader::LoadTextureMap(const aiScene* scene, const aiMaterial* mat, CMaterial* newMaterial, UINT slot, UINT texType)
@@ -336,4 +356,12 @@ VOID CSceneLoader::LoadTextureMap(const aiScene* scene, const aiMaterial* mat, C
     }
 
     newMaterial->Unlock(slot);
+}
+
+static aiMatrix4x4 ComputeFinalTransformation(const aiNode* node)
+{
+    if (!node->mParent)
+        return aiMatrix4x4();
+
+    return node->mTransformation * ComputeFinalTransformation(node->mParent);
 }
