@@ -10,6 +10,7 @@
 #include "VM.h"
 #include "UserInterface.h"
 #include "AudioSystem.h"
+#include "ProfileManager.h"
 
 #include <ctime>
 
@@ -29,8 +30,21 @@ CEngine::CEngine(VOID)
     SetFPS(60.0f);
     mUnprocessedTime = 0.0f;
     mLastTime = 0.0f;
+    mTotalTime = 0.0f;
+    mTotalMeasuredTime = 0.0f;
+    mFrames = 0;
+    mFrameCounter = 0.0f;
+    mRunCycle = 0;
 
-    return; 
+    mUpdateProfiler = new CProfiler("Update");
+    mRenderProfiler = new CProfiler("Render");
+    mWindowProfiler = new CProfiler("Window");
+    mSleepProfiler = new CProfiler("Sleep");
+
+    mProfilers[NEON_PROFILER_RENDER] = mRenderProfiler;
+    mProfilers[NEON_PROFILER_UPDATE] = mUpdateProfiler;
+    mProfilers[NEON_PROFILER_SLEEP] = mSleepProfiler;
+    mProfilers[NEON_PROFILER_WINDOW] = mWindowProfiler;
 }
 
 BOOL CEngine::Release()
@@ -42,6 +56,12 @@ BOOL CEngine::Release()
     SAFE_RELEASE(mInput);
     SAFE_RELEASE(mAudioSystem);
 
+    SAFE_DELETE(mUpdateProfiler);
+    SAFE_DELETE(mRenderProfiler);
+    SAFE_DELETE(mSleepProfiler);
+    SAFE_DELETE(mWindowProfiler);
+    ZeroMemory(mProfilers, MAX_NEON_PROFILERS);
+
     return TRUE;
 }
 
@@ -49,13 +69,21 @@ VOID CEngine::Run()
 {
     MSG msg;
 
+    GetTime();
+    Sleep(50);
+
     while (IsRunning())
     {
+        mWindowProfiler->StartInvocation();
         while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
         {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
+        mWindowProfiler->StopInvocation();
+
+        if (!IsRunning())
+            break;
 
         Think();
     }
@@ -116,18 +144,55 @@ VOID CEngine::Think()
     mLastTime = startTime;
 
     mUnprocessedTime += deltaTime;
+    mFrameCounter += deltaTime;
 
-    if (mUnprocessedTime > mUpdateDuration)
+    if (mFrameCounter >= 1.0f) 
     {
+        mTotalTime = ((1000.0f * mFrameCounter) / ((FLOAT)mFrames));
+        mTotalMeasuredTime = 0.0f;
+        BOOL logStats = mRunCycle % 10 == 0;
+
+        if (logStats) OutputDebugStringA("==================\n");
+
+        for (INT i=0; i<MAX_NEON_PROFILERS; i++)
+        {
+            mTotalMeasuredTime += mProfilers[i]->DisplayAndReset(FLOAT(mFrames), logStats);
+        }
+
+        if (logStats)
+        {
+            OutputDebugStringA("\n");
+            OutputDebugStringA(std::string("Other Time: " + std::to_string(mTotalTime - mTotalMeasuredTime) + " ms\n").c_str());
+            OutputDebugStringA(std::string("Total Time: " + std::to_string(mTotalTime) + " ms (" + std::to_string(1000.0f / mTotalTime) + " fps) \n").c_str());
+        }
+
+        mFrames = 0;
+        mFrameCounter = 0.0f;
+        mRunCycle++;
+    }
+
+    while (mUnprocessedTime > mUpdateDuration)
+    {
+        mUpdateProfiler->StartInvocation();
         Update(mUpdateDuration);
+        mUpdateProfiler->StopInvocation();
         render = TRUE;
         mUnprocessedTime -= mUpdateDuration;
     }
 
     if (render)
+    {
+        mRenderProfiler->StartInvocation();
         Render();
+        mFrames++;
+        mRenderProfiler->StopInvocation();
+    }
     else
-        Sleep(1); // Let CPU sleep a bit
+    {
+        mSleepProfiler->StartInvocation();
+        Sleep(0); // Let CPU sleep a bit
+        mSleepProfiler->StopInvocation();
+    }
 }
 
 LRESULT CEngine::ProcessEvents(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
