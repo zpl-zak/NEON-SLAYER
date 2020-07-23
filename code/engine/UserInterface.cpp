@@ -73,7 +73,7 @@ CUserInterface::CUserInterface()
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
 #ifdef _DEBUG
-    mErrorMessage = new std::string();
+    mErrorMessage = "";
 #endif // _DEBUG
 
     mDraw2DHook = new Draw2DHook();
@@ -97,10 +97,6 @@ BOOL CUserInterface::Release(VOID)
     ImGui_ImplDX9_Shutdown();
     SAFE_RELEASE(mTextSurface);
     SAFE_DELETE(mDraw2DHook);
-    
-#ifdef _DEBUG
-    SAFE_DELETE(mErrorMessage);
-#endif // _DEBUG
 
     return TRUE;
 }
@@ -146,7 +142,7 @@ VOID CUserInterface::ClearErrorWindow()
 {
 #ifdef _DEBUG
     mShowError = FALSE;
-    *mErrorMessage = "";
+    mErrorMessage = "";
 #endif
 }
 
@@ -156,7 +152,7 @@ VOID CUserInterface::PushErrorMessage(LPCSTR err)
     mShowError = TRUE;
 
     if (err)
-        *mErrorMessage += std::string(err) + "\n";
+        mErrorMessage = CString("%s %s\n", mErrorMessage.Str(), err);
 #endif
 }
 
@@ -165,19 +161,28 @@ VOID CUserInterface::DebugPanel(VOID)
 #ifdef _DEBUG
     ImGui::BeginMainMenuBar();
     {
+        if (ImGui::Button("X"))
+            ENGINE->Shutdown();
+
         if (ImGui::Button("Restart VM"))
             VM->Restart();
 
         if (ImGui::Button("Pause VM"))
             VM->Pause();
 
+        ImGui::Text("RESOURCES: %d", gResourceCount);
+        ImGui::Separator();
+        ImGui::Text("MEM ENGINE: %s", FormatBytes(gMemUsed).Str());
+        ImGui::Separator();
+        ImGui::Text("LUA: %s", FormatBytes(gMemUsedLua).Str());
+        ImGui::Separator();
+        ImGui::Text("TOTAL: %s", FormatBytes((INT64)gMemUsed+gMemUsedLua).Str());
+        ImGui::Separator();
+        ImGui::Text("PEAK: %s", FormatBytes(gMemPeak).Str());
+        ImGui::Separator();
         ImGui::Text("CPU %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
         ImGui::Separator();
         ImGui::Text("TIME: %.2fs", VM->GetRunTime());
-        ImGui::Separator();
-        ImGui::Text("RESOURCES: %d", gResourceCount);
-        ImGui::Separator();
-        ImGui::Text("MEM ENGINE: %s LUA: %s TOTAL: %s PEAK: %s", FormatBytes(gMemUsed).c_str(), FormatBytes(gMemUsedLua).c_str(), FormatBytes((INT64)gMemUsed+gMemUsedLua).c_str(), FormatBytes(gMemPeak).c_str());
         ImGui::Separator();
     }
     ImGui::EndMainMenuBar();
@@ -187,7 +192,7 @@ VOID CUserInterface::DebugPanel(VOID)
         ImGui::SetNextWindowSize(ImVec2(500, 150), ImGuiCond_FirstUseEver);
         ImGui::Begin("Error messages", NULL, ImGuiWindowFlags_NoSavedSettings|ImGuiWindowFlags_NoCollapse|ImGuiWindowFlags_AlwaysAutoResize);
         {
-            ImGui::TextWrapped("%s", mErrorMessage->c_str());
+            ImGui::TextWrapped("%s", mErrorMessage.Str());
             
             if (ImGui::Button("Restart VM"))
                 VM->Restart();
@@ -270,7 +275,7 @@ VOID CUserInterface::DebugPanel(VOID)
 #endif
 }
 
-std::string CUserInterface::FormatBytes(UINT64 bytes)
+CString CUserInterface::FormatBytes(UINT64 bytes)
 {
     const std::string suffixes[] = { "B", "KB", "MB", "GB", "TB" };
     BYTE suffixId;
@@ -285,5 +290,5 @@ std::string CUserInterface::FormatBytes(UINT64 bytes)
     ss.precision(2);
     ss << std::fixed << formattedBytes << " " << suffixes[suffixId];
 
-    return ss.str();
+    return ss.str().c_str();
 }
