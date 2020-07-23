@@ -72,8 +72,8 @@ public:
         Release();
     }
 
-    iterator begin() { return &mData[0]; }
-    iterator end() { return &mData[mCount]; }
+    iterator begin() const { return &mData[0]; }
+    iterator end() const { return &mData[mCount]; }
 
     inline VOID Release()
     {
@@ -105,7 +105,7 @@ public:
         return ERROR_SUCCESS;
     }
 
-    inline T Find(LPCSTR name)
+    inline T Find(LPCSTR name) const
     {
         for (UINT i = 0; i < mCount; i++)
         {
@@ -116,13 +116,21 @@ public:
         return NULL;
     }
 
+    inline T RemoveByIndex(UINT idx) {
+        T* ptr = (mData + idx);
+        ::memmove(mData + idx, mData + idx + 1, (mCount - idx - 1) * sizeof(T));
+        mCount--;
+
+        return *ptr;
+    }
+
     inline VOID Clear() { mCount = 0; }
 
-    inline UINT GetCount() { return mCount; }
-    inline UINT GetCapacity() { return mCapacity; }
+    inline UINT GetCount() const { return mCount; }
+    inline UINT GetCapacity() const { return mCapacity; }
 
-    inline T operator[] (UINT index) { return mData[index]; }
-    inline T* GetData() { return mData; }
+    inline T operator[] (UINT index) const { return mData[index]; }
+    inline T* GetData() const { return mData; }
 
 private:
     T* mData;
@@ -131,23 +139,7 @@ private:
     BOOL mIsOwned;
 };
 
-#include <vector>
 #include <string>
-
-inline std::vector<std::string> split(const std::string& str, const std::string& delim)
-{
-    std::vector<std::string> tokens;
-    size_t prev = 0, pos = 0;
-    do
-    {
-        pos = str.find(delim, prev);
-        if (pos == std::string::npos) pos = str.length();
-        std::string token = str.substr(prev, pos - prev);
-        if (!token.empty()) tokens.push_back(token);
-        prev = pos + delim.length();
-    } while (pos < str.length() && prev < str.length());
-    return tokens;
-}
 
 class ENGINE_API CString {
 public:

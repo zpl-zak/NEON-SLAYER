@@ -9,6 +9,8 @@
 #include "Effect.h"
 #include "RenderTarget.h"
 
+#include "engine.h"
+
 #if !defined(_DEBUG) || defined(NEON_FORCE_D3DX9)
 #pragma comment (lib, "d3d9/d3dx9.lib")
 #else
@@ -30,11 +32,7 @@ CRenderer::CRenderer()
 	mActiveEffect = NULL;
 	mDefaultBox = NULL;
 	mDefaultMaterial = NULL;
-#ifndef _DEBUG
 	mVsync = TRUE;
-#else
-	mVsync = FALSE;
-#endif
 	mFullscreen = FALSE;
 	mEnableLighting = FALSE;
 	mUsesMaterialOverride = FALSE;
@@ -202,6 +200,7 @@ VOID CRenderer::EndRender(VOID)
     Blit();
     GetDevice()->EndScene();
     GetDevice()->Present(NULL, NULL, NULL, NULL);
+	ENGINE->DefaultProfiling.IncrementFrame();
 }
 
 VOID CRenderer::Clear(VOID)

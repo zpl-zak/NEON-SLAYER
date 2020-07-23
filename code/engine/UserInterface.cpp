@@ -5,12 +5,65 @@
 #include "imgui.h"
 #include "imgui_impl_dx9.h"
 #include "imgui_impl_win32.h"
+#include "imgui_plot.h"
 
 #include "Engine.h"
 #include "Renderer.h"
 #include "VM.h"
 #include "ReferenceManager.h"
 #include "ProfileManager.h"
+
+constexpr SSIZE_T sFramerateMaxSamples = 30;
+
+class CGraphData {
+public:
+    CGraphData() {
+        mData.Release();
+
+        for (UINT i=0; i<sFramerateMaxSamples; i++)
+            mData.Push(0.0f);
+
+        mMaxima = FLT_MIN;
+        mMinima = FLT_MAX;
+    }
+
+    VOID Push(FLOAT ms) {
+        if (VM->GetStatus() != PLAYKIND_PLAYING)
+            return;
+
+        mData.Push(ms);
+
+        if (mData.GetCount() > sFramerateMaxSamples) {
+            mData.RemoveByIndex(0);
+        }
+    }
+
+    FLOAT GetMaxMS() {
+        for (auto m : mData) {
+            if (m > mMaxima) {
+                mMaxima = m;
+            }
+        }
+
+        return mMaxima;
+    }
+
+    FLOAT GetMinMS() {
+        for (auto m : mData) {
+            if (m < mMinima) {
+                mMinima = m;
+            }
+        }
+
+        return mMinima;
+    }
+
+    FLOAT* GetData() { return mData.GetData(); }
+    UINT GetCount() { return mData.GetCount(); }
+private:
+    CArray<FLOAT> mData;
+    FLOAT mMaxima, mMinima;
+} sFramerateStats;
 
 #include <sstream>
 
@@ -38,6 +91,9 @@ CUserInterface::CUserInterface()
 
 BOOL CUserInterface::Release(VOID)
 {
+#ifdef _DEBUG
+    ImGui::SaveIniSettingsToDisk(NULL);
+#endif
     ImGui_ImplDX9_Shutdown();
     SAFE_RELEASE(mTextSurface);
     SAFE_DELETE(mDraw2DHook);
@@ -72,6 +128,11 @@ VOID CUserInterface::RenderHook(VOID)
 {
     if (*mDraw2DHook)
         (*mDraw2DHook)();
+}
+
+VOID CUserInterface::PushMS(FLOAT ms)
+{
+    sFramerateStats.Push(ms);
 }
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -123,7 +184,7 @@ VOID CUserInterface::DebugPanel(VOID)
 
     if (mShowError)
     {
-        ImGui::SetNextWindowSize(ImVec2(500, 150), ImGuiCond_Always);
+        ImGui::SetNextWindowSize(ImVec2(500, 150), ImGuiCond_FirstUseEver);
         ImGui::Begin("Error messages", NULL, ImGuiWindowFlags_NoSavedSettings|ImGuiWindowFlags_NoCollapse|ImGuiWindowFlags_AlwaysAutoResize);
         {
             ImGui::TextWrapped("%s", mErrorMessage->c_str());
@@ -140,37 +201,69 @@ VOID CUserInterface::DebugPanel(VOID)
     }
 
     // Profiler window
-    if (ENGINE->GetRunCycleCount() > 0)
+    if (ENGINE->DefaultProfiling.GetRunCycleCount() > 0)
     {
         RECT res = RENDERER->GetResolution();
-        ImGui::SetNextWindowSizeConstraints({ 320, -1 }, { (FLOAT)res.right, -1 });
-        ImGui::Begin("Profiler", NULL, ImGuiWindowFlags_NoSavedSettings);
-        ImGui::SetWindowPos(ImVec2(0, (FLOAT)res.bottom - ImGui::GetWindowHeight()));
+        ImGui::Begin("Profiler", NULL, ImGuiWindowFlags_AlwaysAutoResize);
+        FLOAT profW = ImGui::GetWindowHeight();
+
+        ImGui::SetWindowPos(ImVec2(0, (FLOAT)res.bottom - profW), ImGuiCond_Always);
         {
             ImGui::Columns(2, "profiler");
             ImGui::Separator();
 
             ImGui::Text("Profiler"); ImGui::NextColumn();
             ImGui::Text("Time"); ImGui::NextColumn();
-            ImGui::Separator();
 
-            for (INT i = 0; i < MAX_NEON_PROFILERS; i++)
+            if (ENGINE->DefaultProfiling.GetProfilers().GetCount() > 0)
             {
-                CProfiler* profiler = ENGINE->GetProfilers()[i];
-                ImGui::Text("%s Time", profiler->GetName().Str()); ImGui::NextColumn();
-                ImGui::Text("%f ms", profiler->GetDelta()); ImGui::NextColumn();
+                ImGui::Separator();
+
+                for (UINT i = 0; i < ENGINE->DefaultProfiling.GetProfilers().GetCount(); i++)
+                {
+                    CProfiler* profiler = ENGINE->DefaultProfiling.GetProfilers()[i];
+                    ImGui::Text("%s Time", profiler->GetName().Str()); ImGui::NextColumn();
+                    ImGui::Text("%f ms", profiler->GetDelta()); ImGui::NextColumn();
+                }
             }
 
             ImGui::Separator();
 
             ImGui::Text("Other Time"); ImGui::NextColumn();
-            ImGui::Text("%f ms", ((DOUBLE)ENGINE->GetTotalRunTime() - ENGINE->GetTotalMeasuredRunTime())); ImGui::NextColumn();
+            ImGui::Text("%f ms", ((DOUBLE)ENGINE->DefaultProfiling.GetTotalRunTime() - ENGINE->DefaultProfiling.GetTotalMeasuredRunTime())); ImGui::NextColumn();
             
             ImGui::Text("Total Time"); ImGui::NextColumn();
-            ImGui::Text("%f ms (%.02f fps)", ENGINE->GetTotalRunTime(), (1000.0f / ENGINE->GetTotalRunTime())); ImGui::NextColumn();
+            ImGui::Text("%f ms (%.02f fps)", ENGINE->DefaultProfiling.GetTotalRunTime(), (1000.0f / ENGINE->DefaultProfiling.GetTotalRunTime())); ImGui::NextColumn();
 
             ImGui::Columns(1);
             ImGui::Separator();
+            {
+                static UINT32 selection_start = 0, selection_length = 0;
+                
+                ImGui::PlotConfig conf;
+                conf.values.count = sFramerateMaxSamples;
+                conf.values.ys = sFramerateStats.GetData();
+                conf.values.offset = 0;
+                conf.values.color = ImColor(0, 0, 0);
+                conf.scale.min = sFramerateStats.GetMinMS();
+                conf.scale.max = sFramerateStats.GetMaxMS();
+                conf.scale.type = ImGui::PlotConfig::Scale::Linear;
+                conf.tooltip.show = true;
+                conf.tooltip.format = "%.0s%.02f ms";
+                conf.grid_x.show = true;
+                conf.grid_x.size = 10.0f;
+                conf.grid_x.subticks = 5;
+                conf.grid_y.show = true;
+                conf.grid_y.size = 10.0f;
+                conf.grid_y.subticks = 5;
+                conf.selection.show = true;
+                conf.selection.start = &selection_start;
+                conf.selection.length = &selection_length;
+                conf.frame_size = ImVec2(sFramerateMaxSamples*10, 200);
+                conf.line_thickness = 4.0f;
+                conf.overlay_text = "Total Time (ms)";
+                ImGui::Plot("frameratePlot", conf);
+            }
         }
         ImGui::End();
     }

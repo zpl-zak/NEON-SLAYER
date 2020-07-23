@@ -24,43 +24,22 @@ CEngine::CEngine(VOID)
     mInput = NULL;
     mFileSystem = NULL;
     mVirtualMachine = NULL;
-    mGameEditor = NULL;
+    mDebugUI = NULL;
     mAudioSystem = NULL;
     
     SetFPS(60.0f);
     mUnprocessedTime = 0.0f;
     mLastTime = 0.0f;
-    mTotalTime = 0.0f;
-    mTotalMeasuredTime = 0.0f;
-    mFrames = 0;
-    mFrameCounter = 0.0f;
-    mRunCycle = 0;
-
-    mUpdateProfiler = new CProfiler("Update");
-    mRenderProfiler = new CProfiler("Render");
-    mWindowProfiler = new CProfiler("Window");
-    mSleepProfiler = new CProfiler("Sleep");
-
-    mProfilers[NEON_PROFILER_RENDER] = mRenderProfiler;
-    mProfilers[NEON_PROFILER_UPDATE] = mUpdateProfiler;
-    mProfilers[NEON_PROFILER_SLEEP] = mSleepProfiler;
-    mProfilers[NEON_PROFILER_WINDOW] = mWindowProfiler;
 }
 
 BOOL CEngine::Release()
 {
     SAFE_RELEASE(mVirtualMachine);
     SAFE_RELEASE(mFileSystem);
-    SAFE_RELEASE(mGameEditor);
+    SAFE_RELEASE(mDebugUI);
     SAFE_RELEASE(mRenderer);
     SAFE_RELEASE(mInput);
     SAFE_RELEASE(mAudioSystem);
-
-    SAFE_DELETE(mUpdateProfiler);
-    SAFE_DELETE(mRenderProfiler);
-    SAFE_DELETE(mSleepProfiler);
-    SAFE_DELETE(mWindowProfiler);
-    ZeroMemory(mProfilers, MAX_NEON_PROFILERS);
 
     return TRUE;
 }
@@ -69,19 +48,15 @@ VOID CEngine::Run()
 {
     MSG msg;
 
-    GetTime();
-    Sleep(50);
-
     while (IsRunning())
     {
-        mWindowProfiler->StartInvocation();
         while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
         {
+            CProfileScope scope(DefaultProfiling.mWindowProfiler);
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
-        mWindowProfiler->StopInvocation();
-
+     
         if (!IsRunning())
             break;
 
@@ -121,7 +96,7 @@ BOOL CEngine::Init(HWND window, RECT resolution)
         return FALSE;
     }
 
-    mGameEditor = new CUserInterface();
+    mDebugUI = new CUserInterface();
     mAudioSystem = new CAudioSystem();
 
     if (mAudioSystem->CreateDevice(window) != ERROR_SUCCESS)
@@ -144,17 +119,42 @@ VOID CEngine::Think()
     mLastTime = startTime;
 
     mUnprocessedTime += deltaTime;
-    mFrameCounter += deltaTime;
 
-    if (mFrameCounter >= 1.0f) 
+    DefaultProfiling.UpdateProfilers(deltaTime);
+
+    if (mUnprocessedTime > mUpdateDuration)
+    {
+        Update(mUpdateDuration);
+        render = TRUE;
+        mUnprocessedTime -= mUpdateDuration;
+    }
+
+    if (render)
+    {
+        Render();
+    }
+    else
+    {
+        CProfileScope scope(DefaultProfiling.mWindowProfiler);
+        Sleep(1); // Let CPU sleep a bit
+    }
+}
+
+VOID CEngine::CDefaultProfiling::UpdateProfilers(FLOAT dt)
+{
+    static constexpr FLOAT sFrameWindow = 0.5f;
+
+    mFrameCounter += dt;
+
+    if (mFrameCounter >= sFrameWindow)
     {
         mTotalTime = ((1000.0f * mFrameCounter) / ((FLOAT)mFrames));
         mTotalMeasuredTime = 0.0f;
-        BOOL logStats = mRunCycle % 10 == 0;
+        BOOL logStats = mRunCycle % (INT(sFrameWindow * 10.0f)) == 0;
 
         if (logStats) OutputDebugStringA("==================\n");
 
-        for (INT i=0; i<MAX_NEON_PROFILERS; i++)
+        for (UINT i = 0; i < mProfilers.GetCount(); i++)
         {
             mTotalMeasuredTime += mProfilers[i]->DisplayAndReset(FLOAT(mFrames), logStats);
         }
@@ -166,38 +166,40 @@ VOID CEngine::Think()
             OutputDebugStringA(std::string("Total Time: " + std::to_string(mTotalTime) + " ms (" + std::to_string(1000.0f / mTotalTime) + " fps) \n").c_str());
         }
 
+        UI->PushMS(mTotalTime);
+
         mFrames = 0;
         mFrameCounter = 0.0f;
         mRunCycle++;
     }
+}
 
-    while (mUnprocessedTime > mUpdateDuration)
-    {
-        mUpdateProfiler->StartInvocation();
-        Update(mUpdateDuration);
-        mUpdateProfiler->StopInvocation();
-        render = TRUE;
-        mUnprocessedTime -= mUpdateDuration;
-    }
+VOID CEngine::CDefaultProfiling::IncrementFrame()
+{
+    mFrames++;
+}
 
-    if (render)
-    {
-        mRenderProfiler->StartInvocation();
-        Render();
-        mFrames++;
-        mRenderProfiler->StopInvocation();
-    }
-    else
-    {
-        mSleepProfiler->StartInvocation();
-        Sleep(0); // Let CPU sleep a bit
-        mSleepProfiler->StopInvocation();
-    }
+VOID CEngine::CDefaultProfiling::SetupDefaultProfilers()
+{
+    mUpdateProfiler = new CProfiler("Update");
+    mRenderProfiler = new CProfiler("Render");
+    mRender2DProfiler = new CProfiler("RenderUI");
+    mWindowProfiler = new CProfiler("Window");
+
+    mProfilers.Push(mUpdateProfiler);
+    mProfilers.Push(mRenderProfiler);
+    mProfilers.Push(mRender2DProfiler);
+    mProfilers.Push(mWindowProfiler);
+}
+
+VOID CEngine::CDefaultProfiling::PushProfiler(CProfiler* profile)
+{
+    mProfilers.Push(profile);
 }
 
 LRESULT CEngine::ProcessEvents(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    if (mGameEditor->ProcessEvents(hWnd, message, wParam, lParam))
+    if (mDebugUI->ProcessEvents(hWnd, message, wParam, lParam))
         return FALSE;
 
     CInput* input = INPUT;
@@ -292,17 +294,33 @@ LRESULT CEngine::ProcessEvents(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 
 VOID CEngine::Update(FLOAT deltaTime)
 {
-    mVirtualMachine->Update(deltaTime);
-    mGameEditor->Update(deltaTime);
+    {
+        CProfileScope scope(DefaultProfiling.mUpdateProfiler);
+        mVirtualMachine->Update(deltaTime);
+    }
+ 
+    mDebugUI->Update(deltaTime);
     mInput->Update();
 }
 
 VOID CEngine::Render()
 {
     mRenderer->BeginRender();
-    mVirtualMachine->Render();
-    mGameEditor->Render();
-    mRenderer->EndRender();
+    
+    {
+        CProfileScope scope(DefaultProfiling.mRenderProfiler);
+        mVirtualMachine->Render();
+    }
+
+    {
+        CProfileScope scope(DefaultProfiling.mRender2DProfiler);
+        mDebugUI->Render();
+    }
+
+    {
+        CProfileScope scope(DefaultProfiling.mWindowProfiler);
+        mRenderer->EndRender();
+    }
 }
 
 VOID CEngine::Resize(RECT resolution)

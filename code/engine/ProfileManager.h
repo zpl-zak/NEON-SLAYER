@@ -20,3 +20,20 @@ private:
     FLOAT mDeltaTime;
     FLOAT mTotalTime;
 };
+
+class ENGINE_API CProfileScope {
+public:
+    CProfileScope(CProfiler* profile) {
+        if (profile)
+            profile->StartInvocation();
+        mProfiler = profile;
+    };
+
+    ~CProfileScope() {
+        if (mProfiler)
+            mProfiler->StopInvocation();
+    }
+
+private:
+    CProfiler* mProfiler;
+};
