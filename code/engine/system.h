@@ -26,10 +26,10 @@ ENGINE_API extern FLOAT GetTime();
 ENGINE_API extern FLOAT ScaleBetween(FLOAT x, FLOAT a, FLOAT b, FLOAT na, FLOAT nb);
 
 extern UINT64 gMemUsed, gMemUsedLua, gMemPeak, gResourceCount;
-extern VOID neon_mempeak_update();
-extern LPVOID neon_malloc(size_t size);
-extern LPVOID neon_realloc(LPVOID mem, size_t newSize);
-extern VOID neon_free(LPVOID mem);
+ENGINE_API extern VOID neon_mempeak_update();
+ENGINE_API extern LPVOID neon_malloc(size_t size);
+ENGINE_API extern LPVOID neon_realloc(LPVOID mem, size_t newSize);
+ENGINE_API extern VOID neon_free(LPVOID mem);
 
 /// panic handling
 #define NEON_PANIC_FN(name) VOID name(HWND window, LPCSTR text, LPCSTR caption, DWORD style);
@@ -50,7 +50,7 @@ extern VOID PushLog(LPCSTR msg, BOOL noHist=FALSE);
 
 /// helpers
 template <typename T>
-class ENGINE_API CArray
+class CArray
 {
 public:
     typedef T* iterator;

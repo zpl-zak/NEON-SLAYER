@@ -21,7 +21,7 @@ ENetPeer *client_peer = NULL;
 INT tankupdateref = 0;
 INT tankcollideref = 0;
 
-#define DEBUG_LINES
+// #define DEBUG_LINES
 
 static INT ne_server_start(lua_State* L) {
     if (server) {
@@ -114,8 +114,9 @@ typedef struct {
 typedef struct {
     float x, y, z, r;
     int c;
-    ne_vec3 tail[MAX_TRAILS];
-    int tail_end;
+    // ne_vec3 tail[MAX_TRAILS];
+    // int tail_end;
+    CArray<ne_vec3> trail;
     float collision_delay;
     ENetPeer* peer;
 } ne_data;
@@ -148,7 +149,7 @@ bool ne_check_collision(ne_vec3 p1, ne_vec3 p2, float cx, float cy, float cz) {
 
     float a = D3DXVec3Dot(&d, &d);
     float b = 2 * D3DXVec3Dot(&d, &oc);
-    float c = D3DXVec3Dot(&oc, &oc) - r;
+    float c = D3DXVec3LengthSq(&oc) - r;
 
     float dis = b * b - 4 * a * c;
 
@@ -160,18 +161,6 @@ bool ne_check_collision(ne_vec3 p1, ne_vec3 p2, float cx, float cy, float cz) {
 
     auto dt = d*t;
     return (t > 0 && D3DXVec3LengthSq(&dt) < D3DXVec3LengthSq(&AB));
-
-
-    // auto f = l - c;
-    // return D3DXVec3LengthSq(&f) < (r * r);
-    /*
-    #define sq(a) (a*a)
-    auto f = o - c;
-    float delta = sq(D3DXVec3Dot(&l, &f)) - (D3DXVec3LengthSq(&f) - sq(r));
-    auto t = std::string("delta: "); t += std::to_string(delta);
-    OutputDebugStringA(t.c_str());
-    return delta >= 0;
-    #undef sq*/
 }
 
 void ne_server_update(lua_State* L) {
@@ -185,6 +174,7 @@ void ne_server_update(lua_State* L) {
                 /* allocate and store entity data in the data part of peer */
                 ne_data _ent = { 0 }; _ent.peer = event.peer;
                 ne_server_data[entity_id] = _ent;
+                ne_server_data[entity_id].trail.Release();
                 ne_server_data[entity_id].c = rand() % 360;
 
                 char buffer[512] = { 0 };
@@ -213,8 +203,13 @@ void ne_server_update(lua_State* L) {
 
                 if (ne_server_data[entity_id].x != 0) {
                     ne_vec3 pos = {ne_server_data[entity_id].x, ne_server_data[entity_id].y, ne_server_data[entity_id].z};
-                    ne_server_data[entity_id].tail_end = (ne_server_data[entity_id].tail_end+1) % MAX_TRAILS;
-                    ne_server_data[entity_id].tail[ne_server_data[entity_id].tail_end] = pos;
+                    // ne_server_data[entity_id].tail_end = (ne_server_data[entity_id].tail_end+1) % MAX_TRAILS;
+                    // ne_server_data[entity_id].tail[ne_server_data[entity_id].tail_end] = pos;
+                    ne_server_data[entity_id].trail.Push(pos);
+
+                    if (ne_server_data[entity_id].trail.GetCount() > MAX_TRAILS) {
+                        ne_server_data[entity_id].trail.RemoveByIndex(0);
+                    }
                 }
 
                 float x = *(float*)(buffer + offset); offset += sizeof(float);
@@ -245,20 +240,33 @@ void ne_server_update(lua_State* L) {
         for (auto it2 = ne_server_data.begin(); it2 != ne_server_data.end() && !collided; ++it2) {
             if (entity_id == it2->first) continue;
 
-            int tail = it2->second.tail_end < 0 ? MAX_TRAILS : it2->second.tail_end;
-            for (int i = 0, s = tail; i < MAX_TRAILS; ++i) {
-                s = (s-1) < 0 ? MAX_TRAILS-1 : s-1;
-                int index_pre = s-1 < 0 ? MAX_TRAILS-1 : s-1;
-                if (ne_check_collision(it2->second.tail[index_pre], it2->second.tail[s], data->x, data->y, data->z)) {
+            // int tail = it2->second.tail_end < 0 ? MAX_TRAILS : it2->second.tail_end;
+            // for (int i = 0, s = tail; i < MAX_TRAILS; ++i) {
+            //     s = (s-1) < 0 ? MAX_TRAILS-1 : s-1;
+            //     int index_pre = s-1 < 0 ? MAX_TRAILS-1 : s-1;
+            //     if (ne_check_collision(it2->second.tail[index_pre], it2->second.tail[s], data->x, data->y, data->z)) {
+            //         collided = true;
+            //         killer_id = it2->first;
+            //         data->collision_delay = GetTime() + 8.0f;
+            //         break;
+            //     }
+            // }
+
+            for (int i = 0; i < it2->second.trail.GetCount()-1; ++i) {
+                auto p1 = it2->second.trail[i];
+                auto p2 = it2->second.trail[i+1];
+
+                if (ne_check_collision(p1, p2, data->x, data->y, data->z)) {
                     collided = true;
-                    killer_id = it2->first;
-                    data->collision_delay = GetTime() + 8.0f;
                     break;
                 }
             }
         }
 
         if (collided) {
+            data->collision_delay = GetTime() + 8.0f;
+            data->trail.Clear();
+
             char buffer[512] = { 0 };
             *((uint16_t*)(buffer)+0) = 2;
             *((uint16_t*)(buffer)+1) = killer_id;
