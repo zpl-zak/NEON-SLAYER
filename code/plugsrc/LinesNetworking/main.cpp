@@ -114,6 +114,7 @@ typedef struct {
     int c;
     ne_vec3 tail[MAX_TRAILS];
     int tail_end;
+    float collision_delay;
     ENetPeer* peer;
 } ne_data;
 
@@ -216,6 +217,7 @@ void ne_server_update(lua_State* L) {
                 if (ne_check_collision(it2->second.tail[s], it2->second.tail[s], data->x, data->y, data->z)) {
                     collided = true;
                     killer_id = it2->first;
+                    data->collision_delay = GetTime() + 8.0f;
                     break;
                 }
             }
