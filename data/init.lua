@@ -74,7 +74,9 @@ function _init()
   -- Set up network update event
   net.setUpdate(function (entity_id, x, y, z, r, c, islocal, serverTrail)
     if islocal == 1 then
-      if serverTrail ~= nil then tanks[-1].serverTrail = serverTrail end
+      if serverTrail ~= nil then
+        tanks[-1].serverTrail = serverTrail
+      end
       return
     end
 
@@ -95,6 +97,8 @@ function _init()
     local nz = lerp(tank.pos:z(), z, 0.5)
     tank.pos = Vector3(nx, ny, nz)
     tank.rot = Matrix():rotate(r+math.rad(90),0,0)
+    tank.aliveTime = getTime() + 5
+
     if serverTrail ~= nil then
       tank.serverTrail = serverTrail
     end

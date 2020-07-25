@@ -36,6 +36,7 @@ function addTank(id, color)
     crot = 0,
     health = 100,
     alive = true,
+    aliveTime = nil,
     color = 0,
   }
 
@@ -133,6 +134,11 @@ function drawTanks()
         drawTrails(t, t.trails, 10, trailPosNode)
         drawTrails(t, t.serverTrail, 30, trailPosNode)
         i = i + 1
+      end
+      if t.aliveTime ~= nil and t.aliveTime < getTime() then
+        LogString("removing player " .. idx)
+        t.alive = false
+        tanks[idx] = nil
       end
     end
 end

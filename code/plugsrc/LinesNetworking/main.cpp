@@ -158,6 +158,7 @@ void ne_server_update(lua_State* L) {
                 /* create packet with actual length, and send it */
                 ENetPacket* packet = enet_packet_create(buffer, sizeof(uint16_t)*2, ENET_PACKET_FLAG_RELIABLE);
                 enet_peer_send(event.peer, 0, packet);
+                enet_peer_timeout(event.peer, 5, 3, 5);
 
             } break;
             case ENET_EVENT_TYPE_DISCONNECT:
