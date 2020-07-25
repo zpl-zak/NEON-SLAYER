@@ -219,8 +219,24 @@ void ne_server_update(lua_State* L) {
             ENetPacket* packet = enet_packet_create(buffer, sizeof(uint16_t)*2, ENET_PACKET_FLAG_RELIABLE);
             enet_peer_send(data->peer, 0, packet);
 
-            /* handle player death and respawn */
-            //OutputDebugStringA("a player have collided with somth");
+            ENetPeer *currentPeer;
+            for (currentPeer = server->peers; currentPeer < &server->peers[server->peerCount]; ++currentPeer) {
+                if (currentPeer->state != ENET_PEER_STATE_CONNECTED && currentPeer != data->peer) {
+                    continue;
+                }
+
+                int offset = sizeof(uint32_t);
+                int count = 0;
+                char buffer[512] = {0};
+
+                *((uint16_t*)(buffer)+0) = 3;
+                *((uint16_t*)(buffer)+1) = killer_id;
+                *((uint16_t*)(buffer)+2) = entity_id;
+
+                /* create packet with actual length, and send it */
+                ENetPacket *packet = enet_packet_create(buffer, sizeof(uint16_t)*3, ENET_PACKET_FLAG_RELIABLE);
+                enet_peer_send(currentPeer, 0, packet);
+            }
         }
     }
 
@@ -324,7 +340,23 @@ void ne_client_update(lua_State* L) {
                         goto ne_srv_clenaup;
 
                     lua_pushnumber(L, killer_id);
-                    lua_pcall(L, 1, 0, 0);
+                    lua_pushnumber(L, -999);
+                    lua_pcall(L, 2, 0, 0);
+                    tankcollideref = luaL_ref(L, LUA_REGISTRYINDEX);
+                }
+                else if (packetid == 3) {
+                    int killer_id = *((uint16_t*)(buffer)+1);
+                    int victim_id = *((uint16_t*)(buffer)+2);
+
+                    lua_rawgeti(L, LUA_REGISTRYINDEX, tankcollideref);
+                    lua_pushvalue(L, 1);
+
+                    if (!lua_isfunction(L, -1))
+                        goto ne_srv_clenaup;
+
+                    lua_pushnumber(L, killer_id);
+                    lua_pushnumber(L, victim_id);
+                    lua_pcall(L, 2, 0, 0);
                     tankcollideref = luaL_ref(L, LUA_REGISTRYINDEX);
                 }
 ne_srv_clenaup:

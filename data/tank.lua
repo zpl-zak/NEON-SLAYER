@@ -51,6 +51,10 @@ end
 function updateTanks(dt)
     local t = tanks["local"]
 
+    for _, t in pairs(tanks) do
+      handleTrails(t, trailPosNode)
+    end
+
     if not t.alive then
       return
     end
@@ -98,23 +102,20 @@ function updateTanks(dt)
         t.vel:y(0)
       end
 
-    for _, t in pairs(tanks) do
-      handleTrails(t, trailPosNode)
-    end
 end
 
 function drawTanks()
-    BindTexture(0, tankMaterial)
     local i = 1
     for idx, t in pairs(tanks) do
       if t.alive then
         t.light:setPosition(t.pos+Vector3(0,5,0))
         t.light:enable(true, i)
         Matrix():bind(WORLD)
+        BindTexture(0, tankMaterial)
         tankBody:draw(t.rot * Matrix():translate(t.pos+t.hover))
+        BindTexture(0)
         drawTrails(t, 10, trailPosNode)
         i = i + 1
       end
     end
-    BindTexture(0)
 end

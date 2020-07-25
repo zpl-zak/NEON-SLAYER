@@ -61,16 +61,26 @@ function _init()
     end
   
     local tank = tanks[entity_id]
-  
+    
+    if math.abs(tank.x - x) > 5.0 then
+      tank.alive = true
+    end
+
     tank.pos = Vector3(x,y,z)
     tank.heading = r
   
     -- LogString("_net_tankupdate: " .. entity_id .. " pos: " .. x .. " " .. y .. " " .. z)
   end)
 
-  net.setCollide(function(killer_id)
-    LogString("BOOM WE GOT KILLED BY " .. killer_id)
-    state:switch("death")
+  net.setCollide(function(killer_id, victim_id)
+    if victim_id == -999 then
+      state:switch("death")
+      LogString("BOOM WE GOT KILLED BY " .. killer_id)
+    else
+      if tanks[victim_id] ~= nil then
+        tanks[victim_id].alive = false
+      end
+    end
   end)
 
   -- ui.init()
