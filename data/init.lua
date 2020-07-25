@@ -14,10 +14,8 @@ cols = require "collisions"
 world = nil
 
 local state = require("code/state")
-local MenuState = require("code/states/menu")
-local GameState = require("code/states/game")
 
--- dofile("code/ui.lua")
+
 -- dofile("code/state.lua")
 -- dofile("code/states/menu.lua")
 -- dofile("code/states/game.lua")
@@ -72,15 +70,18 @@ function _init()
 
   net.setCollide(function(killer_id)
     LogString("BOOM WE GOT KILLED BY " .. killer_id)
+    state:switch("death")
   end)
 
   -- ui.init()
   -- state.add("menu", createMenu())
   -- state.add("game", createGame())
   -- state.switch("menu")
-  state:add("menu", MenuState())
-  state:add("game", GameState())
+  state:add("menu", require "code/states/menu" ())
+  state:add("game", require "code/states/game" ())
+  state:add("death", require "code/states/death" ())
   state:switch("menu")
+  ui.init()
 end
 
 
@@ -109,13 +110,13 @@ function _update(dt)
 
   time = time + dt
 
-  -- ui.update()
-  -- state.update(dt)
+  ui.update()
+  state:update(dt)
 end
 
 function _charInput(key)
-  -- ui.input(key)
-  -- state.input(key)
+  ui.input(key)
+  state:input(key)
 end
 
 function _render()
@@ -141,7 +142,7 @@ function _render2d()
 --   ]], 15, 30)
 
 
-  -- state.draw2d()
+  state:draw2d()
 end
 
 function updateTestAI()

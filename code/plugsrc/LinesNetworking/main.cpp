@@ -119,7 +119,7 @@ typedef struct {
 std::unordered_map<uint64_t, ne_data> ne_server_data;
 
 bool ne_check_collision(ne_vec3 a, ne_vec3 b, float cx, float cy, float cz) {
-    float r = 5.f;
+    float r = 8.f;
 
     D3DXVECTOR3 o = D3DXVECTOR3(a.x, a.y, a.z);
     D3DXVECTOR3 l = D3DXVECTOR3(b.x, b.y, b.z);
@@ -195,7 +195,7 @@ void ne_server_update(lua_State* L) {
         bool collided = false;
 
         for (auto it2 = ne_server_data.begin(); it2 != ne_server_data.end() && !collided; ++it2) {
-            //if (entity_id == it2->first) continue;
+            if (entity_id == it2->first) continue;
 
             int tail_offset = 25;
             int tail = it2->second.tail_end-tail_offset < 0 ? MAX_TRAILS-tail_offset : it2->second.tail_end-tail_offset;

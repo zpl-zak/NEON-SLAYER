@@ -1,15 +1,14 @@
 local class = require("code/class")
+local state = require("code/state")
 local AbstractState = require("code/states/abstract")
--- local 
 
 dofile("code/ui.lua")
 
 return class "MenuState" (AbstractState) {
     __init__ = function(self)
+        AbstractState.__init__(self)
+
         self.elements = {}
-        self.resolution = GetResolution()
-        self.titleFont = Font("Silkscreen", 36, 1, false)
-        self.uiFont = Font("Silkscreen", 14, 1, false)
 
         local padding = 8
         local groupMargin = 25
@@ -26,10 +25,10 @@ return class "MenuState" (AbstractState) {
 
         yoffset = yoffset + buttonHeight + padding
         local btnHostStart = uiButton("Host game", self.resolution[1]/2-100, yoffset, 200, 50, function()
-        local port = inpHostPort.value == "" and tonumber(inpHostPort.value) or 27666
+            local port = inpHostPort.value ~= "" and tonumber(inpHostPort.value) or 27666
             net.serverStart(port)
             net.connect("localhost", port)
-            state.switch("game")
+            state:switch("game")
         end)
 
         yoffset = yoffset + groupMargin
@@ -42,8 +41,10 @@ return class "MenuState" (AbstractState) {
 
         yoffset = yoffset + buttonHeight + padding
         local btnJoinStart = uiButton("Join game", self.resolution[1]/2-100, yoffset, 200, 50, function()
-            net.connect(inpJoinHost.value, inpJoinPort.value == "" and tonumber(inpJoinPort.value) or 27666)
-            state.switch("game")
+            local host = inpJoinHost.value ~= "" and tonumber(inpJoinHost.value) or "inlife.no-ip.org"
+            local port = inpJoinPort.value ~= "" and tonumber(inpJoinPort.value) or 27666
+            net.connect(host, port)
+            state:switch("game")
         end)
 
         yoffset = yoffset + groupMargin

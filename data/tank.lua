@@ -31,7 +31,8 @@ function addTank(id)
     trails = {},
     trailTime = 0,
     crot = 0,
-    health = 100
+    health = 100,
+    alive = true,
   }
 
   l = Light()
@@ -49,6 +50,10 @@ end
 
 function updateTanks(dt)
     local t = tanks["local"]
+
+    if not t.alive then
+      return
+    end
 
       t.vel:y(t.vel:y() - 2*dt)
 
@@ -102,12 +107,14 @@ function drawTanks()
     BindTexture(0, tankMaterial)
     local i = 1
     for idx, t in pairs(tanks) do
-      t.light:setPosition(t.pos+Vector3(0,5,0))
-      t.light:enable(true, i)
-      Matrix():bind(WORLD)
-      tankBody:draw(t.rot * Matrix():translate(t.pos+t.hover))
-      drawTrails(t, 10, trailPosNode)
-      i = i + 1
+      if t.alive then
+        t.light:setPosition(t.pos+Vector3(0,5,0))
+        t.light:enable(true, i)
+        Matrix():bind(WORLD)
+        tankBody:draw(t.rot * Matrix():translate(t.pos+t.hover))
+        drawTrails(t, 10, trailPosNode)
+        i = i + 1
+      end
     end
     BindTexture(0)
 end

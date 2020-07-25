@@ -6,6 +6,7 @@ Bin
 Build
 Debug/
 Release/
+imgui.ini
 
 *.pdb
 *.ilk
