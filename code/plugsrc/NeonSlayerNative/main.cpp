@@ -366,13 +366,12 @@ void ne_server_update(lua_State* L) {
             // auto ring =
 
             for (int i = 0; i < it2->second.trail->GetCount()-1; ++i) {
-                auto p1 = (*it2->second.trail)[i];
-                auto p2 = (*it2->second.trail)[i+1];
+                ne_vec3 p1 = (*it2->second.trail)[i];
+                ne_vec3 p2 = (*it2->second.trail)[i+1];
 
                 if (ne_check_collision(p1, p2, data->x, data->y, data->z)) {
                     collided = true;
                     killer_id = it2->first;
-            OutputDebugStringA(CString::Format("ne_check_collision killer: %d victim: %d\n", killer_id, entity_id).Str());
                     break;
                 }
             }
@@ -381,8 +380,6 @@ void ne_server_update(lua_State* L) {
         if (collided) {
             data->trail->Clear();
             data->collision_delay = GetTime() + 8.0f;
-
-            OutputDebugStringA(CString::Format("collided callid: %d killer: %d victim: %d\n", call_id, killer_id, entity_id).Str());
 
             char buffer[512] = { 0 };
             *((uint16_t*)(buffer)+0) = 2;
@@ -668,7 +665,7 @@ static const luaL_Reg networkplugin[] = {
     ENDF
 };
 
-extern "C" INT PLUGIN_API luaopen_linesnetworking(lua_State* L) {
+extern "C" INT PLUGIN_API luaopen_slayernative(lua_State* L) {
     srand(time(NULL));
     enet_initialize();
     luaL_newlib(L, networkplugin);

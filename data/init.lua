@@ -1,4 +1,4 @@
-net = require "linesnetworking"
+net = require "slayernative"
 
 time = 0
 player = {}
