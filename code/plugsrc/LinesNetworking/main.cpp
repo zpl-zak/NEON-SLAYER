@@ -8,6 +8,8 @@
 
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 #define ENET_IMPLEMENTATION
+#define ZPL_IMPL
+#define ZPL_NANO
 #include "enet.h"
 
 #include <lua/lua.hpp>
@@ -22,6 +24,101 @@ INT tankupdateref = 0;
 INT tankcollideref = 0;
 
 // #define DEBUG_LINES
+
+/// helpers
+template <typename T>
+class NEArray
+{
+public:
+    typedef T* iterator;
+
+    NEArray()
+    {
+        mCapacity = 4;
+        mCount = 0;
+        mData = (T*)malloc(mCapacity * sizeof(T));
+        mIsOwned = TRUE;
+    }
+
+    NEArray(const NEArray<T>& rhs)
+    {
+        mData = rhs.mData;
+        mCount = rhs.mCount;
+        mCapacity = rhs.mCapacity;
+        mIsOwned = FALSE;
+    }
+
+    ~NEArray()
+    {
+        Release();
+    }
+
+    iterator begin() const { return &mData[0]; }
+    iterator end() const { return &mData[mCount]; }
+
+    inline VOID Release()
+    {
+        if (mIsOwned)
+        {
+            free(mData);
+            mCapacity = 4;
+            mCount = 0;
+        }
+    }
+
+    inline HRESULT Push(T elem)
+    {
+        if (!mData)
+            mData = (T*)realloc(mData, mCapacity * sizeof(T));
+
+        if (mCount >= mCapacity)
+        {
+            mCapacity += 4;
+            mData = (T*)realloc(mData, mCapacity * sizeof(T));
+
+            if (!mData)
+            {
+                return E_OUTOFMEMORY;
+            }
+        }
+
+        mData[mCount++] = elem;
+        return ERROR_SUCCESS;
+    }
+
+    inline T Find(LPCSTR name) const
+    {
+        for (UINT i = 0; i < mCount; i++)
+        {
+            if (!strcmp(name, mData[i]->GetName().Str()))
+                return mData[i];
+        }
+
+        return NULL;
+    }
+
+    inline T RemoveByIndex(UINT idx) {
+        T* ptr = (mData + idx);
+        ::memmove(mData + idx, mData + idx + 1, (mCount - idx - 1) * sizeof(T));
+        mCount--;
+
+        return *ptr;
+    }
+
+    inline VOID Clear() { mCount = 0; }
+
+    inline UINT GetCount() const { return mCount; }
+    inline UINT GetCapacity() const { return mCapacity; }
+
+    inline T operator[] (UINT index) const { return mData[index]; }
+    inline T* GetData() const { return mData; }
+
+private:
+    T* mData;
+    UINT mCapacity;
+    UINT mCount;
+    BOOL mIsOwned;
+};
 
 static INT ne_server_start(lua_State* L) {
     if (server) {
@@ -114,9 +211,12 @@ typedef struct {
 typedef struct {
     float x, y, z, r;
     int c;
-    // ne_vec3 tail[MAX_TRAILS];
-    // int tail_end;
-    CArray<ne_vec3> trail;
+    ne_vec3 tail[MAX_TRAILS];
+    int tail_start;
+    int tail_end;
+
+    NEArray<ne_vec3> *trail;
+    // zpl_ring_ne_vec3 trail;
     float collision_delay;
     ENetPeer* peer;
 } ne_data;
@@ -174,8 +274,9 @@ void ne_server_update(lua_State* L) {
                 /* allocate and store entity data in the data part of peer */
                 ne_data _ent = { 0 }; _ent.peer = event.peer;
                 ne_server_data[entity_id] = _ent;
-                ne_server_data[entity_id].trail.Release();
                 ne_server_data[entity_id].c = rand() % 360;
+                ne_server_data[entity_id].trail = new NEArray<ne_vec3>();
+                // zpl_ring_ne_vec3_init(&ne_server_data[entity_id].trail, zpl_heap(), MAX_TRAILS);
 
                 char buffer[512] = { 0 };
                 *((uint16_t*)(buffer)+0) = 4;
@@ -191,6 +292,8 @@ void ne_server_update(lua_State* L) {
             case ENET_EVENT_TYPE_DISCONNECT_TIMEOUT: {
                 OutputDebugStringA("[server]  A user disconnected.\n");
                 uint16_t entity_id = event.peer->incomingPeerID;
+                // zpl_ring_ne_vec3_free(&ne_server_data[entity_id].trail);
+                delete ne_server_data[entity_id].trail;
 
                 ne_server_data.erase(entity_id);
             } break;
@@ -205,11 +308,8 @@ void ne_server_update(lua_State* L) {
                     ne_vec3 pos = {ne_server_data[entity_id].x, ne_server_data[entity_id].y, ne_server_data[entity_id].z};
                     // ne_server_data[entity_id].tail_end = (ne_server_data[entity_id].tail_end+1) % MAX_TRAILS;
                     // ne_server_data[entity_id].tail[ne_server_data[entity_id].tail_end] = pos;
-                    ne_server_data[entity_id].trail.Push(pos);
-
-                    if (ne_server_data[entity_id].trail.GetCount() > MAX_TRAILS) {
-                        ne_server_data[entity_id].trail.RemoveByIndex(0);
-                    }
+                    // zpl_ring_zpl_u32_append(&ne_server_data[entity_id].trail, pos);
+                    ne_server_data[entity_id].trail->Push(pos);
                 }
 
                 float x = *(float*)(buffer + offset); offset += sizeof(float);
@@ -252,20 +352,23 @@ void ne_server_update(lua_State* L) {
             //     }
             // }
 
-            for (int i = 0; i < it2->second.trail.GetCount()-1; ++i) {
-                auto p1 = it2->second.trail[i];
-                auto p2 = it2->second.trail[i+1];
+            // auto ring = 
+
+            for (int i = 0; i < it->second.trail->GetCount()-1; ++i) {
+                auto p1 = (*it->second.trail)[i];
+                auto p2 = (*it->second.trail)[i+1];
 
                 if (ne_check_collision(p1, p2, data->x, data->y, data->z)) {
                     collided = true;
+                    killer_id = it2->first;
                     break;
                 }
             }
         }
 
         if (collided) {
+            data->trail->Clear();
             data->collision_delay = GetTime() + 8.0f;
-            data->trail.Clear();
 
             char buffer[512] = { 0 };
             *((uint16_t*)(buffer)+0) = 2;
