@@ -265,7 +265,7 @@ CFaceGroup* CSceneLoader::LoadFaceGroup(const aiScene* scene, const aiMesh* mesh
         mat->Get(AI_MATKEY_OPACITY, opacity);
         newMaterial->SetOpacity(opacity);
 
-        newFGroup->SetMaterial(0, newMaterial);
+        newFGroup->SetMaterial(newMaterial);
     }
 
     return newFGroup;
@@ -336,11 +336,11 @@ VOID CSceneLoader::LoadTextureMap(const aiScene* scene, const aiMaterial* mat, C
         newMaterial->CreateTextureForSlot(slot, (LPSTR)path.C_Str());
     }
 
-    if (slot != TEXTURESLOT_ALBEDO || !newMaterial->GetUserTextureHandle(slot))
+    if (slot != TEXTURESLOT_ALBEDO || !newMaterial->GetTextureHandle(slot))
         return;
 
     D3DSURFACE_DESC a;
-    newMaterial->GetUserTextureHandle(slot)->GetLevelDesc(0, &a);
+    newMaterial->GetTextureHandle(slot)->GetLevelDesc(0, &a);
 
     UINT* buf = (UINT*)newMaterial->Lock(slot);
     

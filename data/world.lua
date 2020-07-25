@@ -13,7 +13,7 @@ function initWorld()
     terrainMaterial = Material("assets/tile_base.png")
     terrainMaterial:setDiffuse(0x815192)
     terrainMaterial:setPower(120)
-    terrain:getMeshes()[1]:setMaterial(0, terrainMaterial)
+    terrain:getMeshes()[1]:setMaterial(terrainMaterial)
 
     terrainMaterial:loadFile("assets/tile_active.png", ACTIVE_TILE_TEX_SLOT)
 
@@ -44,8 +44,8 @@ function initWorld()
     gradientMesh = backdropRoot:findNode("gradient")
     sunMesh = backdropRoot:findNode("sun")
     sunGlareMesh = backdropRoot:findNode("sunglare")
-    boundsMesh:getMeshes()[1]:setMaterial(0, boundsMaterial)
-    gradientMesh:getMeshes()[1]:setMaterial(0, gradientMaterial)
+    boundsMesh:getMeshes()[1]:setMaterial(boundsMaterial)
+    gradientMesh:getMeshes()[1]:setMaterial(gradientMaterial)
     
     bdMesh = backdropRoot:findNode("bd"):getNodes()
 
