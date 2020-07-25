@@ -23,7 +23,7 @@ ENetPeer *client_peer = NULL;
 INT tankupdateref = 0;
 INT tankcollideref = 0;
 
-// #define DEBUG_LINES
+#define DEBUG_LINES
 
 /// helpers
 template <typename T>
@@ -36,7 +36,7 @@ public:
     {
         mCapacity = 4;
         mCount = 0;
-        mData = (T*)malloc(mCapacity * sizeof(T));
+        mData = NULL;//(T*)malloc(mCapacity * sizeof(T));
         mIsOwned = TRUE;
     }
 
@@ -276,6 +276,7 @@ void ne_server_update(lua_State* L) {
                 ne_server_data[entity_id] = _ent;
                 ne_server_data[entity_id].c = rand() % 360;
                 ne_server_data[entity_id].trail = new NEArray<ne_vec3>();
+                ne_server_data[entity_id].collision_delay = GetTime() + 3.0f;
                 // zpl_ring_ne_vec3_init(&ne_server_data[entity_id].trail, zpl_heap(), MAX_TRAILS);
 
                 char buffer[512] = { 0 };
@@ -310,6 +311,10 @@ void ne_server_update(lua_State* L) {
                     // ne_server_data[entity_id].tail[ne_server_data[entity_id].tail_end] = pos;
                     // zpl_ring_zpl_u32_append(&ne_server_data[entity_id].trail, pos);
                     ne_server_data[entity_id].trail->Push(pos);
+
+                    if (ne_server_data[entity_id].trail->GetCount() > MAX_TRAILS) {
+                        ne_server_data[entity_id].trail->RemoveByIndex(0);
+                    }
                 }
 
                 float x = *(float*)(buffer + offset); offset += sizeof(float);
@@ -334,6 +339,10 @@ void ne_server_update(lua_State* L) {
     for (auto it = ne_server_data.begin(); it != ne_server_data.end(); ++it) {
         uint16_t entity_id = it->first;
         ne_data *data = &it->second;
+
+        /* do not die if you recently did */
+        if (data->collision_delay > GetTime()) continue;
+
         uint16_t killer_id = -1;
         bool collided = false;
 
@@ -352,7 +361,7 @@ void ne_server_update(lua_State* L) {
             //     }
             // }
 
-            // auto ring = 
+            // auto ring =
 
             for (int i = 0; i < it->second.trail->GetCount()-1; ++i) {
                 auto p1 = (*it->second.trail)[i];
@@ -429,12 +438,21 @@ void ne_server_update(lua_State* L) {
             *(uint8_t*)(buffer + offset) = (currentPeer->incomingPeerID == it->first); offset += sizeof(uint8_t);
 
 #ifdef DEBUG_LINES
-            int tail = it->second.tail_end < 0 ? MAX_TRAILS : it->second.tail_end;
-            for (int i = 0, s = tail; i < MAX_TRAILS; ++i) {
-                s = (s-1) < 0 ? MAX_TRAILS-1 : s-1;
-                *(float*)(buffer + offset) = it->second.tail[s].x; offset += sizeof(float);
-                *(float*)(buffer + offset) = it->second.tail[s].y; offset += sizeof(float);
-                *(float*)(buffer + offset) = it->second.tail[s].z; offset += sizeof(float);
+            // int tail = it->second.tail_end < 0 ? MAX_TRAILS : it->second.tail_end;
+            // for (int i = 0, s = tail; i < MAX_TRAILS; ++i) {
+            //     s = (s-1) < 0 ? MAX_TRAILS-1 : s-1;
+            //     *(float*)(buffer + offset) = it->second.tail[s].x; offset += sizeof(float);
+            //     *(float*)(buffer + offset) = it->second.tail[s].y; offset += sizeof(float);
+            //     *(float*)(buffer + offset) = it->second.tail[s].z; offset += sizeof(float);
+            // }
+
+            *(uint16_t*)(buffer + offset) = it->second.trail->GetCount(); offset += sizeof(uint16_t);
+
+            for (int i = 0; i < it->second.trail->GetCount(); ++i) {
+                auto p1 = (*it->second.trail)[i];
+                *(float*)(buffer + offset) = p1.x; offset += sizeof(float);
+                *(float*)(buffer + offset) = p1.y; offset += sizeof(float);
+                *(float*)(buffer + offset) = p1.z; offset += sizeof(float);
             }
 #endif
             count++;
@@ -502,9 +520,11 @@ void ne_client_update(lua_State* L) {
                         lua_pushnumber(L, islocal);
 
 #ifdef DEBUG_LINES
+                        uint16_t linecount = *(uint16_t*)(buffer + offset); offset += sizeof(uint16_t);
+
                         lua_newtable(L);
 
-                        for (int k = 0; k < MAX_TRAILS; ++k) {
+                        for (int k = 0; k < linecount; ++k) {
                             float x = *(float*)(buffer + offset); offset += sizeof(float);
                             float y = *(float*)(buffer + offset); offset += sizeof(float);
                             float z = *(float*)(buffer + offset); offset += sizeof(float);

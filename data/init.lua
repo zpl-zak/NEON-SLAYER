@@ -114,6 +114,7 @@ function _init()
     else
       if tanks[victim_id] ~= nil then
         tanks[victim_id].alive = false
+        tanks[victim_id].trails = {}
       end
     end
   end)
