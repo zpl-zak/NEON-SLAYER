@@ -21,6 +21,8 @@ ENetPeer *client_peer = NULL;
 INT tankupdateref = 0;
 INT tankcollideref = 0;
 
+#define DEBUG_LINES
+
 static INT ne_server_start(lua_State* L) {
     if (server) {
         OutputDebugStringA("[server] Server is already running...\n");
@@ -137,7 +139,7 @@ bool ne_check_collision(ne_vec3 p1, ne_vec3 p2, float cx, float cy, float cz) {
     D3DXVECTOR3 B = D3DXVECTOR3(p2.x, p2.y, p2.z);
     D3DXVECTOR3 C = D3DXVECTOR3(cx, cy, cz);
 
-    float r = 5.f;
+    float r = 36.f;
     D3DXVECTOR3 d;
     D3DXVECTOR3 AB = (B-A);
     D3DXVec3Normalize(&d, &AB);
@@ -146,7 +148,7 @@ bool ne_check_collision(ne_vec3 p1, ne_vec3 p2, float cx, float cy, float cz) {
 
     float a = D3DXVec3Dot(&d, &d);
     float b = 2 * D3DXVec3Dot(&d, &oc);
-    float c = D3DXVec3Dot(&oc, &oc) - r * r;
+    float c = D3DXVec3Dot(&oc, &oc) - r;
 
     float dis = b * b - 4 * a * c;
 
@@ -192,7 +194,7 @@ void ne_server_update(lua_State* L) {
                 /* create packet with actual length, and send it */
                 ENetPacket* packet = enet_packet_create(buffer, sizeof(uint16_t)*2, ENET_PACKET_FLAG_RELIABLE);
                 enet_peer_send(event.peer, 0, packet);
-                enet_peer_timeout(event.peer, 5, 3, 5);
+                enet_peer_timeout(event.peer, 10, 5000, 10000);
 
             } break;
             case ENET_EVENT_TYPE_DISCONNECT:
@@ -246,8 +248,8 @@ void ne_server_update(lua_State* L) {
             int tail = it2->second.tail_end < 0 ? MAX_TRAILS : it2->second.tail_end;
             for (int i = 0, s = tail; i < MAX_TRAILS; ++i) {
                 s = (s-1) < 0 ? MAX_TRAILS-1 : s-1;
-                //int index_pre = index_cur-1 < 0 ? MAX_TRAILS-1 : index_cur-1;
-                if (ne_check_collision(it2->second.tail[s], it2->second.tail[s], data->x, data->y, data->z)) {
+                int index_pre = s-1 < 0 ? MAX_TRAILS-1 : s-1;
+                if (ne_check_collision(it2->second.tail[index_pre], it2->second.tail[s], data->x, data->y, data->z)) {
                     collided = true;
                     killer_id = it2->first;
                     data->collision_delay = GetTime() + 8.0f;

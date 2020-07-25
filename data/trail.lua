@@ -90,9 +90,9 @@ function drawTrails(tank, trails, height, trailNode)
                 Vertex(tr2[1], tr2[2]-height, tr2[3], 1, 0)
             )
             DrawPolygon(
-                Vertex(tr1[1], tr1[2]+height, tr1[3], 0, 1),
+                Vertex(tr2[1], tr2[2]+height, tr2[3], 1, 1),
                 Vertex(tr2[1], tr2[2]-height, tr2[3], 1, 0),
-                Vertex(tr2[1], tr2[2]+height, tr2[3], 1, 1)
+                Vertex(tr1[1], tr1[2]+height, tr1[3], 0, 1)
             )
             BindTexture(0)
         end
