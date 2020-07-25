@@ -273,6 +273,8 @@ VOID CRenderer::DrawPolygon(VERTEX& a, VERTEX& b, VERTEX& c)
 	D3DXVECTOR3 n;
 	D3DXVec3Cross(&n, &e1, &e2);
 
+	mDevice->SetRenderState(D3DRS_LIGHTING, IsLightingEnabled());
+
 	ZeroMemory(&mImmediateBuffer, sizeof(mImmediateBuffer));
 	mImmediateBuffer[0] = { a.x, a.y, a.z, n.x,n.y,n.z,0,0,0,0,0,0, a.color, a.su, a.tv };
 	mImmediateBuffer[1] = { b.x, b.y, b.z, n.x,n.y,n.z,0,0,0,0,0,0, b.color, b.su, b.tv };
@@ -300,6 +302,8 @@ VOID CRenderer::DrawQuad3D(FLOAT x1, FLOAT x2, FLOAT y1, FLOAT y2, FLOAT z1, FLO
         {x2, y1, z1, 0,0,0,0,0,0,0,0,0,  color, 1.0f, 1.0f},
     };
 
+	mDevice->SetRenderState(D3DRS_LIGHTING, IsLightingEnabled());
+
     static IDirect3DVertexDeclaration9* vertsDecl = NULL;
 
     if (!vertsDecl)
@@ -322,6 +326,8 @@ VOID CRenderer::DrawQuad(FLOAT x1, FLOAT x2, FLOAT y1, FLOAT y2, DWORD color, BO
 		{x2, y1, 0, 1, color, 1.0f, flipY - 1.0f},
 	};
 
+	mDevice->SetRenderState(D3DRS_LIGHTING, IsLightingEnabled());
+
 	static IDirect3DVertexDeclaration9* vertsDecl = NULL;
 
 	if (!vertsDecl)
@@ -343,6 +349,8 @@ VOID CRenderer::DrawBox(D3DXMATRIX mat, D3DXVECTOR4 dims, DWORD color)
 
 	if (!mDefaultBox)
 		return;
+
+	mDevice->SetRenderState(D3DRS_LIGHTING, IsLightingEnabled());
 
     mDevice->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_CONSTANT);
 	mDevice->SetTextureStageState(0, D3DTSS_CONSTANT, color);
