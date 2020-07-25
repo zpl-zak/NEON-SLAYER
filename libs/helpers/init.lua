@@ -1,8 +1,8 @@
-local function lerp(a,b,t)
+function lerp(a,b,t)
   return a + (b-a)*t
 end
 
-local function clamp(a,x,b)
+function clamp(a,x,b)
   if x < a then
     return a
   end
@@ -14,7 +14,7 @@ local function clamp(a,x,b)
   return x
 end
 
-local function cap3(v, m)
+function cap3(v, m)
   if math.abs(v:x()) > m then
     return v / v:x() * m
   end
@@ -27,8 +27,43 @@ local function cap3(v, m)
   return v
 end
 
+function drawEffect(fx, tech, drawfn)
+  local numPasses = fx:start(tech)
+  for i=1,numPasses do
+    fx:beginPass(i)
+    drawfn(fx)
+    fx:endPass()
+  end
+  fx:finish()
+end
+
+function spairs(t, order)
+  -- collect the keys
+  local keys = {}
+  for k in pairs(t) do keys[#keys+1] = k end
+
+  -- if order function given, sort by it by passing the table and keys a, b,
+  -- otherwise just sort the keys
+  if order then
+      table.sort(keys, function(a,b) return order(t[a], t[b]) end)
+  else
+      table.sort(keys)
+  end
+
+  -- return the iterator function
+  local i = 0
+  return function()
+      i = i + 1
+      if keys[i] then
+          return keys[i], t[keys[i]]
+      end
+  end
+end
+
 return {
   lerp = lerp,
   clamp = clamp,
-  cap3 = cap3
+  cap3 = cap3,
+  drawEffect = drawEffect,
+  spairs = spairs
 }

@@ -12,6 +12,7 @@ imgui.ini
 *.ilk
 *.lib
 *.exp
+libs/*.dll
 
 .lite_workspace.lua
 *.code-workspace
