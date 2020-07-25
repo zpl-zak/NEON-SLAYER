@@ -9,7 +9,9 @@ INT effect_new(lua_State* L)
 {
     LPCSTR effectPath = luaL_checkstring(L, 1);
     
-    *(CEffect**)lua_newuserdata(L, sizeof(CEffect*)) = new CEffect(effectPath);
+    CEffect** fx = (CEffect**)lua_newuserdata(L, sizeof(CEffect*));
+    *fx = new CEffect();
+    (*fx)->LoadEffect(effectPath);
 
     luaL_setmetatable(L, L_EFFECT);
     return 1;
@@ -157,6 +159,7 @@ static INT effect_settexture(lua_State* L)
     if (luaL_testudata(L, 3, L_RENDERTARGET))
     {
         CRenderTarget* rtt = *(CRenderTarget**)lua_touserdata(L, 3);
+        
         fx->SetTexture(name, rtt->GetTextureHandle());
     }
     else if (luaL_testudata(L, 3, L_MATERIAL))

@@ -46,22 +46,8 @@ BOOL CEngine::Release()
 
 VOID CEngine::Run()
 {
-    MSG msg;
-
     while (IsRunning())
-    {
-        while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
-        {
-            CProfileScope scope(DefaultProfiling.mWindowProfiler);
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        }
-     
-        if (!IsRunning())
-            break;
-
         Think();
-    }
 
     mVirtualMachine->Stop();
     Release();
@@ -122,8 +108,20 @@ VOID CEngine::Think()
 
     DefaultProfiling.UpdateProfilers(deltaTime);
 
+    MSG msg;
+
     if (mUnprocessedTime > mUpdateDuration)
     {
+        while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+        {
+            CProfileScope scope(DefaultProfiling.mWindowProfiler);
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
+
+        if (!IsRunning())
+            return;
+
         Update(mUpdateDuration);
         render = TRUE;
         mUnprocessedTime -= mUpdateDuration;
@@ -136,7 +134,7 @@ VOID CEngine::Think()
     else
     {
         CProfileScope scope(DefaultProfiling.mWindowProfiler);
-        Sleep(1); // Let CPU sleep a bit
+        Sleep(1);
     }
 }
 
@@ -162,8 +160,8 @@ VOID CEngine::CDefaultProfiling::UpdateProfilers(FLOAT dt)
         if (logStats)
         {
             OutputDebugStringA("\n");
-            OutputDebugStringA(CString("Other Time: %f ms\n", (mTotalTime - mTotalMeasuredTime)).Str());
-            OutputDebugStringA(CString("Total Time: %f ms (%f fps)\n", mTotalTime, (1000.0f / mTotalTime)).Str());
+            OutputDebugStringA(CString::Format("Other Time: %f ms\n", (mTotalTime - mTotalMeasuredTime)).Str());
+            OutputDebugStringA(CString::Format("Total Time: %f ms (%f fps)\n", mTotalTime, (1000.0f / mTotalTime)).Str());
         }
 
         UI->PushMS(mTotalTime);
