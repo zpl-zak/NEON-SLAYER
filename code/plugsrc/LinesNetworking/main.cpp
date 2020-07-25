@@ -120,15 +120,48 @@ typedef struct {
 
 std::unordered_map<uint64_t, ne_data> ne_server_data;
 
-bool ne_check_collision(ne_vec3 a, ne_vec3 b, float cx, float cy, float cz) {
-    float r = 8.f;
+float ne_check_collision_solve(float b, float dis) {
+    float t;
 
-    D3DXVECTOR3 o = D3DXVECTOR3(a.x, a.y, a.z);
-    D3DXVECTOR3 l = D3DXVECTOR3(b.x, b.y, b.z);
-    D3DXVECTOR3 c = D3DXVECTOR3(cx, cy, cz);
+    t = (-b - ::sqrtf(dis));
+    if (t > 0) return t;
 
-    auto f = l - c;
-    return D3DXVec3LengthSq(&f) < (r * r);
+    t = (-b + ::sqrtf(dis));
+    if (t > 0) return t;
+
+    return -1.0f;
+}
+
+bool ne_check_collision(ne_vec3 p1, ne_vec3 p2, float cx, float cy, float cz) {
+    D3DXVECTOR3 A = D3DXVECTOR3(p1.x, p1.y, p1.z);
+    D3DXVECTOR3 B = D3DXVECTOR3(p2.x, p2.y, p2.z);
+    D3DXVECTOR3 C = D3DXVECTOR3(cx, cy, cz);
+
+    float r = 5.f;
+    D3DXVECTOR3 d;
+    D3DXVECTOR3 AB = (B-A);
+    D3DXVec3Normalize(&d, &AB);
+
+    D3DXVECTOR3 oc = (A-C);
+
+    float a = D3DXVec3Dot(&d, &d);
+    float b = 2 * D3DXVec3Dot(&d, &oc);
+    float c = D3DXVec3Dot(&oc, &oc) - r * r;
+
+    float dis = b * b - 4 * a * c;
+
+    if (dis < 0) {
+        return false;
+    }
+
+    float t = ne_check_collision_solve(b, dis) / (a * 2);
+
+    auto dt = d*t;
+    return (t > 0 && D3DXVec3LengthSq(&dt) < D3DXVec3LengthSq(&AB));
+
+
+    // auto f = l - c;
+    // return D3DXVec3LengthSq(&f) < (r * r);
     /*
     #define sq(a) (a*a)
     auto f = o - c;
