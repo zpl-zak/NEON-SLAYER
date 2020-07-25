@@ -49,7 +49,8 @@ function setupTrail(tank)
 end
 
 function getTrailPos(t, trailNode)
-    return t.pos + (trailNode:getFinalTransform():translate(0,t.hover:y(),0) * t.rot):row(4)
+    local pos = t.pos + (trailNode:getFinalTransform():translate(0,t.hover:y(),0) * t.rot):row(4)
+    return {pos:x(), pos:y(), pos:z()}
 end
 
 function handleTrails(t, trailNode)
@@ -63,8 +64,7 @@ function handleTrails(t, trailNode)
     end
 end
 
-function drawTrails(tank, height, trailNode)
-    local trails = tank.trails
+function drawTrails(tank, trails, height, trailNode)
     for i=1,#trails,1 do
         local tr1 = trails[i]
         local tr2 = trails[i+1]
@@ -85,14 +85,14 @@ function drawTrails(tank, height, trailNode)
             CullMode(CULLKIND_NONE)
             AmbientColor(255, 255, 255)
             DrawPolygon(
-                Vertex(tr1:x(), tr1:y()-height, tr1:z(), 0, 0),
-                Vertex(tr1:x(), tr1:y()+height, tr1:z(), 0, 1),
-                Vertex(tr2:x(), tr2:y()-height, tr2:z(), 1, 0)
+                Vertex(tr1[1], tr1[2]-height, tr1[3], 0, 0),
+                Vertex(tr1[1], tr1[2]+height, tr1[3], 0, 1),
+                Vertex(tr2[1], tr2[2]-height, tr2[3], 1, 0)
             )
             DrawPolygon(
-                Vertex(tr1:x(), tr1:y()+height, tr1:z(), 0, 1),
-                Vertex(tr2:x(), tr2:y()-height, tr2:z(), 1, 0),
-                Vertex(tr2:x(), tr2:y()+height, tr2:z(), 1, 1)
+                Vertex(tr1[1], tr1[2]+height, tr1[3], 0, 1),
+                Vertex(tr2[1], tr2[2]-height, tr2[3], 1, 0),
+                Vertex(tr2[1], tr2[2]+height, tr2[3], 1, 1)
             )
             BindTexture(0)
         end

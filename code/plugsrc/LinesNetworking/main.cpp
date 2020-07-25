@@ -208,8 +208,7 @@ void ne_server_update(lua_State* L) {
         for (auto it2 = ne_server_data.begin(); it2 != ne_server_data.end() && !collided; ++it2) {
             if (entity_id == it2->first) continue;
 
-            int tail_offset = 0;
-            int tail = it2->second.tail_end-tail_offset < 0 ? MAX_TRAILS-tail_offset : it2->second.tail_end-tail_offset;
+            int tail = it2->second.tail_end < 0 ? MAX_TRAILS : it2->second.tail_end;
             for (int i = 0, s = tail; i < MAX_TRAILS; ++i) {
                 s = (s-1) < 0 ? MAX_TRAILS-1 : s-1;
                 //int index_pre = index_cur-1 < 0 ? MAX_TRAILS-1 : index_cur-1;
@@ -270,13 +269,25 @@ void ne_server_update(lua_State* L) {
         char buffer[4096] = {0};
 
         for (auto it = ne_server_data.begin(); it != ne_server_data.end(); ++it) {
-            if (currentPeer->incomingPeerID == it->first) continue; /* skip sending to local player */
+            // if (currentPeer->incomingPeerID == it->first) continue; /* skip sending to local player */
+
             *(uint16_t*)(buffer + offset) = it->first; offset += sizeof(uint16_t);
             *(float*)(buffer + offset) = it->second.x; offset += sizeof(float);
             *(float*)(buffer + offset) = it->second.y; offset += sizeof(float);
             *(float*)(buffer + offset) = it->second.z; offset += sizeof(float);
             *(float*)(buffer + offset) = it->second.r; offset += sizeof(float);
             *(uint16_t*)(buffer + offset) = it->second.c; offset += sizeof(uint16_t);
+            *(uint8_t*)(buffer + offset) = (currentPeer->incomingPeerID == it->first); offset += sizeof(uint8_t);
+
+#ifdef DEBUG_LINES
+            int tail = it->second.tail_end < 0 ? MAX_TRAILS : it->second.tail_end;
+            for (int i = 0, s = tail; i < MAX_TRAILS; ++i) {
+                s = (s-1) < 0 ? MAX_TRAILS-1 : s-1;
+                *(float*)(buffer + offset) = it->second.tail[s].x; offset += sizeof(float);
+                *(float*)(buffer + offset) = it->second.tail[s].y; offset += sizeof(float);
+                *(float*)(buffer + offset) = it->second.tail[s].z; offset += sizeof(float);
+            }
+#endif
             count++;
         }
 
@@ -323,6 +334,7 @@ void ne_client_update(lua_State* L) {
                         float z = *(float*)(buffer + offset); offset += sizeof(float);
                         float r = *(float*)(buffer + offset); offset += sizeof(float);
                         uint16_t c = *(uint16_t*)(buffer + offset); offset += sizeof(uint16_t);
+                        uint8_t islocal = *(uint8_t*)(buffer + offset); offset += sizeof(uint8_t);
 
                         // OutputDebugStringA(CString::Format("update: %ld: [%f %f %f] %f %d\n", entity_id, x, y, z, r, c).Str());
 
@@ -338,8 +350,38 @@ void ne_client_update(lua_State* L) {
                         lua_pushnumber(L, z);
                         lua_pushnumber(L, r);
                         lua_pushnumber(L, c);
+                        lua_pushnumber(L, islocal);
 
-                        lua_pcall(L, 6, 0, 0);
+#ifdef DEBUG_LINES
+                        lua_newtable(L);
+
+                        for (int k = 0; k < MAX_TRAILS; ++k) {
+                            float x = *(float*)(buffer + offset); offset += sizeof(float);
+                            float y = *(float*)(buffer + offset); offset += sizeof(float);
+                            float z = *(float*)(buffer + offset); offset += sizeof(float);
+
+                            lua_pushinteger(L, k+1);
+                            lua_newtable(L);
+
+                            lua_pushinteger(L, 1);
+                            lua_pushnumber(L, x);
+                            lua_settable(L, -3);
+
+                            lua_pushinteger(L, 2);
+                            lua_pushnumber(L, y);
+                            lua_settable(L, -3);
+
+                            lua_pushinteger(L, 3);
+                            lua_pushnumber(L, z);
+                            lua_settable(L, -3);
+
+                            lua_settable(L, -3);
+                        }
+#else
+                        lua_pushnil(L);
+#endif
+
+                        lua_pcall(L, 8, 0, 0);
 
                         tankupdateref = luaL_ref(L, LUA_REGISTRYINDEX);
                     }

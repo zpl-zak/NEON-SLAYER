@@ -22,16 +22,16 @@ function addTank(id, color)
     id = id,
     isLocal = id == -1,
     pos = Vector3(
-      math.random(WORLD_SIZE/4.0,(WORLD_SIZE/4.0)*WORLD_TILES[1]),
+      math.random(WORLD_SIZE,(WORLD_SIZE)*WORLD_TILES[1]),
       10,
-      math.random(WORLD_SIZE/4.0,(WORLD_SIZE/4.0)*WORLD_TILES[2])
+      math.random(WORLD_SIZE,(WORLD_SIZE)*WORLD_TILES[2])
     ),
     movedir = Vector3(),
     hover = Vector3(),
     vel = Vector(),
     rot = Matrix(),
-    heading = 0,
     trails = {},
+    serverTrail = {},
     trailTime = 0,
     crot = 0,
     health = 100,
@@ -130,7 +130,8 @@ function drawTanks()
         BindTexture(0, tankMaterial)
         tankBody:draw(t.rot * Matrix():translate(t.pos+t.hover))
         BindTexture(0)
-        drawTrails(t, 10, trailPosNode)
+        drawTrails(t, t.trails, 10, trailPosNode)
+        drawTrails(t, t.serverTrail, 30, trailPosNode)
         i = i + 1
       end
     end

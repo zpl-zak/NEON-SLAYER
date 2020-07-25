@@ -11,6 +11,19 @@ WORLD_TILES = {5,5}
 hh = require "helpers"
 cols = require "collisions"
 
+function dump(o)
+   if type(o) == 'table' then
+      local s = '{ '
+      for k,v in pairs(o) do
+         if type(k) ~= 'number' then k = '"'..k..'"' end
+         s = s .. '['..k..'] = ' .. dump(v) .. ','
+      end
+      return s .. '} '
+   else
+      return tostring(o)
+   end
+end
+
 world = nil
 
 local state = require("code/state")
@@ -25,6 +38,11 @@ dofile("world.lua")
 dofile("player.lua")
 
 local testSnd
+
+function lerp(v0, v1, t)
+  return v0 + t * (v1 - v0);
+end
+
 
 function _init()
   RegisterFontFile("assets/slkscr.ttf")
@@ -54,7 +72,12 @@ function _init()
   light:enable(true, 0)
 
   -- Set up network update event
-  net.setUpdate(function (entity_id, x, y, z, r, c)
+  net.setUpdate(function (entity_id, x, y, z, r, c, islocal, serverTrail)
+    if islocal == 1 then
+      if serverTrail ~= nil then tanks[-1].serverTrail = serverTrail end
+      return
+    end
+
     if tanks[entity_id] == nil then
       addTank(entity_id, c)
     end
@@ -66,8 +89,15 @@ function _init()
     end
 
     tank.color = c
-    tank.pos = Vector3(x,y,z)
-    tank.heading = r
+    -- tank.pos = Vector3(x,y,z)
+    local nx = lerp(tank.pos:x(), x, 0.5)
+    local ny = lerp(tank.pos:y(), y, 0.5)
+    local nz = lerp(tank.pos:z(), z, 0.5)
+    tank.pos = Vector3(nx, ny, nz)
+    tank.rot = Matrix():rotate(r+math.rad(90),0,0)
+    if serverTrail ~= nil then
+      tank.serverTrail = serverTrail
+    end
     updateTrail(tank)
   
     -- LogString("_net_tankupdate: " .. entity_id .. " pos: " .. x .. " " .. y .. " " .. z)
@@ -95,6 +125,10 @@ function _init()
   ui.init()
 end
 
+function _destroy()
+   net.disconnect()
+   net.serverStop()
+end
 
 function _update(dt)
   net.update()
