@@ -125,6 +125,7 @@ function _init()
   state:add("menu", require "code/states/menu" ())
   state:add("game", require "code/states/game" ())
   state:add("death", require "code/states/death" ())
+  state:add("pause", require "code/states/pause" ())
   state:switch("menu")
   ui.init()
 end
@@ -137,9 +138,6 @@ end
 function _update(dt)
   net.update()
 
-  -- if GetKeyDown(KEY_ESCAPE) then
-  --     ExitGame()
-  -- end
 
   if GetKey(KEY_CONTROL) and GetKeyDown("R") then
       RestartGame()
