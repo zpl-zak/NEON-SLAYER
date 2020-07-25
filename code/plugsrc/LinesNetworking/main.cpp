@@ -36,7 +36,7 @@ public:
     {
         mCapacity = 4;
         mCount = 0;
-        mData = NULL;//(T*)malloc(mCapacity * sizeof(T));
+        mData = (T*)malloc(mCapacity * sizeof(T));
         mIsOwned = TRUE;
     }
 
@@ -335,16 +335,18 @@ void ne_server_update(lua_State* L) {
         }
     }
 
+    static int call_id = 0;
+    call_id++;
+
     /* check collisions */
     for (auto it = ne_server_data.begin(); it != ne_server_data.end(); ++it) {
         uint16_t entity_id = it->first;
         ne_data *data = &it->second;
+        bool collided = false;
+        uint16_t killer_id = -1;
 
         /* do not die if you recently did */
         if (data->collision_delay > GetTime()) continue;
-
-        uint16_t killer_id = -1;
-        bool collided = false;
 
         for (auto it2 = ne_server_data.begin(); it2 != ne_server_data.end() && !collided; ++it2) {
             if (entity_id == it2->first) continue;
@@ -363,13 +365,14 @@ void ne_server_update(lua_State* L) {
 
             // auto ring =
 
-            for (int i = 0; i < it->second.trail->GetCount()-1; ++i) {
-                auto p1 = (*it->second.trail)[i];
-                auto p2 = (*it->second.trail)[i+1];
+            for (int i = 0; i < it2->second.trail->GetCount()-1; ++i) {
+                auto p1 = (*it2->second.trail)[i];
+                auto p2 = (*it2->second.trail)[i+1];
 
                 if (ne_check_collision(p1, p2, data->x, data->y, data->z)) {
                     collided = true;
                     killer_id = it2->first;
+            OutputDebugStringA(CString::Format("ne_check_collision killer: %d victim: %d\n", killer_id, entity_id).Str());
                     break;
                 }
             }
@@ -379,6 +382,8 @@ void ne_server_update(lua_State* L) {
             data->trail->Clear();
             data->collision_delay = GetTime() + 8.0f;
 
+            OutputDebugStringA(CString::Format("collided callid: %d killer: %d victim: %d\n", call_id, killer_id, entity_id).Str());
+
             char buffer[512] = { 0 };
             *((uint16_t*)(buffer)+0) = 2;
             *((uint16_t*)(buffer)+1) = killer_id;
@@ -387,24 +392,24 @@ void ne_server_update(lua_State* L) {
             ENetPacket* packet = enet_packet_create(buffer, sizeof(uint16_t)*2, ENET_PACKET_FLAG_RELIABLE);
             enet_peer_send(data->peer, 0, packet);
 
-            ENetPeer *currentPeer;
-            for (currentPeer = server->peers; currentPeer < &server->peers[server->peerCount]; ++currentPeer) {
-                if (currentPeer->state != ENET_PEER_STATE_CONNECTED && currentPeer != data->peer) {
-                    continue;
-                }
+            // ENetPeer *currentPeer;
+            // for (currentPeer = server->peers; currentPeer < &server->peers[server->peerCount]; ++currentPeer) {
+            //     if (currentPeer->state != ENET_PEER_STATE_CONNECTED && currentPeer != data->peer) {
+            //         continue;
+            //     }
 
-                int offset = sizeof(uint32_t);
-                int count = 0;
-                char buffer[512] = {0};
+            //     int offset = sizeof(uint32_t);
+            //     int count = 0;
+            //     char buffer[512] = {0};
 
-                *((uint16_t*)(buffer)+0) = 3;
-                *((uint16_t*)(buffer)+1) = killer_id;
-                *((uint16_t*)(buffer)+2) = entity_id;
+            //     *((uint16_t*)(buffer)+0) = 3;
+            //     *((uint16_t*)(buffer)+1) = killer_id;
+            //     *((uint16_t*)(buffer)+2) = entity_id;
 
-                /* create packet with actual length, and send it */
-                ENetPacket *packet = enet_packet_create(buffer, sizeof(uint16_t)*3, ENET_PACKET_FLAG_RELIABLE);
-                enet_peer_send(currentPeer, 0, packet);
-            }
+            //     /* create packet with actual length, and send it */
+            //     ENetPacket *packet = enet_packet_create(buffer, sizeof(uint16_t)*3, ENET_PACKET_FLAG_RELIABLE);
+            //     enet_peer_send(currentPeer, 0, packet);
+            // }
         }
     }
 

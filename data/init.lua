@@ -86,7 +86,9 @@ function _init()
   
     local tank = tanks[entity_id]
     
-    if math.abs(tank.pos:x() - x) > 2.0 then
+    -- detect if we started moving
+    local tp = Vector3(x,y,z)
+    if (tank.pos-tp):magSq() > 2.0 then
       tank.alive = true
     end
 
