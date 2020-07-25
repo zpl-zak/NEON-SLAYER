@@ -11,7 +11,7 @@ return class "DeathState" (AbstractState) {
 
         self.entertime = getTime() + 5
 
-        tanks["local"].alive = false
+        tanks[-1].alive = false
     end,
 
 
@@ -19,14 +19,14 @@ return class "DeathState" (AbstractState) {
         if self.entertime < getTime() then
             state:switch("game")
 
-            tanks["local"].pos = Vector3(
+            tanks[-1].pos = Vector3(
               math.random(WORLD_SIZE,(WORLD_SIZE)*WORLD_TILES[1]),
               20,
               math.random(WORLD_SIZE,(WORLD_SIZE)*WORLD_TILES[2])
             )
 
-            tanks["local"].alive = true
-            tanks["local"].trails = {}
+            tanks[-1].alive = true
+            tanks[-1].trails = {}
         end
     end,
 

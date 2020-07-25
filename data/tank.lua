@@ -1,6 +1,7 @@
 tankModel = {}
 tanks = {}
 local tankMaterial
+localPlayerColor = 0
 
 local tankBody, tankCanon, tankCanonMat, trailPosNode
 
@@ -16,8 +17,10 @@ function initTankModel()
     tankMaterial:setEmission(0xe6cfff)
 end
 
-function addTank(id)
+function addTank(id, color)
   t = {
+    id = id,
+    isLocal = id == -1,
     pos = Vector3(
       math.random(WORLD_SIZE/4.0,(WORLD_SIZE/4.0)*WORLD_TILES[1]),
       10,
@@ -33,7 +36,13 @@ function addTank(id)
     crot = 0,
     health = 100,
     alive = true,
+    color = 0,
   }
+
+  if color ~= nil then
+    t.color = color
+    LogString("setting color for remote entity to:" .. color)
+  end
 
   l = Light()
   l:setType(LIGHTKIND_POINT)
@@ -43,13 +52,15 @@ function addTank(id)
   l:setAttenuation(0,0.01,0)
   t.light = l
 
+  setupTrail(t)
+
   -- table.insert(tanks, t)
   tanks[id] = t
   return t
 end
 
 function updateTanks(dt)
-    local t = tanks["local"]
+    local t = tanks[-1]
 
     for _, t in pairs(tanks) do
       handleTrails(t, trailPosNode)
@@ -57,6 +68,11 @@ function updateTanks(dt)
 
     if not t.alive then
       return
+    end
+
+    if t.isLocal and t.color ~= localPlayerColor then
+      t.color = localPlayerColor
+      updateTrail(t)
     end
 
       t.vel:y(t.vel:y() - 2*dt)

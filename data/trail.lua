@@ -1,4 +1,3 @@
-local trailMaterial
 MAX_TRAILS = 150.0
 TRAIL_TIME = 0.05
 
@@ -34,15 +33,19 @@ local function HSVToRGB( h, s, v, a )
   return r*255, g*255, b*255, (a or 1) * 255
 end
 
-function setupTrail()
-    trailMaterial = Material("assets/trail.png")
-    local r, g, b = HSVToRGB(pi*2*(math.random(0, 360)/360), 0.5, 1)
-    trailMaterial:setDiffuse(r,g,b)
-    trailMaterial:setEmission(r,g,b)
-    trailMaterial:setAmbient(r,g,b)
-    trailMaterial:setOpacity(1)
-    trailMaterial:setShaded(false)
-    trailMaterial:alphaIsTransparency(true)
+function updateTrail(tank)
+    local r, g, b = HSVToRGB(pi*2*(tank.color/360), 0.5, 1)
+    tank.trailMaterial:setDiffuse(r,g,b)
+    tank.trailMaterial:setEmission(r,g,b)
+    tank.trailMaterial:setAmbient(r,g,b)
+end
+
+function setupTrail(tank)
+    tank.trailMaterial = Material("assets/trail.png")
+    updateTrail(tank)
+    tank.trailMaterial:setOpacity(1)
+    tank.trailMaterial:setShaded(false)
+    tank.trailMaterial:alphaIsTransparency(true)
 end
 
 function getTrailPos(t, trailNode)
@@ -70,16 +73,17 @@ function drawTrails(tank, height, trailNode)
 
         if tr1 ~= nil then
             if #trails > MAX_TRAILS then
-                trailMaterial:setOpacity(alpha)
+                tank.trailMaterial:setOpacity(alpha)
             end
             if tr2 == nil then
                 tr2 = getTrailPos(tank, trailNode)
-                trailMaterial:setOpacity(1)
+                tank.trailMaterial:setOpacity(1)
             end
             
-            BindTexture(0, trailMaterial)
+            BindTexture(0, tank.trailMaterial)
             Matrix():bind(WORLD)
             CullMode(CULLKIND_NONE)
+            AmbientColor(255, 255, 255)
             DrawPolygon(
                 Vertex(tr1:x(), tr1:y()-height, tr1:z(), 0, 0),
                 Vertex(tr1:x(), tr1:y()+height, tr1:z(), 0, 1),

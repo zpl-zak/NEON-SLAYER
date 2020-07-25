@@ -111,6 +111,7 @@ typedef struct {
 
 typedef struct {
     float x, y, z, r;
+    int c;
     ne_vec3 tail[MAX_TRAILS];
     int tail_end;
     ENetPeer* peer;
@@ -148,6 +149,16 @@ void ne_server_update(lua_State* L) {
                 /* allocate and store entity data in the data part of peer */
                 ne_data _ent = { 0 }; _ent.peer = event.peer;
                 ne_server_data[entity_id] = _ent;
+                ne_server_data[entity_id].c = rand() % 360;
+
+                char buffer[512] = { 0 };
+                *((uint16_t*)(buffer)+0) = 4;
+                *((uint16_t*)(buffer)+1) = (uint16_t)ne_server_data[entity_id].c;
+
+                /* create packet with actual length, and send it */
+                ENetPacket* packet = enet_packet_create(buffer, sizeof(uint16_t)*2, ENET_PACKET_FLAG_RELIABLE);
+                enet_peer_send(event.peer, 0, packet);
+
             } break;
             case ENET_EVENT_TYPE_DISCONNECT:
             case ENET_EVENT_TYPE_DISCONNECT_TIMEOUT: {
@@ -197,7 +208,7 @@ void ne_server_update(lua_State* L) {
         for (auto it2 = ne_server_data.begin(); it2 != ne_server_data.end() && !collided; ++it2) {
             if (entity_id == it2->first) continue;
 
-            int tail_offset = 25;
+            int tail_offset = 0;
             int tail = it2->second.tail_end-tail_offset < 0 ? MAX_TRAILS-tail_offset : it2->second.tail_end-tail_offset;
             for (int i = 0, s = tail; i < MAX_TRAILS; ++i) {
                 s = (s-1) < 0 ? MAX_TRAILS-1 : s-1;
@@ -265,6 +276,7 @@ void ne_server_update(lua_State* L) {
             *(float*)(buffer + offset) = it->second.y; offset += sizeof(float);
             *(float*)(buffer + offset) = it->second.z; offset += sizeof(float);
             *(float*)(buffer + offset) = it->second.r; offset += sizeof(float);
+            *(uint16_t*)(buffer + offset) = it->second.c; offset += sizeof(uint16_t);
             count++;
         }
 
@@ -310,8 +322,9 @@ void ne_client_update(lua_State* L) {
                         float y = *(float*)(buffer + offset); offset += sizeof(float);
                         float z = *(float*)(buffer + offset); offset += sizeof(float);
                         float r = *(float*)(buffer + offset); offset += sizeof(float);
+                        uint16_t c = *(uint16_t*)(buffer + offset); offset += sizeof(uint16_t);
 
-                        // OutputDebugStringA("update: %ld: [%f %f %f] %f\n", entity_id, x, y, z, r);
+                        // OutputDebugStringA(CString::Format("update: %ld: [%f %f %f] %f %d\n", entity_id, x, y, z, r, c).Str());
 
                         lua_rawgeti(L, LUA_REGISTRYINDEX, tankupdateref);
                         lua_pushvalue(L, 1);
@@ -324,8 +337,9 @@ void ne_client_update(lua_State* L) {
                         lua_pushnumber(L, y);
                         lua_pushnumber(L, z);
                         lua_pushnumber(L, r);
+                        lua_pushnumber(L, c);
 
-                        lua_pcall(L, 5, 0, 0);
+                        lua_pcall(L, 6, 0, 0);
 
                         tankupdateref = luaL_ref(L, LUA_REGISTRYINDEX);
                     }
@@ -340,7 +354,7 @@ void ne_client_update(lua_State* L) {
                         goto ne_srv_clenaup;
 
                     lua_pushnumber(L, killer_id);
-                    lua_pushnumber(L, -999);
+                    lua_pushinteger(L, -1);
                     lua_pcall(L, 2, 0, 0);
                     tankcollideref = luaL_ref(L, LUA_REGISTRYINDEX);
                 }
@@ -358,6 +372,11 @@ void ne_client_update(lua_State* L) {
                     lua_pushnumber(L, victim_id);
                     lua_pcall(L, 2, 0, 0);
                     tankcollideref = luaL_ref(L, LUA_REGISTRYINDEX);
+                }
+                else if (packetid == 4) {
+                    int color = *((uint16_t*)(buffer)+1);
+                    OutputDebugStringA(CString::Format("setting my own color: %d\n", color).Str());
+                    REGN(localPlayerColor, color);
                 }
 ne_srv_clenaup:
                 /* Clean up the packet now that we're done using it. */
@@ -434,6 +453,7 @@ static const luaL_Reg networkplugin[] = {
 };
 
 extern "C" INT PLUGIN_API luaopen_linesnetworking(lua_State* L) {
+    srand(time(NULL));
     enet_initialize();
     luaL_newlib(L, networkplugin);
     return 1;

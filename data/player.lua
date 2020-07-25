@@ -4,7 +4,7 @@ SEND_TIME = 0.05
 function setupPlayer()
     player.pos = Vector3()
     player.cam = Matrix()
-    player.tank = tanks["local"]
+    player.tank = tanks[-1]
     player.angles = {0,0}
     player.heading = 0
     player.sendTime = 0

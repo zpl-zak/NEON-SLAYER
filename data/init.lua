@@ -35,13 +35,12 @@ function _init()
   
   initWorld()
   initTankModel()
-  setupTrail()
 
   math.random()
   math.random()
   math.random()
   math.random()
-  addTank("local")
+  addTank(-1)
   -- testAI = addTank()
   
   setupPlayer()
@@ -55,25 +54,27 @@ function _init()
   light:enable(true, 0)
 
   -- Set up network update event
-  net.setUpdate(function (entity_id, x, y, z, r)
+  net.setUpdate(function (entity_id, x, y, z, r, c)
     if tanks[entity_id] == nil then
-      addTank(entity_id)
+      addTank(entity_id, c)
     end
   
     local tank = tanks[entity_id]
     
-    if math.abs(tank.x - x) > 5.0 then
+    if math.abs(tank.pos:x() - x) > 2.0 then
       tank.alive = true
     end
 
+    tank.color = c
     tank.pos = Vector3(x,y,z)
     tank.heading = r
+    updateTrail(tank)
   
     -- LogString("_net_tankupdate: " .. entity_id .. " pos: " .. x .. " " .. y .. " " .. z)
   end)
 
   net.setCollide(function(killer_id, victim_id)
-    if victim_id == -999 then
+    if victim_id == -1 then
       state:switch("death")
       LogString("BOOM WE GOT KILLED BY " .. killer_id)
     else
