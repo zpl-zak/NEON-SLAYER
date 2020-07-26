@@ -184,13 +184,13 @@ function _update(dt)
       RestartGame()
   end
 
-  -- if IsFocused() then
-  --   ShowCursor(false)
-  --   SetCursorMode(CURSORMODE_CENTERED)
-  -- else
-  --   ShowCursor(true)
-  --   SetCursorMode(CURSORMODE_DEFAULT)
-  -- end
+  if IsFocused() and not state.showingCursor then
+    ShowCursor(false)
+    SetCursorMode(CURSORMODE_CENTERED)
+  else
+    ShowCursor(true)
+    SetCursorMode(CURSORMODE_DEFAULT)
+  end
 
   updateTanks(dt)
   -- updateTestAI()

@@ -4,6 +4,7 @@ class "StateManager" {
     __init__ = function(self)
         self.registry = {}
         self.current = nil
+        self.showingCursor = true
 
         LogString("StateManager::__init__")
     end,
@@ -17,6 +18,10 @@ class "StateManager" {
             self.registry[newState]:enter()
             self.current = newState
         end
+    end,
+
+    setCursor = function(self, value)
+        self.showingCursor = value
     end,
 
     is = function(self, state)

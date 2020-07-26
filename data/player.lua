@@ -49,8 +49,8 @@ function player.update(self, dt, net)
         self.tank.rot = Matrix():rotate(self.heading+math.rad(90),0,0)
 
         self.cam = Matrix():lookAt(
-        self.pos:neg()+Vector3(-250,500,-250),
-        self.pos:neg(),
+            Vector3(0,800,0),
+            Vector3((WORLD_SIZE*WORLD_TILES[1])/2, 0, (WORLD_SIZE*WORLD_TILES[2])/2),
             Vector3(0,1,0)
         )
     else

@@ -5,6 +5,7 @@ ui = {
   borderWidth = 2,
   borderColor = 0xffA188C7,
   textColor = 0xffe2e2e2,
+  textShadowColor = 0xff770055,
 
   -- internals
   focused = nil,

@@ -6,11 +6,12 @@ return class "ConnectingState" (AbstractState) {
     __init__ = function(self)
         AbstractState.__init__(self)
         self.elements = {}
+        self.offsety = math.floor(self.resolution[2] / 3.0)
 
         local padding = 8
         local groupMargin = 25
         local buttonHeight = 50
-        local yoffset = 200
+        local yoffset = self.offsety+50
 
         yoffset = yoffset + buttonHeight + padding
         local btnDisconnect = uiButton("Disconnect", self.resolution[1]/2-100, yoffset, 200, 50, function()
@@ -37,8 +38,7 @@ return class "ConnectingState" (AbstractState) {
     end,
 
     enter = function(self)
-        ShowCursor(true)
-        SetCursorMode(CURSORMODE_DEFAULT)
+        state:setCursor(true)
     end,
 
     update = function(self)
@@ -53,8 +53,8 @@ return class "ConnectingState" (AbstractState) {
         local title = "Connecting"
         local desc = "(Please wait until the we establish connection with the uplink)"
 
-        self.titleFont:drawText(ui.textColor, title, 0, 150, self.resolution[1], 25, FONTFLAG_SINGLELINE|FONTFLAG_CENTER|FONTFLAG_NOCLIP)
-        self.uiFont:drawText(ui.textColor, desc, 0, 200, self.resolution[1], 25, FONTFLAG_SINGLELINE|FONTFLAG_CENTER|FONTFLAG_NOCLIP)
+        self.titleFont:drawText(ui.textColor, title, 0, self.offsety, self.resolution[1], 25, FONTFLAG_SINGLELINE|FONTFLAG_CENTER|FONTFLAG_NOCLIP)
+        self.uiFont:drawText(ui.textColor, desc, 0, self.offsety+50, self.resolution[1], 25, FONTFLAG_SINGLELINE|FONTFLAG_CENTER|FONTFLAG_NOCLIP)
         for _,el in pairs(self.elements) do el:draw() end
     end,
 }

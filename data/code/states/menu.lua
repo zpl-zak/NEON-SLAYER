@@ -72,7 +72,9 @@ return class "MenuState" (AbstractState) {
         local title = "Neon Slayer"
         local desc = "Description goes here (yes)"
 
+        self.titleFont:drawText(ui.textShadowColor, title, 2, 154, self.resolution[1], 25, FONTFLAG_SINGLELINE|FONTFLAG_CENTER|FONTFLAG_NOCLIP)
         self.titleFont:drawText(ui.textColor, title, 0, 150, self.resolution[1], 25, FONTFLAG_SINGLELINE|FONTFLAG_CENTER|FONTFLAG_NOCLIP)
+        self.uiFont:drawText(ui.textShadowColor, desc, 1, 202, self.resolution[1], 25, FONTFLAG_SINGLELINE|FONTFLAG_CENTER|FONTFLAG_NOCLIP)
         self.uiFont:drawText(ui.textColor, desc, 0, 200, self.resolution[1], 25, FONTFLAG_SINGLELINE|FONTFLAG_CENTER|FONTFLAG_NOCLIP)
 
         for _,el in pairs(self.elements) do el:draw() end
@@ -83,7 +85,6 @@ return class "MenuState" (AbstractState) {
     end,
 
     enter = function(self)
-        ShowCursor(true)
-        SetCursorMode(CURSORMODE_DEFAULT)
+        state:setCursor(true)
     end,
 }
