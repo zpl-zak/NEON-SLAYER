@@ -240,7 +240,7 @@ bool ne_check_collision(ne_vec3 p1, ne_vec3 p2, float cx, float cy, float cz) {
     D3DXVECTOR3 B = D3DXVECTOR3(p2.x, p2.y, p2.z);
     D3DXVECTOR3 C = D3DXVECTOR3(cx, cy, cz);
 
-    float r = 36.f;
+    float r = 100.f;
     D3DXVECTOR3 d;
     D3DXVECTOR3 AB = (B-A);
     D3DXVec3Normalize(&d, &AB);
@@ -365,14 +365,18 @@ void ne_server_update(lua_State* L) {
 
             // auto ring =
 
-            for (int i = 0; i < it2->second.trail->GetCount()-1; ++i) {
+            for (int i = 0; i < ((int)it2->second.trail->GetCount())-1; ++i) {
                 auto p1 = (*it2->second.trail)[i];
                 auto p2 = (*it2->second.trail)[i+1];
 
                 if (ne_check_collision(p1, p2, data->x, data->y, data->z)) {
                     collided = true;
                     killer_id = it2->first;
-            OutputDebugStringA(CString::Format("ne_check_collision killer: %d victim: %d\n", killer_id, entity_id).Str());
+                    OutputDebugStringA(CString::Format("fofofofofo killer: %d\n", it2->second.trail->GetCount()).Str());
+                    OutputDebugStringA(CString::Format("ne_check_collision killer: %d victim: %d\n", killer_id, entity_id).Str());
+                    OutputDebugStringA(CString::Format("p1: %f %f %f\n", p1.x, p1.y, p1.z).Str());
+                    OutputDebugStringA(CString::Format("p2: %f %f %f\n", p2.x, p2.y, p2.z).Str());
+                    OutputDebugStringA(CString::Format("vpos: %f %f %f\n", data->x, data->y, data->z).Str());
                     break;
                 }
             }
