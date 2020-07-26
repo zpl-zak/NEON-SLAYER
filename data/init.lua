@@ -116,6 +116,7 @@ function _init()
 
     if tanks[entity_id] == nil then
       addTank(entity_id, c)
+      tanks[entity_id].pos = Vector3(x, y, z)
     end
 
     local tank = tanks[entity_id]

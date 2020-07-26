@@ -29,7 +29,10 @@ function handleTrails(t, trailNode)
         if #t.trails > MAX_TRAILS then
             table.remove(t.trails, 1)
         end
-        table.insert(t.trails, getTrailPos(t, trailNode))
+
+        if t.pos:magSq() > 0.01 then
+            table.insert(t.trails, getTrailPos(t, trailNode))
+        end
     end
 end
 

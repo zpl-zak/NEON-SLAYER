@@ -42,10 +42,6 @@ return class "ConnectingState" (AbstractState) {
     end,
 
     update = function(self)
-        if GetKeyDown(KEY_ESCAPE) then
-            state:switch("game")
-        end
-
         for _,el in pairs(self.elements) do el:update(dt) end
     end,
 
