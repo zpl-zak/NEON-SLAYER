@@ -1,20 +1,35 @@
 tankModel = {}
 tanks = {}
-local tankMaterial
+debugSphere = {}
+-- local tankMaterial
 localPlayerColor = 0
 
 local tankBody, tankCanon, tankCanonMat, trailPosNode
 
 BOUNDS_PUSHBACK = 1
+tankModel = Model("assets/tank.fbx", false, false)
+debugSphere = Model("assets/sphere.fbx", false)
+local tankNode = tankModel:getRootNode()
+-- tankBody = tankNode:findNode("body")
+trailPosNode = tankNode:findNode("trailpos")
 
-function initTankModel()
-    tankModel = Model("assets/tank.fbx", false, false)
-    local tankNode = tankModel:getRootNode()
-    tankBody = tankNode:findNode("body")
-    trailPosNode = tankNode:findNode("trailpos")
-    tankMaterial = Material()
-    tankMaterial:setDiffuse(0xe6cfff)
-    tankMaterial:setEmission(0xe6cfff)
+function initTankModel(t)
+    local tankMaterial = Material("assets/trail.png")
+
+    -- tankMaterial:setOpacity(1)
+    -- tankMaterial:setShaded(true)
+    -- tankMaterial:alphaIsTransparency(true)
+    -- debugSphere:getMeshes()[1]:setMaterial(tankMaterial)
+    t.material = tankMaterial
+    updateTankModel(t)
+
+end
+
+function updateTankModel(t)
+    local r, g, b = HSVToRGB(math.pi*2*(t.color/360), 0.5, 1)
+    t.material:setDiffuse(r,g,b)
+    t.material:setEmission(r,g,b)
+    t.material:setAmbient(r,g,b)
 end
 
 function addTank(id, color)
@@ -38,6 +53,7 @@ function addTank(id, color)
     alive = true,
     aliveTime = nil,
     color = 0,
+    heading = 0,
   }
 
   if color ~= nil then
@@ -53,6 +69,7 @@ function addTank(id, color)
   l:setAttenuation(0,0.01,0)
   t.light = l
 
+  initTankModel(t)
   setupTrail(t)
 
   -- table.insert(tanks, t)
@@ -74,6 +91,7 @@ function updateTanks(dt)
     if t.isLocal and t.color ~= localPlayerColor then
       t.color = localPlayerColor
       updateTrail(t)
+      updateTankModel(t)
     end
 
       t.vel:y(t.vel:y() - 2*dt)
@@ -93,27 +111,27 @@ function updateTanks(dt)
       t.hover = Vector3(0,math.sin(time*4) * (hoverFactor - math.min(t.vel:magSq(), hoverFactor) / hoverFactor),0)
       t.pos = t.pos + t.vel
       t.crotm = t.rot
-      
+
       if t.pos:x() <= 0 then
         t.vel:x(-t.vel:x() + BOUNDS_PUSHBACK)
         t.pos:x(t.pos:x()+t.vel:x())
       end
-      
+
       if t.pos:z() <= 0 then
         t.vel:z(-t.vel:z() + BOUNDS_PUSHBACK)
         t.pos:x(t.pos:x()+t.vel:x())
       end
-      
+
       if t.pos:x() >= WORLD_SIZE*WORLD_TILES[1] then
         t.vel:x(-t.vel:x() - BOUNDS_PUSHBACK)
         t.pos:x(t.pos:x()+t.vel:x())
       end
-      
+
       if t.pos:z() >= WORLD_SIZE*WORLD_TILES[2] then
         t.vel:z(-t.vel:z() - BOUNDS_PUSHBACK)
         t.pos:z(t.pos:z()+t.vel:z())
       end
-  
+
       if t.pos:y() < -0 then
         t.pos:y(-0)
         t.vel:y(0)
@@ -128,11 +146,14 @@ function drawTanks()
         t.light:setPosition(t.pos+Vector3(0,5,0))
         t.light:enable(true, i)
         Matrix():bind(WORLD)
-        BindTexture(0, tankMaterial)
-        tankBody:draw(t.rot * Matrix():translate(t.pos+t.hover))
+        BindTexture(0, t.material)
+        -- tankBody:draw(t.rot * Matrix():translate(t.pos+t.hover))
+        debugSphere:draw(Matrix():scale(20.0,20.0,20.0):translate(t.pos+Vector3(0, 15, 0)))
         BindTexture(0)
-        drawTrails(t, t.trails, 10, trailPosNode)
+        drawTrails(t, t.trails, 20, trailPosNode)
+        ToggleWireframe(true)
         drawTrails(t, t.serverTrail, 30, trailPosNode)
+        ToggleWireframe(false)
         i = i + 1
       end
       if t.aliveTime ~= nil and t.aliveTime < getTime() then

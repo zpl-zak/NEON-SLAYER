@@ -22,8 +22,12 @@ ENetPeer *client_peer = NULL;
 
 INT tankupdateref = 0;
 INT tankcollideref = 0;
+INT tankrespawnref = 0;
 
 #define DEBUG_LINES
+#define SLAYER_DEATHTIME 5.0f
+#define SLAYER_GODTIME 3.0f
+#define SLAYER_RADIUS 20.0f
 
 /// helpers
 template <typename T>
@@ -211,13 +215,9 @@ typedef struct {
 typedef struct {
     float x, y, z, r;
     int c;
-    ne_vec3 tail[MAX_TRAILS];
-    int tail_start;
-    int tail_end;
-
     NEArray<ne_vec3> *trail;
-    // zpl_ring_ne_vec3 trail;
-    float collision_delay;
+    int alive;
+    float collision_resolve_time;
     ENetPeer* peer;
 } ne_data;
 
@@ -240,7 +240,7 @@ bool ne_check_collision(ne_vec3 p1, ne_vec3 p2, float cx, float cy, float cz) {
     D3DXVECTOR3 B = D3DXVECTOR3(p2.x, p2.y, p2.z);
     D3DXVECTOR3 C = D3DXVECTOR3(cx, cy, cz);
 
-    float r = 100.f;
+    float r = SLAYER_RADIUS * SLAYER_RADIUS;
     D3DXVECTOR3 d;
     D3DXVECTOR3 AB = (B-A);
     D3DXVec3Normalize(&d, &AB);
@@ -275,8 +275,9 @@ void ne_server_update(lua_State* L) {
                 ne_data _ent = { 0 }; _ent.peer = event.peer;
                 ne_server_data[entity_id] = _ent;
                 ne_server_data[entity_id].c = rand() % 360;
+                ne_server_data[entity_id].alive = 1;
                 ne_server_data[entity_id].trail = new NEArray<ne_vec3>();
-                ne_server_data[entity_id].collision_delay = GetTime() + 3.0f;
+                ne_server_data[entity_id].collision_resolve_time = GetTime() + SLAYER_GODTIME;
                 // zpl_ring_ne_vec3_init(&ne_server_data[entity_id].trail, zpl_heap(), MAX_TRAILS);
 
                 char buffer[512] = { 0 };
@@ -305,11 +306,8 @@ void ne_server_update(lua_State* L) {
                 char *buffer = (char *)event.packet->data;
                 int offset = 0;
 
-                if (ne_server_data[entity_id].x != 0) {
+                if (ne_server_data[entity_id].x != 0 && (ne_server_data[entity_id].collision_resolve_time - SLAYER_GODTIME*0.7f) < GetTime()) {
                     ne_vec3 pos = {ne_server_data[entity_id].x, ne_server_data[entity_id].y, ne_server_data[entity_id].z};
-                    // ne_server_data[entity_id].tail_end = (ne_server_data[entity_id].tail_end+1) % MAX_TRAILS;
-                    // ne_server_data[entity_id].tail[ne_server_data[entity_id].tail_end] = pos;
-                    // zpl_ring_zpl_u32_append(&ne_server_data[entity_id].trail, pos);
                     ne_server_data[entity_id].trail->Push(pos);
 
                     if (ne_server_data[entity_id].trail->GetCount() > MAX_TRAILS) {
@@ -346,24 +344,10 @@ void ne_server_update(lua_State* L) {
         uint16_t killer_id = -1;
 
         /* do not die if you recently did */
-        if (data->collision_delay > GetTime()) continue;
+        if (data->collision_resolve_time > GetTime()) continue;
 
         for (auto it2 = ne_server_data.begin(); it2 != ne_server_data.end() && !collided; ++it2) {
             if (entity_id == it2->first) continue;
-
-            // int tail = it2->second.tail_end < 0 ? MAX_TRAILS : it2->second.tail_end;
-            // for (int i = 0, s = tail; i < MAX_TRAILS; ++i) {
-            //     s = (s-1) < 0 ? MAX_TRAILS-1 : s-1;
-            //     int index_pre = s-1 < 0 ? MAX_TRAILS-1 : s-1;
-            //     if (ne_check_collision(it2->second.tail[index_pre], it2->second.tail[s], data->x, data->y, data->z)) {
-            //         collided = true;
-            //         killer_id = it2->first;
-            //         data->collision_delay = GetTime() + 8.0f;
-            //         break;
-            //     }
-            // }
-
-            // auto ring =
 
             for (int i = 0; i < ((int)it2->second.trail->GetCount())-1; ++i) {
                 auto p1 = (*it2->second.trail)[i];
@@ -378,8 +362,9 @@ void ne_server_update(lua_State* L) {
         }
 
         if (collided) {
+            data->alive = 0;
             data->trail->Clear();
-            data->collision_delay = GetTime() + 8.0f;
+            data->collision_resolve_time = GetTime() + SLAYER_DEATHTIME + SLAYER_GODTIME;
 
             char buffer[512] = { 0 };
             *((uint16_t*)(buffer)+0) = 2;
@@ -389,24 +374,48 @@ void ne_server_update(lua_State* L) {
             ENetPacket* packet = enet_packet_create(buffer, sizeof(uint16_t)*2, ENET_PACKET_FLAG_RELIABLE);
             enet_peer_send(data->peer, 0, packet);
 
-            // ENetPeer *currentPeer;
-            // for (currentPeer = server->peers; currentPeer < &server->peers[server->peerCount]; ++currentPeer) {
-            //     if (currentPeer->state != ENET_PEER_STATE_CONNECTED && currentPeer != data->peer) {
-            //         continue;
-            //     }
+            ENetPeer *currentPeer;
+            for (currentPeer = server->peers; currentPeer < &server->peers[server->peerCount]; ++currentPeer) {
+                if (currentPeer->state != ENET_PEER_STATE_CONNECTED && currentPeer != data->peer) {
+                    continue;
+                }
 
-            //     int offset = sizeof(uint32_t);
-            //     int count = 0;
-            //     char buffer[512] = {0};
+                int offset = sizeof(uint32_t);
+                int count = 0;
+                char buffer[512] = {0};
 
-            //     *((uint16_t*)(buffer)+0) = 3;
-            //     *((uint16_t*)(buffer)+1) = killer_id;
-            //     *((uint16_t*)(buffer)+2) = entity_id;
+                *((uint16_t*)(buffer)+0) = 3;
+                *((uint16_t*)(buffer)+1) = killer_id;
+                *((uint16_t*)(buffer)+2) = entity_id;
 
-            //     /* create packet with actual length, and send it */
-            //     ENetPacket *packet = enet_packet_create(buffer, sizeof(uint16_t)*3, ENET_PACKET_FLAG_RELIABLE);
-            //     enet_peer_send(currentPeer, 0, packet);
-            // }
+                /* create packet with actual length, and send it */
+                ENetPacket *packet = enet_packet_create(buffer, sizeof(uint16_t)*3, ENET_PACKET_FLAG_RELIABLE);
+                enet_peer_send(currentPeer, 0, packet);
+            }
+        }
+    }
+
+    /* send respawn messages */
+    for (auto it = ne_server_data.begin(); it != ne_server_data.end(); ++it) {
+        if (it->second.alive) continue;
+        if ((it->second.collision_resolve_time - SLAYER_GODTIME) < GetTime()) {
+            it->second.alive = 1;
+
+            ENetPeer *currentPeer;
+            for (currentPeer = server->peers; currentPeer < &server->peers[server->peerCount]; ++currentPeer) {
+                if (currentPeer->state != ENET_PEER_STATE_CONNECTED) {
+                    continue;
+                }
+
+                char buffer[512] = {0};
+
+                *((int16_t*)(buffer)+0) = 5;
+                *((int16_t*)(buffer)+1) = it->first == currentPeer->incomingPeerID ? -1 : it->first;
+
+                /* create packet with actual length, and send it */
+                ENetPacket *packet = enet_packet_create(buffer, sizeof(uint16_t)*2, ENET_PACKET_FLAG_RELIABLE);
+                enet_peer_send(currentPeer, 0, packet);
+            }
         }
     }
 
@@ -440,14 +449,6 @@ void ne_server_update(lua_State* L) {
             *(uint8_t*)(buffer + offset) = (currentPeer->incomingPeerID == it->first); offset += sizeof(uint8_t);
 
 #ifdef DEBUG_LINES
-            // int tail = it->second.tail_end < 0 ? MAX_TRAILS : it->second.tail_end;
-            // for (int i = 0, s = tail; i < MAX_TRAILS; ++i) {
-            //     s = (s-1) < 0 ? MAX_TRAILS-1 : s-1;
-            //     *(float*)(buffer + offset) = it->second.tail[s].x; offset += sizeof(float);
-            //     *(float*)(buffer + offset) = it->second.tail[s].y; offset += sizeof(float);
-            //     *(float*)(buffer + offset) = it->second.tail[s].z; offset += sizeof(float);
-            // }
-
             *(uint16_t*)(buffer + offset) = it->second.trail->GetCount(); offset += sizeof(uint16_t);
 
             for (int i = 0; i < it->second.trail->GetCount(); ++i) {
@@ -591,6 +592,21 @@ void ne_client_update(lua_State* L) {
                     OutputDebugStringA(CString::Format("setting my own color: %d\n", color).Str());
                     REGN(localPlayerColor, color);
                 }
+                else if (packetid == 5) {
+                    OutputDebugStringA("RECEIVED SPAWN MESSAGE\n");
+
+                    int entity_id = *((int16_t*)(buffer)+1);
+
+                    lua_rawgeti(L, LUA_REGISTRYINDEX, tankrespawnref);
+                    lua_pushvalue(L, 1);
+
+                    if (!lua_isfunction(L, -1))
+                        goto ne_srv_clenaup;
+
+                    lua_pushnumber(L, entity_id);
+                    lua_pcall(L, 1, 0, 0);
+                    tankrespawnref = luaL_ref(L, LUA_REGISTRYINDEX);
+                }
 ne_srv_clenaup:
                 /* Clean up the packet now that we're done using it. */
                 enet_packet_destroy(event.packet);
@@ -647,6 +663,11 @@ static INT ne_setcollide(lua_State* L) {
     return 0;
 }
 
+static INT ne_setrespawn(lua_State* L) {
+    tankrespawnref = luaL_ref(L, LUA_REGISTRYINDEX);
+    return 0;
+}
+
 static INT ne_openlink(lua_State *L) {
     ShellExecuteA(0, 0, "https://discord.gg/eBQ4QHX", 0, 0 , SW_SHOW);
     return 0;
@@ -661,6 +682,7 @@ static const luaL_Reg networkplugin[] = {
     {"send", ne_send},
     {"setUpdate", ne_setupdate},
     {"setCollide", ne_setcollide},
+    {"setRespawn", ne_setrespawn},
     {"openLink", ne_openlink},
     ENDF
 };

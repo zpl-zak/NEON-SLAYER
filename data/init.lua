@@ -11,6 +11,37 @@ WORLD_TILES = {5,5}
 hh = require "helpers"
 cols = require "collisions"
 
+local sqrt, sin, cos = math.sqrt, math.sin, math.cos
+local r1, r2 =  0          ,  1.0
+local g1, g2 = -sqrt( 3 )/2, -0.5
+local b1, b2 =  sqrt( 3 )/2, -0.5
+
+
+--[[--
+  @param h a real number between 0 and 2*pi
+  @param s a real number between 0 and 1
+  @param v a real number between 0 and 1
+  @return r g b a
+]]
+function HSVToRGB( h, s, v, a )
+  h=h+math.pi/2--because the r vector is up
+  local r, g, b = 1, 1, 1
+  local h1, h2 = cos( h ), sin( h )
+  
+  --hue
+  r = h1*r1 + h2*r2
+  g = h1*g1 + h2*g2
+  b = h1*b1 + h2*b2
+  --saturation
+  r = r + (1-r)*s
+  g = g + (1-g)*s
+  b = b + (1-b)*s
+  
+  r,g,b = r*v, g*v, b*v
+  
+  return r*255, g*255, b*255, (a or 1) * 255
+end
+
 function dump(o)
    if type(o) == 'table' then
       local s = '{ '
@@ -26,7 +57,7 @@ end
 
 world = nil
 
-local state = require("code/state")
+state = require("code/state")
 
 
 -- dofile("code/state.lua")
@@ -52,7 +83,6 @@ function _init()
   testSnd:play()
 
   initWorld()
-  initTankModel()
 
   math.random()
   math.random()
@@ -73,6 +103,10 @@ function _init()
 
   -- Set up network update event
   net.setUpdate(function (entity_id, x, y, z, r, c, islocal, serverTrail)
+    if state:is("connecting") then
+      state:switch("game")
+    end
+
     if islocal == 1 then
       if serverTrail ~= nil then
         tanks[-1].serverTrail = serverTrail
@@ -86,12 +120,6 @@ function _init()
 
     local tank = tanks[entity_id]
 
-    -- detect if we started moving
-    local tp = Vector3(x,y,z)
-    if (tank.pos-tp):magSq() > 2.0 then
-      tank.alive = true
-    end
-
     tank.color = c
     -- tank.pos = Vector3(x,y,z)
     local nx = lerp(tank.pos:x(), x, 0.5)
@@ -100,6 +128,7 @@ function _init()
     tank.pos = Vector3(nx, ny, nz)
     tank.rot = Matrix():rotate(r+math.rad(90),0,0)
     tank.aliveTime = getTime() + 5
+    tank.heading = r
 
     if serverTrail ~= nil then
       tank.serverTrail = serverTrail
@@ -115,10 +144,18 @@ function _init()
       LogString("BOOM WE GOT KILLED BY " .. killer_id)
     else
       if tanks[victim_id] ~= nil then
+        LogString("Removing PLAYERS TRAIL KILLING IT AND STUFF")
         tanks[victim_id].alive = false
         tanks[victim_id].trails = {}
       end
     end
+  end)
+
+  net.setRespawn(function(entity_id)
+      LogString("SPAWNING PLAYERS  STUFF")
+      local tank = tanks[entity_id]
+      tank.alive = true
+      tank.trails = {}
   end)
 
   -- ui.init()
@@ -129,6 +166,7 @@ function _init()
   state:add("game", require "code/states/game" ())
   state:add("death", require "code/states/death" ())
   state:add("pause", require "code/states/pause" ())
+  state:add("connecting", require "code/states/connecting" ())
   state:switch("menu")
   ui.init()
 end

@@ -19,6 +19,10 @@ class "StateManager" {
         end
     end,
 
+    is = function(self, state)
+        return self.current == state
+    end,
+
     add = function(self, name, instance)
         self.registry[name] = instance
     end,

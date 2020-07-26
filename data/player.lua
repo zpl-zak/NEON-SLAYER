@@ -40,31 +40,42 @@ function player.update(self, dt, net)
         Vector3(0,1,0)
     ) ]]
 
-
-    if not GetMouse(MOUSE_RIGHT_BUTTON) then
-        self.heading = hh.lerp(self.heading, self.angles[1], 0.1238772)
-    end
-
-    self.tank.rot = Matrix():rotate(self.heading+math.rad(90),0,0)
-
     self.tank.movedir = Vector()
     self.tank.movedir = self.tank.movedir + fwd*SPEED*dt*0.5
 
-    if GetKey("w") then
+    if not state:is("game") then
+        self.heading = self.heading + 1.65 * dt
         self.tank.movedir = self.tank.movedir + fwd*SPEED*dt*0.5
-    end
-    if GetKey("s") then
-        self.tank.movedir = self.tank.movedir - fwd*SPEED*dt
-    end
-    if GetKey("a") then
-        self.tank.movedir = self.tank.movedir - rhs*SPEED*dt
-    end
-    if GetKey("d") then
-        self.tank.movedir = self.tank.movedir + rhs*SPEED*dt
-    end
+        self.tank.rot = Matrix():rotate(self.heading+math.rad(90),0,0)
 
-    if GetKey(KEY_SHIFT) then
-        self.tank.vel = self.tank.vel:lerp(Vector3(0,--[[ self.tank.vel:y() ]] 0, 0), 0.04221)
+        self.cam = Matrix():lookAt(
+        self.pos:neg()+Vector3(-250,500,-250),
+        self.pos:neg(),
+            Vector3(0,1,0)
+        )
+    else
+        if not GetMouse(MOUSE_RIGHT_BUTTON) then
+            self.heading = hh.lerp(self.heading, self.angles[1], 0.1238772)
+        end
+
+        self.tank.rot = Matrix():rotate(self.heading+math.rad(90),0,0)
+
+        if GetKey("w") then
+            self.tank.movedir = self.tank.movedir + fwd*SPEED*dt*0.5
+        end
+        if GetKey("s") then
+            self.tank.movedir = self.tank.movedir - fwd*SPEED*dt
+        end
+        if GetKey("a") then
+            self.tank.movedir = self.tank.movedir - rhs*SPEED*dt
+        end
+        if GetKey("d") then
+            self.tank.movedir = self.tank.movedir + rhs*SPEED*dt
+        end
+
+        if GetKey(KEY_SHIFT) then
+            self.tank.vel = self.tank.vel:lerp(Vector3(0,--[[ self.tank.vel:y() ]] 0, 0), 0.04221)
+        end
     end
 
     if self.sendTime < time then

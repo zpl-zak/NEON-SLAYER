@@ -1,40 +1,9 @@
 MAX_TRAILS = 150.0
 TRAIL_TIME = 0.05
 
-local sqrt, sin, cos = math.sqrt, math.sin, math.cos
-local pi = math.pi
-local r1, r2 =  0          ,  1.0
-local g1, g2 = -sqrt( 3 )/2, -0.5
-local b1, b2 =  sqrt( 3 )/2, -0.5
-
-
---[[--
-  @param h a real number between 0 and 2*pi
-  @param s a real number between 0 and 1
-  @param v a real number between 0 and 1
-  @return r g b a
-]]
-local function HSVToRGB( h, s, v, a )
-  h=h+pi/2--because the r vector is up
-  local r, g, b = 1, 1, 1
-  local h1, h2 = cos( h ), sin( h )
-  
-  --hue
-  r = h1*r1 + h2*r2
-  g = h1*g1 + h2*g2
-  b = h1*b1 + h2*b2
-  --saturation
-  r = r + (1-r)*s
-  g = g + (1-g)*s
-  b = b + (1-b)*s
-  
-  r,g,b = r*v, g*v, b*v
-  
-  return r*255, g*255, b*255, (a or 1) * 255
-end
 
 function updateTrail(tank)
-    local r, g, b = HSVToRGB(pi*2*(tank.color/360), 0.5, 1)
+    local r, g, b = HSVToRGB(math.pi*2*(tank.color/360), 0.5, 1)
     tank.trailMaterial:setDiffuse(r,g,b)
     tank.trailMaterial:setEmission(r,g,b)
     tank.trailMaterial:setAmbient(r,g,b)
@@ -49,12 +18,12 @@ function setupTrail(tank)
 end
 
 function getTrailPos(t, trailNode)
-    local pos = t.pos + (trailNode:getFinalTransform():translate(0,t.hover:y(),0) * t.rot):row(4)
-    return {pos:x(), pos:y(), pos:z()}
+    local pos = t.pos
+    return {pos:x(), pos:y()+15, pos:z()}
 end
 
 function handleTrails(t, trailNode)
-    if t.trailTime < time then
+    if t.trailTime < time and t.alive then
         t.trailTime = time + TRAIL_TIME
 
         if #t.trails > MAX_TRAILS then

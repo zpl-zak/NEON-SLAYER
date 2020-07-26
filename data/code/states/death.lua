@@ -12,18 +12,16 @@ return class "DeathState" (AbstractState) {
         self.entertime = getTime() + 5
 
         tanks[-1].alive = false
+        tanks[-1].pos = Vector3(
+            math.random(WORLD_SIZE,(WORLD_SIZE)*WORLD_TILES[1]),
+            20,
+            math.random(WORLD_SIZE,(WORLD_SIZE)*WORLD_TILES[2])
+        )
     end,
-
 
     update = function(self, dt)
         if self.entertime < getTime() then
             state:switch("game")
-
-            tanks[-1].pos = Vector3(
-              math.random(WORLD_SIZE,(WORLD_SIZE)*WORLD_TILES[1]),
-              20,
-              math.random(WORLD_SIZE,(WORLD_SIZE)*WORLD_TILES[2])
-            )
 
             tanks[-1].alive = true
             tanks[-1].trails = {}

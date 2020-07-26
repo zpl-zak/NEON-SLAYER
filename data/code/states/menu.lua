@@ -44,7 +44,7 @@ return class "MenuState" (AbstractState) {
             local host = inpJoinHost.value ~= "" and tonumber(inpJoinHost.value) or "inlife.no-ip.org"
             local port = inpJoinPort.value ~= "" and tonumber(inpJoinPort.value) or 27666
             net.connect(host, port)
-            state:switch("game")
+            state:switch("connecting")
         end)
 
         yoffset = yoffset + groupMargin
