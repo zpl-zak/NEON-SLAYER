@@ -49,7 +49,7 @@ static INT facegroup_addtriangle(lua_State* L)
 	SHORT i1 = (SHORT)luaL_checkinteger(L, 2);
 	SHORT i2 = (SHORT)luaL_checkinteger(L, 3);
 	SHORT i3 = (SHORT)luaL_checkinteger(L, 4);
-	
+
 	mesh->AddIndex(i1);
 	mesh->AddIndex(i2);
 	mesh->AddIndex(i3);
@@ -61,16 +61,15 @@ static INT facegroup_addtriangle(lua_State* L)
 static INT facegroup_setmaterial(lua_State* L)
 {
 	CFaceGroup* mesh = *(CFaceGroup**)luaL_checkudata(L, 1, L_FACEGROUP);
-	DWORD stage = (DWORD)luaL_checkinteger(L, 2);
 	CMaterial* mat = NULL;
 
-	if (lua_gettop(L) == 3)
+	if (lua_gettop(L) == 2)
 	{
-		mat = *(CMaterial**)luaL_checkudata(L, 3, L_MATERIAL);
+		mat = *(CMaterial**)luaL_checkudata(L, 2, L_MATERIAL);
 		mat->AddRef();
 	}
 
-	mesh->SetMaterial(stage, mat ? mat : NULL);
+	mesh->SetMaterial(mat ? mat : NULL);
 
 	lua_pushvalue(L, 1);
 	return 1;
@@ -83,16 +82,6 @@ static INT facegroup_getmaterial(lua_State* L)
 
 	if (mat) { LUAP(L, L_MATERIAL, CMaterial, mat); }
 	else lua_pushnil(L);
-
-    return 1;
-}
-
-
-static INT facegroup_getmaterialstage(lua_State* L)
-{
-    CFaceGroup* mesh = *(CFaceGroup**)luaL_checkudata(L, 1, L_FACEGROUP);
-    DWORD stage = mesh->GetMaterialStage();
-	lua_pushinteger(L, stage);
 
     return 1;
 }
@@ -138,7 +127,7 @@ static INT facegroup_calcnormals(lua_State* L)
 	CFaceGroup* mesh = *(CFaceGroup**)luaL_checkudata(L, 1, L_FACEGROUP);
 
 	mesh->CalculateNormals();
-	
+
 	return 0;
 }
 
@@ -172,7 +161,7 @@ static INT facegroup_getbounds(lua_State* L)
 {
 	CFaceGroup* mesh = *(CFaceGroup**)luaL_checkudata(L, 1, L_FACEGROUP);
 	D3DXVECTOR4* b = mesh->GetBounds();
-	
+
 	lua_newtable(L);
 
 	lua_pushinteger(L, 1);
@@ -217,7 +206,6 @@ static VOID LuaFaceGroup_register(lua_State* L)
     REGC("addTriangle", facegroup_addtriangle);
     REGC("setMaterial", facegroup_setmaterial);
 	REGC("getMaterial", facegroup_getmaterial);
-	REGC("getMaterialStage", facegroup_getmaterialstage);
 	REGC("getBounds", facegroup_getbounds);
     REGC("draw", facegroup_draw);
     REGC("build", facegroup_build);

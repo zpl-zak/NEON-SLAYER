@@ -34,10 +34,6 @@ public:
         SetName("(unknown)");
         mIsTransformDirty = TRUE;
         mParent = NULL;
-
-        mMeshes.Release();
-        mLights.Release();
-        mNodes.Release();
     }
 
     CNode(D3DXMATRIX mat, CString name): CAllocable()
@@ -46,10 +42,6 @@ public:
         mTransform = new D3DXMATRIX(mat);
         mCachedTransform = new D3DXMATRIX();
         mMetadata = new METADATA();
-
-        mMeshes.Release();
-        mLights.Release();
-        mNodes.Release();
         mMetadata->clear();
 
         mParent = NULL;
@@ -64,7 +56,7 @@ public:
     VOID DrawSubset(UINT subset, const D3DXMATRIX& wmat);
 
     inline VOID SetMetadata(LPCSTR name, LPCSTR value) { (*mMetadata)[name] = value; }
-    inline METADATA_RESULT GetMetadata(LPCSTR name) 
+    inline METADATA_RESULT GetMetadata(LPCSTR name)
     {
         METADATA_RESULT res = { 0 };
         auto e = mMetadata->find(name);
@@ -96,8 +88,11 @@ public:
 
     inline UINT GetNumNodes() { return mNodes.GetCount(); }
     inline CNode** GetNodeData() { return mNodes.GetData(); }
+
     CNode* FindNode(LPCSTR name);
+
     VOID AddNode(CNode* tgt);
+
     CNode* Clone();
 
     BOOL IsEmpty();

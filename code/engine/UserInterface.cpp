@@ -18,26 +18,29 @@ constexpr SSIZE_T sFramerateMaxSamples = 30;
 class CGraphData {
 public:
     CGraphData() {
-        mData.Release();
-
-        for (UINT i = 0; i < sFramerateMaxSamples; i++)
-            mData.Push(0.0f);
-
         mMaxima = FLT_MIN;
         mMinima = FLT_MAX;
 
         mSelectionStart = 0;
         mSelectionLength = 0;
+        mPaused = FALSE;
     }
 
     VOID Push(FLOAT ms) {
         if (VM->GetStatus() != PLAYKIND_PLAYING)
             return;
 
+        if (mPaused)
+            return;
+
         mData.Push(ms);
 
         if (mData.GetCount() > sFramerateMaxSamples) {
             mData.RemoveByIndex(0);
+
+            if (mSelectionStart > 0) {
+                mSelectionStart--;
+            }
         }
     }
 
@@ -99,9 +102,10 @@ public:
 
             ImGui::Columns(1);
             ImGui::Separator();
+            ImGui::Checkbox("Is paused", &mPaused);
             {
                 ImGui::PlotConfig conf;
-                conf.values.count = sFramerateMaxSamples;
+                conf.values.count = (int)::fmin(sFramerateMaxSamples, mData.GetCount());
                 conf.values.ys = sFramerateStats.GetData();
                 conf.values.offset = 0;
                 conf.values.color = ImColor(0, 0, 0);
@@ -124,6 +128,31 @@ public:
                 conf.overlay_text = "Total Time (ms)";
                 ImGui::Plot("frameratePlot", conf);
             }
+            ImGui::Separator();
+
+            // avg ms by selection
+            if (mSelectionLength > 0)
+            {
+                FLOAT avgMs = 0.0f;
+
+                for (UINT i=mSelectionStart; i<mSelectionStart+mSelectionLength && i<mData.GetCount(); i++)
+                    avgMs += mData[i];
+
+                avgMs /= mSelectionLength;
+
+                ImGui::Text("Average Time (selection): %f ms", avgMs);
+            }
+            else
+            {
+                FLOAT avgMs = 0.0f;
+
+                for (UINT i = 0; i < mData.GetCount(); i++)
+                    avgMs += mData[i];
+
+                avgMs /= mData.GetCount();
+
+                ImGui::Text("Average Time: %f ms", avgMs);
+            }
         }
         ImGui::End();
     }
@@ -132,6 +161,7 @@ private:
     FLOAT mMaxima, mMinima;
     UINT32 mSelectionStart;
     UINT32 mSelectionLength;
+    bool mPaused;
 } sFramerateStats;
 
 class CLogWindow {
@@ -168,7 +198,7 @@ public:
     VOID Render() {
         RECT res = RENDERER->GetResolution();
 
-        ImGui::SetNextWindowSizeConstraints({ 220, 300 }, { (FLOAT)res.right, (FLOAT)res.bottom });
+        ImGui::SetNextWindowSizeConstraints({220, 300}, {(FLOAT)res.right, (FLOAT)res.bottom});
         ImGui::Begin("Output", NULL);
         FLOAT profW = ImGui::GetWindowWidth();
         FLOAT profH = ImGui::GetWindowHeight();
@@ -222,7 +252,7 @@ public:
                 clipper.End();
                 ImGui::PopStyleVar();
 
-                if (mAutoScroll && ImGui::GetScrollY() + 20 >= ImGui::GetScrollMaxY())
+                if (mAutoScroll && ImGui::GetScrollY()+20 >= ImGui::GetScrollMaxY())
                     ImGui::SetScrollHereY(1.0f);
             }
             ImGui::EndChildFrame();
@@ -342,7 +372,7 @@ VOID CUserInterface::DebugPanel(VOID)
 #ifdef _DEBUG
     ImGui::BeginMainMenuBar();
     {
-        if (ImGui::Button("X"))
+        if (ImGui::Button(" X "))
             ENGINE->Shutdown();
 
         if (ImGui::Button("Restart VM"))
@@ -357,7 +387,7 @@ VOID CUserInterface::DebugPanel(VOID)
         ImGui::Separator();
         ImGui::Text("LUA: %s", FormatBytes(gMemUsedLua).Str());
         ImGui::Separator();
-        ImGui::Text("TOTAL: %s", FormatBytes((INT64)gMemUsed + gMemUsedLua).Str());
+        ImGui::Text("TOTAL: %s", FormatBytes((INT64)gMemUsed+gMemUsedLua).Str());
         ImGui::Separator();
         ImGui::Text("PEAK: %s", FormatBytes(gMemPeak).Str());
         ImGui::Separator();
@@ -371,7 +401,7 @@ VOID CUserInterface::DebugPanel(VOID)
     if (mShowError)
     {
         ImGui::SetNextWindowSize(ImVec2(500, 150), ImGuiCond_FirstUseEver);
-        ImGui::Begin("Error messages", NULL, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
+        ImGui::Begin("Error messages", NULL, ImGuiWindowFlags_NoSavedSettings|ImGuiWindowFlags_NoCollapse|ImGuiWindowFlags_AlwaysAutoResize);
         {
             ImGui::TextWrapped("%s", mErrorMessage.Str());
 

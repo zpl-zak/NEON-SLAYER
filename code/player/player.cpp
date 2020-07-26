@@ -9,8 +9,12 @@
 
 #include "NeonEngine.h"
 
+#ifndef _DEBUG
+#define DEV_WINDOWED
+#endif
+
 LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
-HWND BuildWindow(HINSTANCE instance, BOOL cmdShow, LPCSTR className, LPCSTR titleName, RECT& resolution);
+HWND BuildWindow(HINSTANCE instance, BOOL borderless, LPCSTR className, LPCSTR titleName, RECT& resolution);
 BOOL CenterWindow(HWND hwndWindow);
 
 int APIENTRY WinMain(HINSTANCE hInstance,
@@ -22,10 +26,16 @@ int APIENTRY WinMain(HINSTANCE hInstance,
     RECT rect;
     rect.left = CW_USEDEFAULT;
     rect.top = CW_USEDEFAULT;
+#ifndef DEV_WINDOWED
     rect.right = 1600;
     rect.bottom = 900;
+    hWnd = BuildWindow(hInstance, FALSE, "NeonClass", "NEON SLAYER", rect);
+#else
+    rect.right = GetSystemMetrics(SM_CXSCREEN);
+    rect.bottom = GetSystemMetrics(SM_CYSCREEN);
+    hWnd = BuildWindow(hInstance, TRUE, "NeonClass", "NEON SLAYER", rect);
+#endif
 
-    hWnd = BuildWindow(hInstance, nCmdShow, "NeonClass", "NEON SLAYER", rect);
     CenterWindow(hWnd);
 
     if (!ENGINE->Init(hWnd, rect))
@@ -62,14 +72,17 @@ HWND BuildWindow(HINSTANCE instance, BOOL cmdShow, LPCSTR className, LPCSTR titl
     wc.lpfnWndProc = WindowProc;
     wc.hInstance = instance;
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-    wc.hbrBackground = (HBRUSH)COLOR_WINDOW;
+    wc.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
     wc.lpszClassName = className;
 
     RegisterClassEx(&wc);
 
+#ifndef DEV_WINDOWED
     DWORD style = WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX;
-
     AdjustWindowRectEx(&resolution, style, FALSE, WS_EX_OVERLAPPEDWINDOW);
+#else
+    DWORD style = WS_VISIBLE | WS_POPUP;
+#endif
 
     hWnd = CreateWindowEx(NULL,
         className,

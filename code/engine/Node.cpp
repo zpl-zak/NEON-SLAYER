@@ -70,7 +70,7 @@ CNode* CNode::Clone()
 {
     CNode* clonedNode = new CNode();
 
-    clonedNode->mMetadata = mMetadata;
+    *clonedNode->mMetadata = *mMetadata;
     clonedNode->SetName(GetName());
 
     for (auto a : mMeshes)
@@ -113,7 +113,7 @@ D3DXMATRIX CNode::GetFinalTransform()
 VOID CNode::InvalidateTransformRecursively()
 {
     InvalidateTransform();
-    
+
     for (UINT i=0; i<mNodes.GetCount(); ++i)
     {
         mNodes[i]->InvalidateTransformRecursively();

@@ -13,7 +13,7 @@ public:
 	~CFaceGroup() { Release(); }
 
 	VOID Release(VOID);
-	VOID SetMaterial(DWORD stage, CMaterial* tex);
+	VOID SetMaterial(CMaterial* tex);
 	VOID AddVertex(const VERTEX& vertex);
 	VOID AddIndex(SHORT index);
 	VOID Draw(D3DXMATRIX*);
@@ -30,11 +30,10 @@ public:
 	inline SHORT* GetIndices() { return mIndices.GetData(); }
 
 	inline CMaterial* GetMaterial() { return mData.mat; }
-	inline DWORD GetMaterialStage() { return mData.stage; }
 	inline D3DXVECTOR4* GetBounds() { if (mData.meshBounds[0] == mData.meshBounds[1] && !D3DXVec4LengthSq(&mData.meshBounds[0])) Build(); return mData.meshBounds; }
 private:
 	RENDERDATA mData;
-	
+
 	CArray<VERTEX> mVerts;
 	CArray<SHORT> mIndices;
 	BOOL mIsDirty;

@@ -75,7 +75,7 @@ VOID CSceneLoader::LoadNodesRecursively(const aiScene* impScene, const aiNode* i
                 data = ss.str();
             } break;
             }
-            
+
             newNode->SetMetadata((LPCSTR)k.C_Str(), data.c_str());
         }
     }
@@ -112,7 +112,7 @@ VOID CSceneLoader::LoadNodesRecursively(const aiScene* impScene, const aiNode* i
         scene->AddMesh(lastMesh);
         newNode->AddMesh(lastMesh);
     }
-    
+
     // Load light
     for (UINT i = 0; i < impScene->mNumLights; i++)
     {
@@ -164,8 +164,8 @@ CFaceGroup* CSceneLoader::LoadFaceGroup(const aiScene* scene, const aiMesh* mesh
 
         const aiVector3D pos = mesh->mVertices[i];
         aiVector3D nm, ta, tb;
-        
-        if (mesh->HasNormals()) 
+
+        if (mesh->HasNormals())
         {
             nm = mesh->mNormals[i];
         }
@@ -265,7 +265,7 @@ CFaceGroup* CSceneLoader::LoadFaceGroup(const aiScene* scene, const aiMesh* mesh
         mat->Get(AI_MATKEY_OPACITY, opacity);
         newMaterial->SetOpacity(opacity);
 
-        newFGroup->SetMaterial(0, newMaterial);
+        newFGroup->SetMaterial(newMaterial);
     }
 
     return newFGroup;
@@ -295,15 +295,15 @@ CLight* CSceneLoader::LoadLight(const aiNode* impNode, const aiLight* impLight)
         impLight->mAttenuationQuadratic);
     lit->SetInnerAngle(impLight->mAngleInnerCone);
     lit->SetOuterAngle(impLight->mAngleOuterCone);
-    
+
     switch (impLight->mType)
     {
     case aiLightSource_POINT:
         lit->SetType(D3DLIGHT_POINT);
-    break; 
+    break;
     case aiLightSource_DIRECTIONAL:
         lit->SetType(D3DLIGHT_DIRECTIONAL);
-    break; 
+    break;
     case aiLightSource_SPOT:
         lit->SetType(D3DLIGHT_SPOT);
         break;
@@ -336,14 +336,14 @@ VOID CSceneLoader::LoadTextureMap(const aiScene* scene, const aiMaterial* mat, C
         newMaterial->CreateTextureForSlot(slot, (LPSTR)path.C_Str());
     }
 
-    if (slot != TEXTURESLOT_ALBEDO || !newMaterial->GetUserTextureHandle(slot))
+    if (slot != TEXTURESLOT_ALBEDO || !newMaterial->GetTextureHandle(slot))
         return;
 
     D3DSURFACE_DESC a;
-    newMaterial->GetUserTextureHandle(slot)->GetLevelDesc(0, &a);
+    newMaterial->GetTextureHandle(slot)->GetLevelDesc(0, &a);
 
     UINT* buf = (UINT*)newMaterial->Lock(slot);
-    
+
     for (UINT i = 0; i < (a.Width * a.Height); i++)
     {
         if (((buf[i] << 24) & 0xFF) < 1.0f)

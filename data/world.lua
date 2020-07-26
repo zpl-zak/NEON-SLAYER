@@ -13,7 +13,7 @@ function initWorld()
     terrainMaterial = Material("assets/tile_base.png")
     terrainMaterial:setDiffuse(0x815192)
     terrainMaterial:setPower(120)
-    terrain:getMeshes()[1]:setMaterial(0, terrainMaterial)
+    terrain:getMeshes()[1]:setMaterial(terrainMaterial)
 
     terrainMaterial:loadFile("assets/tile_active.png", ACTIVE_TILE_TEX_SLOT)
 
@@ -23,19 +23,19 @@ function initWorld()
 
     gradientMaterial = Material("assets/gradient.png")
     gradientMaterial:setShaded(false)
-    
+
     world = cols.newWorld()
-    
+
     local meshNode = terrain:getRootNode():findNode("terrain")
     local mesh = meshNode:getMeshParts()[1][1]
     local baseCols = cols.newTriangleMeshFromPart(mesh, meshNode:getFinalTransform():translate(Vector3()))
-    
+
     for i=0,(WORLD_TILES[1]-1),1 do
         for j=0,(WORLD_TILES[2]-1),1 do
             addTile(baseCols, Vector3(WORLD_SIZE*i,0,WORLD_SIZE*j))
         end
     end
-    
+
     terrainShader = Effect("fx/terrain.fx")
 
     backdropModel = Model("assets/backdrop.fbx")
@@ -44,9 +44,9 @@ function initWorld()
     gradientMesh = backdropRoot:findNode("gradient")
     sunMesh = backdropRoot:findNode("sun")
     sunGlareMesh = backdropRoot:findNode("sunglare")
-    boundsMesh:getMeshes()[1]:setMaterial(0, boundsMaterial)
-    gradientMesh:getMeshes()[1]:setMaterial(0, gradientMaterial)
-    
+    boundsMesh:getMeshes()[1]:setMaterial(boundsMaterial)
+    gradientMesh:getMeshes()[1]:setMaterial(gradientMaterial)
+
     bdMesh = backdropRoot:findNode("bd"):getNodes()
 
     for _, bd in pairs(bdMesh) do
@@ -87,7 +87,7 @@ function drawWorld()
     end
     terrainShader:endPass()
     terrainShader:done()
-    
+
     local wmat = Matrix():scale(WORLD_TILES[1], WORLD_TILES[1], WORLD_TILES[1])
     gradientMesh:draw(wmat)
     sunGlareMesh:draw(wmat)

@@ -18,7 +18,7 @@ CEngine::CEngine(VOID)
 : mIsRunning(FALSE)
 {
     srand((UINT)time(0));
-    sInstance = this; 
+    sInstance = this;
     mIsInitialised = FALSE;
     mRenderer = NULL;
     mInput = NULL;
@@ -26,7 +26,7 @@ CEngine::CEngine(VOID)
     mVirtualMachine = NULL;
     mDebugUI = NULL;
     mAudioSystem = NULL;
-    
+
     SetFPS(60.0f);
     mUnprocessedTime = 0.0f;
     mLastTime = 0.0f;
@@ -148,7 +148,7 @@ VOID CEngine::CDefaultProfiling::UpdateProfilers(FLOAT dt)
     {
         mTotalTime = ((1000.0f * mFrameCounter) / ((FLOAT)mFrames));
         mTotalMeasuredTime = 0.0f;
-        BOOL logStats = false;//mRunCycle % (INT(sFrameWindow * 10.0f)) == 0;
+        BOOL logStats = mRunCycle % (INT(sFrameWindow * 10.0f)) == 0;
 
         if (logStats) PushLog("==================\n", TRUE);
 
@@ -265,7 +265,7 @@ LRESULT CEngine::ProcessEvents(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 
         case WM_CHAR:
         {
-            if (wParam >= 0x20) 
+            if (wParam >= 0x20)
             {
                 VM->CharInput((DWORD)wParam);
             }
@@ -296,7 +296,7 @@ VOID CEngine::Update(FLOAT deltaTime)
         CProfileScope scope(DefaultProfiling.mUpdateProfiler);
         mVirtualMachine->Update(deltaTime);
     }
- 
+
     mDebugUI->Update(deltaTime);
     mInput->Update();
 }
@@ -304,7 +304,7 @@ VOID CEngine::Update(FLOAT deltaTime)
 VOID CEngine::Render()
 {
     mRenderer->BeginRender();
-    
+
     {
         CProfileScope scope(DefaultProfiling.mRenderProfiler);
         mVirtualMachine->Render();
