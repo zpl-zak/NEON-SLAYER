@@ -50,7 +50,7 @@ function _init()
   testSnd:setVolume(100)
   testSnd:loop(true)
   testSnd:play()
-  
+
   initWorld()
   initTankModel()
 
@@ -60,9 +60,9 @@ function _init()
   math.random()
   addTank(-1)
   -- testAI = addTank()
-  
+
   setupPlayer()
-  
+
   light = Light()
   light:setDirection(Vector(-1,-1,1))
   -- light:setSpecular(0xffffff)
@@ -83,9 +83,9 @@ function _init()
     if tanks[entity_id] == nil then
       addTank(entity_id, c)
     end
-  
+
     local tank = tanks[entity_id]
-    
+
     -- detect if we started moving
     local tp = Vector3(x,y,z)
     if (tank.pos-tp):magSq() > 2.0 then
@@ -105,7 +105,7 @@ function _init()
       tank.serverTrail = serverTrail
     end
     updateTrail(tank)
-  
+
     -- LogString("_net_tankupdate: " .. entity_id .. " pos: " .. x .. " " .. y .. " " .. z)
   end)
 
