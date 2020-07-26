@@ -122,9 +122,9 @@ function _init()
 
     tank.color = c
     -- tank.pos = Vector3(x,y,z)
-    local nx = lerp(tank.pos:x(), x, 0.5)
-    local ny = lerp(tank.pos:y(), y, 0.5)
-    local nz = lerp(tank.pos:z(), z, 0.5)
+    local nx = lerp(tank.pos:x(), x, 0.1)
+    local ny = lerp(tank.pos:y(), y, 0.1)
+    local nz = lerp(tank.pos:z(), z, 0.1)
     tank.pos = Vector3(nx, ny, nz)
     tank.rot = Matrix():rotate(r+math.rad(90),0,0)
     tank.aliveTime = getTime() + 5
