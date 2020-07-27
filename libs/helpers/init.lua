@@ -37,8 +37,6 @@ local function drawEffect(fx, tech, drawfn)
   fx:finish()
 end
 
-local withEffect = drawEffect
-
 local function spairs(t, order)
   -- collect the keys
   local keys = {}
@@ -88,7 +86,7 @@ local function merge(a, b)
   return a
 end
 
-local function serializeTable(val, name, skipnewlines, depth)
+local function serializeTable(val, name, skipnewlines, depth, skipfuncs)
   skipnewlines = skipnewlines or false
   depth = depth or 0
 
@@ -102,19 +100,21 @@ local function serializeTable(val, name, skipnewlines, depth)
    end
 
   if type(val) == "table" then
-      tmp = tmp .. "{" .. (not skipnewlines and "\n" or "")
+    tmp = tmp .. "{" .. (not skipnewlines and "\n" or "")
 
-      for k, v in pairs(val) do
-          tmp =  tmp .. serializeTable(v, k, skipnewlines, depth + 1) .. "," .. (not skipnewlines and "\n" or "")
-      end
+    for k, v in pairs(val) do
+      tmp =  tmp .. serializeTable(v, k, skipnewlines, depth + 1) .. "," .. (not skipnewlines and "\n" or "")
+    end
 
-      tmp = tmp .. string.rep(" ", depth) .. "}"
+    tmp = tmp .. string.rep(" ", depth) .. "}"
   elseif type(val) == "number" then
-      tmp = tmp .. tostring(val)
+    tmp = tmp .. tostring(val)
   elseif type(val) == "string" then
-      tmp = tmp .. string.format("%q", val)
+    tmp = tmp .. string.format("%q", val)
   elseif type(val) == "boolean" then
-      tmp = tmp .. (val and "true" or "false")
+    tmp = tmp .. (val and "true" or "false")
+  elseif not skipfuncs and type(val) == "function" then
+    tmp = tmp .. string.format("%q", "fn:"..tostring(string.dump(val, true)))
   else
       tmp = tmp .. "\"[inserializeable datatype:" .. type(val) .. "]\""
   end
@@ -122,13 +122,21 @@ local function serializeTable(val, name, skipnewlines, depth)
   return tmp
 end
 
-local function encode(table)
-	return "return"..serializeTable(table)
+local function encode(table, skipfuncs)
+  skipfuncs = skipfuncs or false
+	return "return"..serializeTable(table, nil, nil, nil, skipfuncs)
 end
 
 local function decode(str)
-	local f = load(str)
-	return f()
+  local f = load(str)()
+  local fndump = "fn:"
+
+  for k, v in pairs(f) do
+    if type(v) == "string" and v:sub(1, #fndump) == fndump then
+      f[k] = load(v:sub(#fndump+1, #v))
+    end
+  end
+	return f
 end
 
 local helpers = {
@@ -144,7 +152,7 @@ local helpers = {
 
   drawEffect = drawEffect,
   withTexture = withTexture,
-  withEffect = withEffect,
+  withEffect = drawEffect,
 }
 
 helpers.global = function()
