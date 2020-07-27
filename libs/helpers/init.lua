@@ -1,8 +1,8 @@
-function lerp(a,b,t)
+local function lerp(a,b,t)
   return a + (b-a)*t
 end
 
-function clamp(a,x,b)
+local function clamp(a,x,b)
   if x < a then
     return a
   end
@@ -14,7 +14,7 @@ function clamp(a,x,b)
   return x
 end
 
-function cap3(v, m)
+local function cap3(v, m)
   if math.abs(v:x()) > m then
     return v / v:x() * m
   end
@@ -27,7 +27,7 @@ function cap3(v, m)
   return v
 end
 
-function drawEffect(fx, tech, drawfn)
+local function drawEffect(fx, tech, drawfn)
   local numPasses = fx:start(tech)
   for i=1,numPasses do
     fx:beginPass(i)
@@ -37,7 +37,9 @@ function drawEffect(fx, tech, drawfn)
   fx:finish()
 end
 
-function spairs(t, order)
+local withEffect = drawEffect
+
+local function spairs(t, order)
   -- collect the keys
   local keys = {}
   for k in pairs(t) do keys[#keys+1] = k end
@@ -60,10 +62,47 @@ function spairs(t, order)
   end
 end
 
-return {
+local function dump(o)
+  if type(o) == 'table' then
+     local s = '{ '
+     for k,v in pairs(o) do
+        if type(k) ~= 'number' then k = '"'..k..'"' end
+        s = s .. '['..k..'] = ' .. dump(v) .. ','
+     end
+     return s .. '} '
+  else
+     return tostring(o)
+  end
+end
+
+local function withTexture(tex, fn)
+  BindTexture(0, tex)
+  fn()
+  BindTexture(0)
+end
+
+local function merge(a, b)
+  if type(a) == 'table' and type(b) == 'table' then
+      for k,v in pairs(b) do if type(v)=='table' and type(a[k] or false)=='table' then merge(a[k],v) else a[k]=v end end
+  end
+  return a
+end
+
+local helpers = {
   lerp = lerp,
   clamp = clamp,
   cap3 = cap3,
+  spairs = spairs,
+  dump = dump,
+  merge = merge,
   drawEffect = drawEffect,
-  spairs = spairs
+  withTexture = withTexture,
+  withEffect = withEffect,
 }
+
+helpers.global = function()
+  _G = merge(_G, helpers)
+  return helpers
+end
+
+return helpers

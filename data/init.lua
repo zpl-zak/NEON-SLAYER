@@ -8,7 +8,7 @@ light = {}
 WORLD_SIZE = 1000.0
 WORLD_TILES = {5,5}
 
-hh = require "helpers"
+hh = require "helpers".global()
 cols = require "collisions"
 
 local res = GetResolution()
