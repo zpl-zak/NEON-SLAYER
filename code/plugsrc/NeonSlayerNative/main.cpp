@@ -24,7 +24,7 @@ INT tankupdateref = 0;
 INT tankcollideref = 0;
 INT tankrespawnref = 0;
 
-#define DEBUG_LINES
+//#define DEBUG_LINES
 #define SLAYER_DEATHTIME 5.0f
 #define SLAYER_GODTIME 3.0f
 #define SLAYER_RADIUS 20.0f
