@@ -24,7 +24,7 @@ INT tankupdateref = 0;
 INT tankcollideref = 0;
 INT tankrespawnref = 0;
 
-#define DEBUG_LINES
+// #define DEBUG_LINES
 #define SLAYER_DEATHTIME 5.0f
 #define SLAYER_GODTIME 3.0f
 #define SLAYER_RADIUS 20.0f
@@ -363,7 +363,6 @@ void ne_server_update(lua_State* L) {
 
         if (collided) {
             data->alive = 0;
-            data->trail->Clear();
             data->collision_resolve_time = GetTime() + SLAYER_DEATHTIME + SLAYER_GODTIME;
 
             char buffer[512] = { 0 };
@@ -398,6 +397,9 @@ void ne_server_update(lua_State* L) {
     /* send respawn messages */
     for (auto it = ne_server_data.begin(); it != ne_server_data.end(); ++it) {
         if (it->second.alive) continue;
+
+        it->second.trail->Clear();
+
         if ((it->second.collision_resolve_time - SLAYER_GODTIME) < GetTime()) {
             it->second.alive = 1;
 

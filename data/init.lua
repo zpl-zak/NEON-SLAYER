@@ -78,7 +78,7 @@ end
 function _init()
   RegisterFontFile("assets/slkscr.ttf")
   testSnd = Sound("assets/test.wav")
-  testSnd:setVolume(100)
+  testSnd:setVolume(0)
   testSnd:loop(true)
   testSnd:play()
 
