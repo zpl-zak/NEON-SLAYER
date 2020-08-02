@@ -67,7 +67,7 @@ VS_OUTPUT VS_Main(VS_INPUT IN)
     float4 sunColor = float4(0.3, 0.15, 0.2, 1);
 
     OUT.flatColor = sunColor * pow(saturate(dot(r,v)), 2.0);
-    OUT.position.y += frac(sin(time + dot(OUT.worldPos.xy, float2(12.9898,78.233))) * 43758.5453)*4;
+    // OUT.position.y += frac(sin(time + dot(OUT.worldPos.xy, float2(12.9898,78.233))) * 43758.5453)*4;
 
     return OUT;
 }
