@@ -8,8 +8,20 @@ light = {}
 WORLD_SIZE = 1000.0
 WORLD_TILES = {5,5}
 
-hh = require "helpers"
+hh = require "helpers".global()
 cols = require "collisions"
+
+local res = GetResolution()
+screenRT = RenderTarget(res[1], res[2])
+local aspect = res[1] / res[2]
+local hAdd = aspect * 150.0
+invTexSize = Vector3(
+  1.0 / res[1],
+  1.0 / (res[2] + hAdd),
+  0.0
+)
+
+fxaaShader = Effect("fx/fxaa.fx")
 
 local sqrt, sin, cos = math.sqrt, math.sin, math.cos
 local r1, r2 =  0          ,  1.0
@@ -209,6 +221,7 @@ function _charInput(key)
 end
 
 function _render()
+  screenRT:bind()
   EnableLighting(true)
   ClearScene(15,0,15)
   AmbientColor(0x773377)
@@ -222,6 +235,17 @@ function _render()
   local wmat = Matrix():scale(WORLD_TILES[1], WORLD_TILES[1], WORLD_TILES[1])
   boundsMesh:draw(wmat)
   -- state.draw()
+
+  ClearTarget()
+
+  drawEffect(fxaaShader, "FXAA", function (fx)
+    fx:setTexture("srcTex", screenRT)
+    fx:setVector3("inverseTexSize", invTexSize)
+		fx:setFloat("fxaaReduceMul", 1.0 / 8.0)
+		fx:setFloat("fxaaReduceMin", 1.0 / 128.0)
+    fx:setFloat("fxaaSpanMax", 8.0)
+    FillScreen()
+  end)
 end
 
 function _render2d()

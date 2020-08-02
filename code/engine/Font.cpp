@@ -43,7 +43,7 @@ VOID CFont::RenderText(DWORD color, LPCSTR text, UINT x, UINT y, UINT w, UINT h,
     rect.left = x;
     rect.top = y;
 
-    if (w == 0 || h == 0)
+    if ((w == 0 || h == 0) && flags & ~FF_NOCLIP)
         CalculateRect(text, &rect);
     else
     {
@@ -57,7 +57,7 @@ VOID CFont::RenderText(DWORD color, LPCSTR text, UINT x, UINT y, UINT w, UINT h,
 
 BOOL CFont::AddFontToDatabase(LPCSTR path)
 {
-    return AddFontResourceExA(FILESYSTEM->ResourcePath(RESOURCEKIND_USER, path), FR_PRIVATE, 0) > 0;
+    return AddFontResourceExA(FILESYSTEM->ResourcePath(path), FR_PRIVATE, 0) > 0;
 }
 
 VOID CFont::CalculateRect(LPCSTR text, LPRECT rect, DWORD flags)

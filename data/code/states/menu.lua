@@ -41,7 +41,7 @@ return class "MenuState" (AbstractState) {
 
         yoffset = yoffset + buttonHeight + padding
         local btnJoinStart = uiButton("Join game", self.resolution[1]/2-100, yoffset, 200, 50, function()
-            local host = inpJoinHost.value ~= "" and tonumber(inpJoinHost.value) or "inlife.no-ip.org"
+            local host = inpJoinHost.value
             local port = inpJoinPort.value ~= "" and tonumber(inpJoinPort.value) or 27666
             net.connect(host, port)
             state:switch("connecting")
