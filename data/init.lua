@@ -89,13 +89,12 @@ end
 
 function _init()
   RegisterFontFile("assets/slkscr.ttf")
-  -- testSnd2 = Sound("assets/music/Zodik - Driz.ogg")
   testSnd = Sound("assets/music/Zodik - Cyborg Destiny.ogg")
     -- testsnd4 = Sound("assets/music/Zodik - Future Travel.ogg")
     -- testsnd7 = Sound("assets/music/Zodik - Technology 82.ogg")
     -- testsnd8 = Sound("assets/music/Zodik - Tedox.ogg")
     -- testsnd9 = Sound("assets/music/Zodik - Touch The Sky.ogg")
-  testSnd:setVolume(80)
+  testSnd:setVolume(69)
   testSnd:loop(true)
   testSnd:play()
 

@@ -8,6 +8,18 @@ function setupPlayer()
     player.angles = {0,0}
     player.heading = 0
     player.sendTime = 0
+    player.soundEngine = Sound("assets/sounds/engine.wav")
+
+    player.soundEngine:setVolume(85)
+    player.soundEngine:loop(true)
+end
+
+function player.soundPlay()
+    player.soundEngine:play()
+end
+
+function player.soundStop()
+    player.soundEngine:stop()
 end
 
 function player.update(self, dt, net)
@@ -76,6 +88,8 @@ function player.update(self, dt, net)
         if GetKey(KEY_SHIFT) then
             self.tank.vel = self.tank.vel:lerp(Vector3(0,--[[ self.tank.vel:y() ]] 0, 0), 0.04221)
         end
+
+        player.soundEngine:setFrequency(44100 + math.floor(self.tank.vel:mag() * 4500))
     end
 
     if self.sendTime < time then
