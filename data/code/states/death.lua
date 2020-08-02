@@ -4,10 +4,7 @@ local AbstractState = require("code/states/abstract")
 
 return class "DeathState" (AbstractState) {
     enter = function(self)
-        AbstractState.__init__(self)
-
         state:setCursor(false)
-
         self.entertime = getTime() + 5
 
         tanks[-1].alive = false

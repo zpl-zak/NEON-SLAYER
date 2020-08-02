@@ -156,6 +156,11 @@ function _init()
   end)
 
   net.setCollide(function(killer_id, victim_id)
+    -- ignore state switch when paused
+    if not state:is("game") then
+      return
+    end
+
     if victim_id == -1 then
       state:switch("death")
       LogString("BOOM WE GOT KILLED BY " .. killer_id)
