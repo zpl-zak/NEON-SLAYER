@@ -5,11 +5,11 @@ local AbstractState = require("code/states/abstract")
 return class "GameState" (AbstractState) {
     enter = function(self)
         state:setCursor(false)
-        player.soundPlay()
+        localPlayer:soundPlay()
     end,
 
     leave = function(self)
-        player.soundStop()
+        localPlayer:soundStop()
     end,
 
     update = function(self)

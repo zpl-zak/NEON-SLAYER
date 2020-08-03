@@ -1,6 +1,9 @@
+dofile("utils.lua")
+
 net = require "slayernative"
 music = require "music"
 Tank = require "tank"
+Player = require "player"
 
 time = 0
 player = {}
@@ -24,51 +27,19 @@ invTexSize = Vector3(
 )
 
 fxaaShader = Effect("fx/fxaa.fx")
-
-local sqrt, sin, cos = math.sqrt, math.sin, math.cos
-local r1, r2 =  0          ,  1.0
-local g1, g2 = -sqrt( 3 )/2, -0.5
-local b1, b2 =  sqrt( 3 )/2, -0.5
-
-
-function HSVToRGB( h, s, v, a )
-  h=h+math.pi/2--because the r vector is up
-  local r, g, b = 1, 1, 1
-  local h1, h2 = cos( h ), sin( h )
-
-  --hue
-  r = h1*r1 + h2*r2
-  g = h1*g1 + h2*g2
-  b = h1*b1 + h2*b2
-  --saturation
-  r = r + (1-r)*s
-  g = g + (1-g)*s
-  b = b + (1-b)*s
-
-  r,g,b = r*v, g*v, b*v
-
-  return r*255, g*255, b*255, (a or 1) * 255
-end
-
-function dump(o)
-   if type(o) == 'table' then
-      local s = '{ '
-      for k,v in pairs(o) do
-         if type(k) ~= 'number' then k = '"'..k..'"' end
-         s = s .. '['..k..'] = ' .. dump(v) .. ','
-      end
-      return s .. '} '
-   else
-      return tostring(o)
-   end
-end
-
 world = nil
+localPlayer = Player()
+
+sun = Light()
+sun:setDirection(Vector(-0.6,-1,-0.7))
+sun:setSpecular(0)
+sun:setDiffuse(0xffcc99)
+sun:setType(LIGHTKIND_DIRECTIONAL)
+sun:enable(true, 0)
 
 state = require("code/state")
 
 dofile("world.lua")
-dofile("player.lua")
 
 function lerp(v0, v1, t)
   return v0 + t * (v1 - v0);
@@ -79,21 +50,6 @@ function _init()
   RegisterFontFile("assets/slkscr.ttf")
 
   initWorld()
-
-  math.random()
-  math.random()
-  math.random()
-  math.random()
-  Tank(-1)
-
-  setupPlayer()
-
-  light = Light()
-  light:setDirection(Vector(-1,-1,1))
-  light:setSpecular(0)
-  light:setDiffuse(0xffcc99)
-  light:setType(LIGHTKIND_DIRECTIONAL)
-  light:enable(true, 0)
 
   -- Set up network update event
   net.setUpdate(function (entity_id, x, y, z, r, c, islocal, serverTrail)
@@ -184,8 +140,8 @@ function _update(dt)
   for _, t in pairs(tanks) do
     t:update(dt)
   end
-  -- updateTestAI()
-  player:update(dt, net)
+
+  localPlayer:update(dt)
 
   time = time + dt
 
@@ -205,8 +161,7 @@ function _render()
   AmbientColor(0x773377)
   CameraPerspective(75, 1.0, 25000)
   Matrix():bind(WORLD)
-  player.cam:bind(VIEW)
-  light:setDirection(Vector(-0.6,-1,-0.7))
+  localPlayer.cam:bind(VIEW)
   drawWorld()
   for _, t in pairs(tanks) do
     t:draw()
@@ -228,8 +183,4 @@ end
 function _render2d()
   state:draw2d()
   music:draw2d()
-end
-
-function updateTestAI()
-  testAI.movedir = (player.tank.pos - testAI.pos):normalize()*0.001
 end

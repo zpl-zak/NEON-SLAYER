@@ -55,6 +55,7 @@ class "Tank" {
     self:refreshMaterial()
 
     tanks[id] = self
+    return self
   end,
 
   refreshMaterial = function (self)
