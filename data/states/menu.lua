@@ -1,8 +1,8 @@
-local class = require("code/class")
-local state = require("code/state")
-local AbstractState = require("code/states/abstract")
+local class = require "class"
+local state = require("state")
+local AbstractState = require("states/abstract")
 
-dofile("code/ui.lua")
+dofile("ui.lua")
 
 return class "MenuState" (AbstractState) {
     __init__ = function(self)

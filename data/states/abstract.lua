@@ -1,4 +1,4 @@
-local class = require("code/class")
+local class = require "class"
 
 return class "State" {
     __init__ = function(self)

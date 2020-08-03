@@ -11,7 +11,7 @@ music = require "music"
 world = require "world"
 Tank = require "tank"
 Player = require "player"
-state = require "code/state"
+state = require "state"
 
 time = 0
 
@@ -98,11 +98,11 @@ function _init()
       tank.trails = {}
   end)
 
-  state:add("menu", require "code/states/menu" ())
-  state:add("game", require "code/states/game" ())
-  state:add("death", require "code/states/death" ())
-  state:add("pause", require "code/states/pause" ())
-  state:add("connecting", require "code/states/connecting" ())
+  state:add("menu", require "states/menu" ())
+  state:add("game", require "states/game" ())
+  state:add("death", require "states/death" ())
+  state:add("pause", require "states/pause" ())
+  state:add("connecting", require "states/connecting" ())
   state:switch("menu")
   ui.init()
 end
