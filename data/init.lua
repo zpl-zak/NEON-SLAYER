@@ -1,4 +1,5 @@
 net = require "slayernative"
+music = require "music"
 
 time = 0
 player = {}
@@ -80,8 +81,6 @@ dofile("tank.lua")
 dofile("world.lua")
 dofile("player.lua")
 
-local testSnd
-
 function lerp(v0, v1, t)
   return v0 + t * (v1 - v0);
 end
@@ -89,14 +88,6 @@ end
 
 function _init()
   RegisterFontFile("assets/slkscr.ttf")
-  testSnd = Sound("assets/music/Zodik - Cyborg Destiny.ogg")
-    -- testsnd4 = Sound("assets/music/Zodik - Future Travel.ogg")
-    -- testsnd7 = Sound("assets/music/Zodik - Technology 82.ogg")
-    -- testsnd8 = Sound("assets/music/Zodik - Tedox.ogg")
-    -- testsnd9 = Sound("assets/music/Zodik - Touch The Sky.ogg")
-  testSnd:setVolume(69)
-  testSnd:loop(true)
-  testSnd:play()
 
   initWorld()
 
@@ -195,7 +186,7 @@ end
 
 function _update(dt)
   net.update()
-
+  music:update(dt)
 
   if GetKey(KEY_CONTROL) and GetKeyDown("R") then
       RestartGame()
@@ -260,6 +251,7 @@ function _render2d()
 
 
   state:draw2d()
+  music:draw2d()
 end
 
 function updateTestAI()
