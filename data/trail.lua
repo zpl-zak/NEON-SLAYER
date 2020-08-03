@@ -17,12 +17,12 @@ function setupTrail(tank)
     tank.trailMaterial:alphaIsTransparency(true)
 end
 
-function getTrailPos(t, trailNode)
+function getTrailPos(t)
     local pos = t.pos
     return {pos:x(), pos:y()+15, pos:z()}
 end
 
-function handleTrails(t, trailNode)
+function handleTrails(t)
     if t.trailTime < time and t.alive then
         t.trailTime = time + TRAIL_TIME
 
@@ -31,7 +31,7 @@ function handleTrails(t, trailNode)
         end
 
         if t.pos:magSq() > 0.01 then
-            table.insert(t.trails, getTrailPos(t, trailNode))
+            table.insert(t.trails, getTrailPos(t))
         end
     end
 end
@@ -40,7 +40,7 @@ function drawTrails(tank, trails, height, trailNode)
     for i=1,#trails,1 do
         local tr1 = trails[i]
         local tr2 = trails[i+1]
-        
+
         local alpha = math.min(i, 20.0) / 20.0
 
         if tr1 ~= nil then
@@ -51,7 +51,7 @@ function drawTrails(tank, trails, height, trailNode)
                 tr2 = getTrailPos(tank, trailNode)
                 tank.trailMaterial:setOpacity(1)
             end
-            
+
             BindTexture(0, tank.trailMaterial)
             Matrix():bind(WORLD)
             CullMode(CULLKIND_NONE)

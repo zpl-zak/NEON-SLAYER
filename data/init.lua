@@ -1,5 +1,6 @@
 net = require "slayernative"
 music = require "music"
+Tank = require "tank"
 
 time = 0
 player = {}
@@ -77,7 +78,6 @@ state = require("code/state")
 -- dofile("code/states/menu.lua")
 -- dofile("code/states/game.lua")
 dofile("trail.lua")
-dofile("tank.lua")
 dofile("world.lua")
 dofile("player.lua")
 
@@ -95,7 +95,7 @@ function _init()
   math.random()
   math.random()
   math.random()
-  addTank(-1)
+  Tank(-1)
   -- testAI = addTank()
 
   setupPlayer()
@@ -200,7 +200,9 @@ function _update(dt)
     SetCursorMode(CURSORMODE_DEFAULT)
   end
 
-  updateTanks(dt)
+  for _, t in pairs(tanks) do
+    t:update(dt)
+  end
   -- updateTestAI()
   player:update(dt, net)
 
@@ -226,7 +228,9 @@ function _render()
   -- SetFog(VectorRGBA(0,0,25,255), FOGKIND_LINEAR, 600, 1300)
   light:setDirection(Vector(-0.6,-1,-0.7))
   drawWorld()
-  drawTanks()
+  for _, t in pairs(tanks) do
+    t:draw()
+  end
   local wmat = Matrix():scale(WORLD_TILES[1], WORLD_TILES[1], WORLD_TILES[1])
   boundsMesh:draw(wmat)
   -- state.draw()
