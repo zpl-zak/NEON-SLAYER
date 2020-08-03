@@ -1,10 +1,18 @@
 BOUNDS_PUSHBACK = 1
+MAX_TRAILS = 150.0
+TRAIL_TIME = 0.05
+
 localPlayerColor = 0
 tanks = {}
 
 local tankModel = Model("assets/sphere.fbx", false)
 local borderHitSound = Sound("assets/sounds/wallhit.wav")
 borderHitSound:setVolume(80)
+
+local function getTrailPos(t)
+    local pos = t.pos
+    return {pos:x(), pos:y()+15, pos:z()}
+end
 
 local class = require "class"
 
@@ -58,11 +66,27 @@ class "Tank" {
     self.material:setEmission(r,g,b)
     self.material:setAmbient(r,g,b)
 
-    setupTrail(self)
+    self.trailMaterial = Material("assets/trail.png")
+    self.trailMaterial:setDiffuse(r,g,b)
+    self.trailMaterial:setEmission(r,g,b)
+    self.trailMaterial:setAmbient(r,g,b)
+    self.trailMaterial:setOpacity(1)
+    self.trailMaterial:setShaded(false)
+    self.trailMaterial:alphaIsTransparency(true)
   end,
 
   update = function (self, dt)
-    handleTrails(self)
+    if self.trailTime < time and self.alive then
+      self.trailTime = time + TRAIL_TIME
+
+      if #self.trails > MAX_TRAILS then
+          table.remove(self.trails, 1)
+      end
+
+      if self.pos:magSq() > 0.01 then
+          table.insert(self.trails, getTrailPos(self))
+      end
+    end
 
     if not self.alive then
       return
@@ -136,10 +160,45 @@ class "Tank" {
       BindTexture(0, self.material)
       tankModel:draw(Matrix():scale(20.0,20.0,20.0):translate(self.pos+Vector3(0, 15, 0)))
       BindTexture(0)
-      drawTrails(self, self.trails, 20, trailPosNode)
+      self:drawTrails(self.trails, 20)
       ToggleWireframe(true)
-      drawTrails(self, self.serverTrail, 30, trailPosNode)
+      self:drawTrails(self.serverTrail, 30)
       ToggleWireframe(false)
+    end
+  end,
+
+  drawTrails = function (self, trails, height)
+    for i=1,#trails,1 do
+      local tr1 = trails[i]
+      local tr2 = trails[i+1]
+
+      local alpha = math.min(i, 20.0) / 20.0
+
+      if tr1 ~= nil then
+          if #trails > MAX_TRAILS then
+              self.trailMaterial:setOpacity(alpha)
+          end
+          if tr2 == nil then
+              tr2 = getTrailPos(self)
+              self.trailMaterial:setOpacity(1)
+          end
+
+          BindTexture(0, self.trailMaterial)
+          Matrix():bind(WORLD)
+          CullMode(CULLKIND_NONE)
+          AmbientColor(255, 255, 255)
+          DrawPolygon(
+              Vertex(tr1[1], tr1[2]-height, tr1[3], 0, 0),
+              Vertex(tr1[1], tr1[2]+height, tr1[3], 0, 1),
+              Vertex(tr2[1], tr2[2]-height, tr2[3], 1, 0)
+          )
+          DrawPolygon(
+              Vertex(tr2[1], tr2[2]+height, tr2[3], 1, 1),
+              Vertex(tr2[1], tr2[2]-height, tr2[3], 1, 0),
+              Vertex(tr1[1], tr1[2]+height, tr1[3], 0, 1)
+          )
+          BindTexture(0)
+      end
     end
   end
 }

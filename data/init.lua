@@ -31,17 +31,11 @@ local g1, g2 = -sqrt( 3 )/2, -0.5
 local b1, b2 =  sqrt( 3 )/2, -0.5
 
 
---[[--
-  @param h a real number between 0 and 2*pi
-  @param s a real number between 0 and 1
-  @param v a real number between 0 and 1
-  @return r g b a
-]]
 function HSVToRGB( h, s, v, a )
   h=h+math.pi/2--because the r vector is up
   local r, g, b = 1, 1, 1
   local h1, h2 = cos( h ), sin( h )
-  
+
   --hue
   r = h1*r1 + h2*r2
   g = h1*g1 + h2*g2
@@ -50,9 +44,9 @@ function HSVToRGB( h, s, v, a )
   r = r + (1-r)*s
   g = g + (1-g)*s
   b = b + (1-b)*s
-  
+
   r,g,b = r*v, g*v, b*v
-  
+
   return r*255, g*255, b*255, (a or 1) * 255
 end
 
@@ -73,11 +67,6 @@ world = nil
 
 state = require("code/state")
 
-
--- dofile("code/state.lua")
--- dofile("code/states/menu.lua")
--- dofile("code/states/game.lua")
-dofile("trail.lua")
 dofile("world.lua")
 dofile("player.lua")
 
@@ -96,13 +85,11 @@ function _init()
   math.random()
   math.random()
   Tank(-1)
-  -- testAI = addTank()
 
   setupPlayer()
 
   light = Light()
   light:setDirection(Vector(-1,-1,1))
-  -- light:setSpecular(0xffffff)
   light:setSpecular(0)
   light:setDiffuse(0xffcc99)
   light:setType(LIGHTKIND_DIRECTIONAL)
@@ -142,8 +129,6 @@ function _init()
       tank.serverTrail = serverTrail
     end
     updateTrail(tank)
-
-    -- LogString("_net_tankupdate: " .. entity_id .. " pos: " .. x .. " " .. y .. " " .. z)
   end)
 
   net.setCollide(function(killer_id, victim_id)
@@ -166,10 +151,6 @@ function _init()
       tank.trails = {}
   end)
 
-  -- ui.init()
-  -- state.add("menu", createMenu())
-  -- state.add("game", createGame())
-  -- state.switch("menu")
   state:add("menu", require "code/states/menu" ())
   state:add("game", require "code/states/game" ())
   state:add("death", require "code/states/death" ())
@@ -225,7 +206,6 @@ function _render()
   CameraPerspective(75, 1.0, 25000)
   Matrix():bind(WORLD)
   player.cam:bind(VIEW)
-  -- SetFog(VectorRGBA(0,0,25,255), FOGKIND_LINEAR, 600, 1300)
   light:setDirection(Vector(-0.6,-1,-0.7))
   drawWorld()
   for _, t in pairs(tanks) do
@@ -233,8 +213,6 @@ function _render()
   end
   local wmat = Matrix():scale(WORLD_TILES[1], WORLD_TILES[1], WORLD_TILES[1])
   boundsMesh:draw(wmat)
-  -- state.draw()
-
   ClearTarget()
 
   drawEffect(fxaaShader, "FXAA", function (fx)
@@ -248,12 +226,6 @@ function _render()
 end
 
 function _render2d()
---   titleFont:drawText(0xFFFFFFFF, [[
--- WASD - move
--- shift - brake
---   ]], 15, 30)
-
-
   state:draw2d()
   music:draw2d()
 end
