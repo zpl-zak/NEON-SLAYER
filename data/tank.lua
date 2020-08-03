@@ -10,16 +10,12 @@ BOUNDS_PUSHBACK = 1
 tankModel = Model("assets/tank.fbx", false, false)
 debugSphere = Model("assets/sphere.fbx", false)
 local tankNode = tankModel:getRootNode()
--- tankBody = tankNode:findNode("body")
 trailPosNode = tankNode:findNode("trailpos")
+local borderHitSound = Sound("assets/sounds/wallhit.wav")
+borderHitSound:setVolume(80)
 
 function initTankModel(t)
     local tankMaterial = Material("assets/trail.png")
-
-    -- tankMaterial:setOpacity(1)
-    -- tankMaterial:setShaded(true)
-    -- tankMaterial:alphaIsTransparency(true)
-    -- debugSphere:getMeshes()[1]:setMaterial(tankMaterial)
     t.material = tankMaterial
     updateTankModel(t)
 
@@ -115,21 +111,25 @@ function updateTanks(dt)
       if t.pos:x() <= 0 then
         t.vel:x(-t.vel:x() + BOUNDS_PUSHBACK)
         t.pos:x(t.pos:x()+t.vel:x())
+        borderHitSound:play()
       end
 
       if t.pos:z() <= 0 then
         t.vel:z(-t.vel:z() + BOUNDS_PUSHBACK)
         t.pos:x(t.pos:x()+t.vel:x())
+        borderHitSound:play()
       end
 
       if t.pos:x() >= WORLD_SIZE*WORLD_TILES[1] then
         t.vel:x(-t.vel:x() - BOUNDS_PUSHBACK)
         t.pos:x(t.pos:x()+t.vel:x())
+        borderHitSound:play()
       end
 
       if t.pos:z() >= WORLD_SIZE*WORLD_TILES[2] then
         t.vel:z(-t.vel:z() - BOUNDS_PUSHBACK)
         t.pos:z(t.pos:z()+t.vel:z())
+        borderHitSound:play()
       end
 
       if t.pos:y() < -0 then
