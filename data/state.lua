@@ -5,8 +5,6 @@ class "StateManager" {
         self.registry = {}
         self.current = nil
         self.showingCursor = true
-
-        LogString("StateManager::__init__")
     end,
 
     switch = function(self, newState)
