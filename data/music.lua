@@ -19,9 +19,8 @@ local function shuffle(tbl)
 end
 
 local function setupTrack(name)
-    local snd = Sound("assets/music/"..name..".ogg")
+    local snd = Music("assets/music/"..name..".ogg")
     snd:setVolume(69)
-    snd:loop(false)
     return {name, snd}
 end
 
@@ -40,10 +39,11 @@ class "MusicManager" {
 
         self.tracks = shuffle(self.tracks)
 
-        self.music = {
-            setupTrack(self.tracks[1]),
-            setupTrack(self.tracks[2]),
-        }
+        self.music = {}
+
+        for _, tr in pairs(self.tracks) do
+            table.insert(self.music, setupTrack(tr))
+        end
 
         self.playing = nil
         self.fade = 0
