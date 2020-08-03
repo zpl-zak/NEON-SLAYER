@@ -6,9 +6,12 @@ localPlayerColor = 0
 tanks = {}
 
 local tankModel = Model("assets/sphere.fbx", false)
+
+-- Sounds
 local borderHitSound = Sound("assets/sounds/wallhit.wav")
 borderHitSound:setVolume(80)
 
+-- Helpers
 local function getTrailPos(t)
     local pos = t.pos
     return {pos:x(), pos:y()+15, pos:z()}
