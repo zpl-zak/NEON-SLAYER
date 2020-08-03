@@ -91,7 +91,7 @@ class "Player" {
         if self.sendTime < time then
             self.sendTime = time + SEND_TIME
             local npos = self.tank.pos
-            net.send(npos:x(), npos:y(), npos:z(), self.heading)
+            nativedll.send(npos:x(), npos:y(), npos:z(), self.heading)
         end
     end
 }

@@ -1,20 +1,19 @@
-dofile("utils.lua")
-
-net = require "slayernative"
-music = require "music"
-Tank = require "tank"
-Player = require "player"
-
-time = 0
-player = {}
-testAI = {}
-light = {}
-
-WORLD_SIZE = 1000.0
-WORLD_TILES = {5,5}
-
+-- Deps
 hh = require "helpers".global()
 cols = require "collisions"
+
+-- Common
+dofile("utils.lua")
+
+-- Modules
+nativedll = require "slayernative"
+music = require "music"
+world = require "world"
+Tank = require "tank"
+Player = require "player"
+state = require "code/state"
+
+time = 0
 
 local res = GetResolution()
 screenRT = RenderTarget(res[1], res[2])
@@ -27,7 +26,6 @@ invTexSize = Vector3(
 )
 
 fxaaShader = Effect("fx/fxaa.fx")
-world = nil
 localPlayer = Player()
 
 sun = Light()
@@ -37,22 +35,15 @@ sun:setDiffuse(0xffcc99)
 sun:setType(LIGHTKIND_DIRECTIONAL)
 sun:enable(true, 0)
 
-state = require("code/state")
-
-dofile("world.lua")
-
 function lerp(v0, v1, t)
   return v0 + t * (v1 - v0);
 end
 
-
 function _init()
   RegisterFontFile("assets/slkscr.ttf")
 
-  initWorld()
-
-  -- Set up network update event
-  net.setUpdate(function (entity_id, x, y, z, r, c, islocal, serverTrail)
+  -- Set up nativedllwork update event
+  nativedll.setUpdate(function (entity_id, x, y, z, r, c, islocal, serverTrail)
     if state:is("connecting") then
       state:switch("game")
     end
@@ -87,7 +78,7 @@ function _init()
     updateTrail(tank)
   end)
 
-  net.setCollide(function(killer_id, victim_id)
+  nativedll.setCollide(function(killer_id, victim_id)
     if victim_id == -1 then
       state:switch("death")
       LogString("BOOM WE GOT KILLED BY " .. killer_id)
@@ -100,7 +91,7 @@ function _init()
     end
   end)
 
-  net.setRespawn(function(entity_id)
+  nativedll.setRespawn(function(entity_id)
       LogString("SPAWNING PLAYERS  STUFF")
       local tank = tanks[entity_id]
       tank.alive = true
@@ -117,12 +108,12 @@ function _init()
 end
 
 function _destroy()
-   net.disconnect()
-   net.serverStop()
+   nativedll.disconnect()
+   nativedll.serverStop()
 end
 
 function _update(dt)
-  net.update()
+  nativedll.update()
   music:update(dt)
 
   if GetKey(KEY_CONTROL) and GetKeyDown("R") then
@@ -162,12 +153,12 @@ function _render()
   CameraPerspective(75, 1.0, 25000)
   Matrix():bind(WORLD)
   localPlayer.cam:bind(VIEW)
-  drawWorld()
+  world:draw()
   for _, t in pairs(tanks) do
     t:draw()
   end
   local wmat = Matrix():scale(WORLD_TILES[1], WORLD_TILES[1], WORLD_TILES[1])
-  boundsMesh:draw(wmat)
+  world.boundsMesh:draw(wmat)
   ClearTarget()
 
   drawEffect(fxaaShader, "FXAA", function (fx)

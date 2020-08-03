@@ -15,8 +15,8 @@ return class "ConnectingState" (AbstractState) {
 
         yoffset = yoffset + buttonHeight + padding
         local btnDisconnect = uiButton("Disconnect", self.resolution[1]/2-100, yoffset, 200, 50, function()
-            net.disconnect()
-            net.serverStop()
+            nativedll.disconnect()
+            nativedll.serverStop()
             state:switch("menu")
         end)
 
@@ -24,7 +24,7 @@ return class "ConnectingState" (AbstractState) {
 
         yoffset = yoffset + buttonHeight + padding
         local btnDiscord = uiButton("Our discord", self.resolution[1]/2-100, yoffset, 200, 50, function()
-            net.openLink()
+            nativedll.openLink()
         end)
 
         yoffset = yoffset + buttonHeight + padding

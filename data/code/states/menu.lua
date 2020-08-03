@@ -26,8 +26,8 @@ return class "MenuState" (AbstractState) {
         yoffset = yoffset + buttonHeight + padding
         local btnHostStart = uiButton("Host game", self.resolution[1]/2-100, yoffset, 200, 50, function()
             local port = inpHostPort.value ~= "" and tonumber(inpHostPort.value) or 27666
-            net.serverStart(port)
-            net.connect("localhost", port)
+            nativedll.serverStart(port)
+            nativedll.connect("localhost", port)
             state:switch("game")
         end)
 
@@ -43,7 +43,7 @@ return class "MenuState" (AbstractState) {
         local btnJoinStart = uiButton("Join game", self.resolution[1]/2-100, yoffset, 200, 50, function()
             local host = inpJoinHost.value
             local port = inpJoinPort.value ~= "" and tonumber(inpJoinPort.value) or 27666
-            net.connect(host, port)
+            nativedll.connect(host, port)
             state:switch("connecting")
         end)
 
@@ -51,7 +51,7 @@ return class "MenuState" (AbstractState) {
 
         yoffset = yoffset + buttonHeight + padding
         local btnDiscord = uiButton("Our discord", self.resolution[1]/2-100, yoffset, 200, 50, function()
-            net.openLink()
+            nativedll.openLink()
         end)
 
         yoffset = yoffset + buttonHeight + padding

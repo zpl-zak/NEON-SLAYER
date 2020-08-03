@@ -104,7 +104,7 @@ class "Tank" {
       self.vel:y(5.0)
     end
 
-    world:forEach(function (shape)
+    world.colsys:forEach(function (shape)
       shape:testSphere(self.pos, 5, self.vel+self.movedir-shape.pos:row(4), function (norm)
         norm = norm:normalize()
         p = norm * ((self.vel * norm) / (norm * norm))
