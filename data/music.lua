@@ -54,8 +54,17 @@ class "MusicManager" {
 
     update = function (self, dt)
         self.time = self.time + dt
+        local skip = false
 
-        if self.playing == nil or not self.playing[2]:isPlaying() then
+        if GetKeyDown("n") then
+            skip = true
+
+            if self.playing ~= nil then
+                self.playing[2]:stop()
+            end
+        end
+
+        if skip or self.playing == nil or not self.playing[2]:isPlaying() then
             self.trackId = self.trackId + 1
 
             if self.trackId > #self.music then
