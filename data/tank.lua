@@ -105,52 +105,54 @@ class "Tank" {
       self:refreshMaterial()
     end
 
-    self.vel:y(self.vel:y() - 2*dt)
+    if self.isLocal then
+      self.vel:y(self.vel:y() - 2*dt)
 
-    if self.vel:y() > 5.0 then
-      self.vel:y(5.0)
-    end
+      if self.vel:y() > 5.0 then
+        self.vel:y(5.0)
+      end
 
-    world.colsys:forEach(function (shape)
-      shape:testSphere(self.pos, 5, self.vel+self.movedir-shape.pos:row(4), function (norm)
-        norm = norm:normalize()
-        p = norm * ((self.vel * norm) / (norm * norm))
-        self.vel = (self.vel - p)
+      world.colsys:forEach(function (shape)
+        shape:testSphere(self.pos, 5, self.vel+self.movedir-shape.pos:row(4), function (norm)
+          norm = norm:normalize()
+          p = norm * ((self.vel * norm) / (norm * norm))
+          self.vel = (self.vel - p)
+        end)
       end)
-    end)
-    local hoverFactor = 2
-    self.vel = self.vel:lerp(self.movedir*1000, 0.01323)
-    self.hover = Vector3(0,math.sin(time*4) * (hoverFactor - math.min(self.vel:magSq(), hoverFactor) / hoverFactor),0)
-    self.pos = self.pos + self.vel
-    self.crotm = self.rot
+      local hoverFactor = 2
+      self.vel = self.vel:lerp(self.movedir*1000, 0.01323)
+      self.hover = Vector3(0,math.sin(time*4) * (hoverFactor - math.min(self.vel:magSq(), hoverFactor) / hoverFactor),0)
+      self.pos = self.pos + self.vel
+      self.crotm = self.rot
 
-    if self.pos:x() <= 0 then
-      self.vel:x(-self.vel:x() + BOUNDS_PUSHBACK)
-      self.pos:x(self.pos:x()+self.vel:x())
-      playHitBorderSound()
-    end
+      if self.pos:x() <= 0 then
+        self.vel:x(-self.vel:x() + BOUNDS_PUSHBACK)
+        self.pos:x(self.pos:x()+self.vel:x())
+        playHitBorderSound()
+      end
 
-    if self.pos:z() <= 0 then
-      self.vel:z(-self.vel:z() + BOUNDS_PUSHBACK)
-      self.pos:x(self.pos:x()+self.vel:x())
-      playHitBorderSound()
-    end
+      if self.pos:z() <= 0 then
+        self.vel:z(-self.vel:z() + BOUNDS_PUSHBACK)
+        self.pos:x(self.pos:x()+self.vel:x())
+        playHitBorderSound()
+      end
 
-    if self.pos:x() >= WORLD_SIZE*WORLD_TILES[1] then
-      self.vel:x(-self.vel:x() - BOUNDS_PUSHBACK)
-      self.pos:x(self.pos:x()+self.vel:x())
-      playHitBorderSound()
-    end
+      if self.pos:x() >= WORLD_SIZE*WORLD_TILES[1] then
+        self.vel:x(-self.vel:x() - BOUNDS_PUSHBACK)
+        self.pos:x(self.pos:x()+self.vel:x())
+        playHitBorderSound()
+      end
 
-    if self.pos:z() >= WORLD_SIZE*WORLD_TILES[2] then
-      self.vel:z(-self.vel:z() - BOUNDS_PUSHBACK)
-      self.pos:z(self.pos:z()+self.vel:z())
-      playHitBorderSound()
-    end
+      if self.pos:z() >= WORLD_SIZE*WORLD_TILES[2] then
+        self.vel:z(-self.vel:z() - BOUNDS_PUSHBACK)
+        self.pos:z(self.pos:z()+self.vel:z())
+        playHitBorderSound()
+      end
 
-    if self.pos:y() < -0 then
-      self.pos:y(-0)
-      self.vel:y(0)
+      if self.pos:y() < -0 then
+        self.pos:y(-0)
+        self.vel:y(0)
+      end
     end
 
     if self.aliveTime ~= nil and self.aliveTime < getTime() then
