@@ -5,6 +5,12 @@ cols = require "collisions"
 -- Common
 dofile("utils.lua")
 
+config = {
+  hostPort = 8000,
+  host = "lab.zakto.pw",
+  port = 8000
+}
+
 -- Modules
 nativedll = require "slayernative"
 music = require "music"
@@ -105,6 +111,7 @@ state:switch("menu")
 ui.init()
 
 function _destroy()
+  SaveState(encode(config))
    nativedll.disconnect()
    nativedll.serverStop()
 end

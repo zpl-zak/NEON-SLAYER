@@ -49,6 +49,7 @@ return class "ConnectingState" (AbstractState) {
         local title = "Connecting"
         local desc = "(Please wait until the we establish connection with the uplink)"
 
+        BindTexture(0)
         self.titleFont:drawText(ui.textColor, title, 0, self.offsety, self.resolution[1], 25, FONTFLAG_SINGLELINE|FONTFLAG_CENTER|FONTFLAG_NOCLIP)
         self.uiFont:drawText(ui.textColor, desc, 0, self.offsety+50, self.resolution[1], 25, FONTFLAG_SINGLELINE|FONTFLAG_CENTER|FONTFLAG_NOCLIP)
         for _,el in pairs(self.elements) do el:draw() end
