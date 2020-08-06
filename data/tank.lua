@@ -17,6 +17,10 @@ local function getTrailPos(t)
     return {pos:x(), pos:y()+15, pos:z()}
 end
 
+local function playHitBorderSound()
+  if state.is("game") then borderHitSound:play() end
+end
+
 local class = require "class"
 
 class "Tank" {
@@ -123,25 +127,25 @@ class "Tank" {
     if self.pos:x() <= 0 then
       self.vel:x(-self.vel:x() + BOUNDS_PUSHBACK)
       self.pos:x(self.pos:x()+self.vel:x())
-      borderHitSound:play()
+      playHitBorderSound()
     end
 
     if self.pos:z() <= 0 then
       self.vel:z(-self.vel:z() + BOUNDS_PUSHBACK)
       self.pos:x(self.pos:x()+self.vel:x())
-      borderHitSound:play()
+      playHitBorderSound()
     end
 
     if self.pos:x() >= WORLD_SIZE*WORLD_TILES[1] then
       self.vel:x(-self.vel:x() - BOUNDS_PUSHBACK)
       self.pos:x(self.pos:x()+self.vel:x())
-      borderHitSound:play()
+      playHitBorderSound()
     end
 
     if self.pos:z() >= WORLD_SIZE*WORLD_TILES[2] then
       self.vel:z(-self.vel:z() - BOUNDS_PUSHBACK)
       self.pos:z(self.pos:z()+self.vel:z())
-      borderHitSound:play()
+      playHitBorderSound()
     end
 
     if self.pos:y() < -0 then
