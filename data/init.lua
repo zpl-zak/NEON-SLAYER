@@ -6,9 +6,9 @@ cols = require "collisions"
 dofile("utils.lua")
 
 config = {
-  hostPort = 8000,
+  hostPort = "8000",
   host = "lab.zakto.pw",
-  port = 8000
+  port = "8000"
 }
 
 -- Modules
