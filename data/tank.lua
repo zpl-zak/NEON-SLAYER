@@ -3,7 +3,6 @@ MAX_TRAILS = 150.0
 TRAIL_TIME = 0.05
 
 localPlayerColor = 0
-tanks = {}
 
 local tankModel = Model("assets/sphere.fbx", false)
 
@@ -47,8 +46,8 @@ class "Tank" {
     self.heading = 0
 
     if color ~= nil then
-      t.color = color
-      LogString("setting color for remote entity to:" .. color)
+      self.color = color
+
     end
 
     local l = Light()
@@ -60,9 +59,6 @@ class "Tank" {
     self.light = l
 
     self:refreshMaterial()
-
-    tanks[id] = self
-    return self
   end,
 
   refreshMaterial = function (self)
@@ -83,7 +79,7 @@ class "Tank" {
     self.trailMaterial:alphaIsTransparency(true)
   end,
 
-  update = function (self, dt)
+  updateTrail = function (self)
     if self.trailTime < time and self.alive then
       self.trailTime = time + TRAIL_TIME
 
@@ -95,10 +91,14 @@ class "Tank" {
           table.insert(self.trails, getTrailPos(self))
       end
     end
+  end,
 
-    if not self.alive then
-      return
-    end
+  update = function (self, dt)
+    self:updateTrail()
+
+    -- if not self.alive then
+    --   return
+    -- end
 
     if self.isLocal and self.color ~= localPlayerColor then
       self.color = localPlayerColor
@@ -154,9 +154,10 @@ class "Tank" {
     end
 
     if self.aliveTime ~= nil and self.aliveTime < getTime() then
-      LogString("removing player " .. idx)
+      LogString("Alive time: " .. self.aliveTime .. " curr: " .. getTime())
+      LogString("removing player " .. self.id)
       self.alive = false
-      tanks[idx] = nil
+      tanks[self.id] = nil
     end
   end,
 

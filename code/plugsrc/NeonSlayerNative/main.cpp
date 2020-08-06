@@ -126,7 +126,7 @@ private:
 
 static INT ne_server_start(lua_State* L) {
     if (server) {
-        OutputDebugStringA("[server] Server is already running...\n");
+        UI->PushLog("[server] Server is already running...\n");
         lua_pushnumber(L, -1);
         return 1;
     }
@@ -141,12 +141,12 @@ static INT ne_server_start(lua_State* L) {
     server = enet_host_create(&address, 32, 2, 0, 0);
 
     if (server == NULL) {
-        OutputDebugStringA("[server] An error occurred while trying to create an ENet server host.\n");
+        UI->PushLog("[server] An error occurred while trying to create an ENet server host.\n");
         lua_pushnumber(L, -1);
         return 1;
     }
 
-    OutputDebugStringA("[server] Started an ENet server...\n");
+    UI->PushLog("[server] Started an ENet server...\n");
     lua_pushnumber(L, 1);
     return 1;
 }
@@ -166,7 +166,7 @@ static INT ne_server_stop(lua_State* L) {
 
 static INT ne_connect(lua_State* L) {
     if (client || client_peer) {
-        OutputDebugStringA("[client] You are already connected, disconnect first\n");
+        UI->PushLog("[client] You are already connected, disconnect first\n");
         lua_pushnumber(L, -1);
         return 1;
     }
@@ -181,7 +181,7 @@ static INT ne_connect(lua_State* L) {
     client_peer = enet_host_connect(client, &address, 2, 0);
 
     if (client_peer == NULL) {
-        OutputDebugStringA("[client] Cannot connect\n");
+        UI->PushLog("[client] Cannot connect\n");
         lua_pushnumber(L, -1);
         return 1;
     }
@@ -268,7 +268,7 @@ void ne_server_update(lua_State* L) {
     while (enet_host_service(server, &event, 2) > 0) {
         switch (event.type) {
             case ENET_EVENT_TYPE_CONNECT: {
-                OutputDebugStringA("[server] A new user connected.\n");
+                UI->PushLog("[server] A new user connected.\n");
                 uint16_t entity_id = event.peer->incomingPeerID;
 
                 /* allocate and store entity data in the data part of peer */
@@ -292,7 +292,7 @@ void ne_server_update(lua_State* L) {
             } break;
             case ENET_EVENT_TYPE_DISCONNECT:
             case ENET_EVENT_TYPE_DISCONNECT_TIMEOUT: {
-                OutputDebugStringA("[server]  A user disconnected.\n");
+                UI->PushLog("[server]  A user disconnected.\n");
                 uint16_t entity_id = event.peer->incomingPeerID;
                 // zpl_ring_ne_vec3_free(&ne_server_data[entity_id].trail);
                 delete ne_server_data[entity_id].trail;
@@ -483,11 +483,11 @@ void ne_client_update(lua_State* L) {
     while (enet_host_service(host, &event, 2) > 0) {
         switch (event.type) {
             case ENET_EVENT_TYPE_CONNECT: {
-                OutputDebugStringA("[client] We connected to the server.\n");
+                UI->PushLog("[client] We connected to the server.\n");
             } break;
             case ENET_EVENT_TYPE_DISCONNECT:
             case ENET_EVENT_TYPE_DISCONNECT_TIMEOUT: {
-                OutputDebugStringA("[client] We disconnected from server.\n");
+                UI->PushLog("[client] We disconnected from server.\n");
             } break;
 
             case ENET_EVENT_TYPE_RECEIVE: {
@@ -508,7 +508,7 @@ void ne_client_update(lua_State* L) {
                         uint16_t c = *(uint16_t*)(buffer + offset); offset += sizeof(uint16_t);
                         uint8_t islocal = *(uint8_t*)(buffer + offset); offset += sizeof(uint8_t);
 
-                        // OutputDebugStringA(CString::Format("update: %ld: [%f %f %f] %f %d\n", entity_id, x, y, z, r, c).Str());
+                        // UI->PushLog(CString::Format("update: %ld: [%f %f %f] %f %d\n", entity_id, x, y, z, r, c).Str());
 
                         lua_rawgeti(L, LUA_REGISTRYINDEX, tankupdateref);
                         lua_pushvalue(L, 1);
@@ -591,11 +591,11 @@ void ne_client_update(lua_State* L) {
                 }
                 else if (packetid == 4) {
                     int color = *((uint16_t*)(buffer)+1);
-                    OutputDebugStringA(CString::Format("setting my own color: %d\n", color).Str());
+                    UI->PushLog(CString::Format("setting my own color: %d\n", color).Str());
                     REGN(localPlayerColor, color);
                 }
                 else if (packetid == 5) {
-                    OutputDebugStringA("RECEIVED SPAWN MESSAGE\n");
+                    UI->PushLog("RECEIVED SPAWN MESSAGE\n");
 
                     int entity_id = *((int16_t*)(buffer)+1);
 

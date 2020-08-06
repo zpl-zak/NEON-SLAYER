@@ -15,6 +15,7 @@ class "Player" {
 
         self.soundEngine:setVolume(85)
         self.soundEngine:loop(true)
+        tanks[-1] = self.tank
     end,
 
     soundPlay = function (self)
@@ -23,6 +24,10 @@ class "Player" {
 
     soundStop = function (self)
         self.soundEngine:stop()
+    end,
+
+    draw = function (self)
+        self.tank:draw()
     end,
 
     update = function (self, dt)

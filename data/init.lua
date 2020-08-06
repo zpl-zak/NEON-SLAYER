@@ -23,6 +23,7 @@ Player = require "player"
 
 -- Globals
 time = 0
+tanks = {}
 
 local res = GetResolution()
 screenRT = RenderTarget(res[1], res[2])
@@ -60,7 +61,7 @@ nativedll.setUpdate(function (entity_id, x, y, z, r, c, islocal, serverTrail)
   end
 
   if tanks[entity_id] == nil then
-    addTank(entity_id, c)
+    tanks[entity_id] = Tank(entity_id, c)
     tanks[entity_id].pos = Vector3(x, y, z)
   end
 
@@ -79,7 +80,7 @@ nativedll.setUpdate(function (entity_id, x, y, z, r, c, islocal, serverTrail)
   if serverTrail ~= nil then
     tank.serverTrail = serverTrail
   end
-  updateTrail(tank)
+  tank:updateTrail()
 end)
 
 nativedll.setCollide(function(killer_id, victim_id)
@@ -96,8 +97,10 @@ nativedll.setCollide(function(killer_id, victim_id)
 end)
 
 nativedll.setRespawn(function(entity_id)
-    LogString("SPAWNING PLAYERS  STUFF")
+    LogString("SPAWNING PLAYERS STUFF: " .. entity_id)
     local tank = tanks[entity_id]
+
+    if tank == nil then return end
     tank.alive = true
     tank.trails = {}
 end)
@@ -161,8 +164,11 @@ function _render()
   for _, t in pairs(tanks) do
     t:draw()
   end
+
   local wmat = Matrix():scale(WORLD_TILES[1], WORLD_TILES[1], WORLD_TILES[1])
+  CullMode(CULLKIND_NONE)
   world.boundsMesh:draw(wmat)
+  CullMode(CULLKIND_CCW)
   ClearTarget()
 
   drawEffect(fxaaShader, "FXAA", function (fx)

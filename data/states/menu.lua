@@ -50,6 +50,7 @@ return class "MenuState" (AbstractState) {
             SaveState(encode(config))
             nativedll.connect(host, port)
             state:switch("connecting")
+            LogString("Connecting to " .. host .. ":" .. port)
         end)
 
         yoffset = yoffset + groupMargin
