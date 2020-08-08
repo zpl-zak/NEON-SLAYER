@@ -1,6 +1,7 @@
 BOUNDS_PUSHBACK = 1
 MAX_TRAILS = 150.0
 TRAIL_TIME = 0.05
+SPHERE_BOUNCE_RADIUS = 50
 
 localPlayerColor = 0
 
@@ -153,6 +154,18 @@ class "Tank" {
             if self.pos:y() < -0 then
                 self.pos:y(-0)
                 self.vel:y(0)
+            end
+
+            -- TODO handle proper shit
+            for _, ot in pairs(tanks) do
+                if ot.isLocal and not ot.alive then goto _ end
+                local dist = (ot.pos - self.pos):mag()
+
+                if dist <= SPHERE_BOUNCE_RADIUS then
+                    self.vel:x(-self.vel:x()*5)
+                    self.vel:z(-self.vel:z()*5)
+                end
+                ::_::
             end
 
             -- IMPORTANT: send data to server

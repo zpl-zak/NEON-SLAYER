@@ -14,13 +14,6 @@ return class "SettingsState" (AbstractState) {
         local yoffset = self.offsety + 50
 
         yoffset = yoffset + buttonHeight + padding
-        local nickname = uiInput("Nickname", self.resolution[1]/2-100, yoffset, 200, 50, function(self, value)
-            config.nickname = value
-            SaveState(encode(config))
-        end)
-        nickname.value = config.nickname
-
-        yoffset = yoffset + buttonHeight + padding
         local a1 = uiSlider({cur = config.volume.music}, "Music volume", self.resolution[1]/2-100, yoffset, 200, 50, function(self, value)
             config.volume.music = value
             SaveState(encode(config))
@@ -36,12 +29,15 @@ return class "SettingsState" (AbstractState) {
 
         yoffset = yoffset + buttonHeight + padding
         local btnQuit = uiButton("< Back", self.resolution[1]/2-100, yoffset, 200, 50, function()
-            state:switch("menu")
+            if state:previous() == "pause" then
+                state:switch("pause")
+            else
+                state:switch("menu")
+            end
         end)
 
         table.insert(self.elements, a1)
         table.insert(self.elements, a2)
-        table.insert(self.elements, nickname)
         table.insert(self.elements, btnQuit)
     end,
 
@@ -55,7 +51,7 @@ return class "SettingsState" (AbstractState) {
 
     draw2d = function(self)
         local title = "Settings"
-        local desc = "nickname, volume, etc."
+        local desc = "volume, sound, musical perception and other names"
 
         BindTexture(0)
         self.titleFont:drawText(ui.textColor, title, 0, self.offsety, self.resolution[1], 25, FONTFLAG_SINGLELINE|FONTFLAG_CENTER|FONTFLAG_NOCLIP)

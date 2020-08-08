@@ -89,9 +89,8 @@ class "World" {
         self.terrainShader:done()
 
         local wmat = Matrix():scale(WORLD_TILES[1], WORLD_TILES[1], WORLD_TILES[1])
-        CullMode(CULLKIND_NONE)
-        self.gradientMesh:draw(wmat)
         CullMode(CULLKIND_CCW)
+        self.gradientMesh:draw(wmat)
         self.sunGlareMesh:draw(wmat)
         self.sunMesh:draw(wmat)
         for i=#self.bdMesh,1,-1 do

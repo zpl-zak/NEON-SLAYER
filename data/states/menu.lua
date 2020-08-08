@@ -55,8 +55,15 @@ return class "MenuState" (AbstractState) {
 
         yoffset = yoffset + groupMargin
 
+        -- yoffset = yoffset + buttonHeight + padding
+        -- local nickname = uiInput("Nickname", self.resolution[1]/2-100, yoffset, 200, 50, function(self, value)
+        --     config.nickname = value
+        --     SaveState(encode(config))
+        -- end)
+        -- nickname.value = config.nickname
+
         yoffset = yoffset + buttonHeight + padding
-        local btnSettings = uiButton("Settings", self.resolution[1]/2-100, yoffset, 200, 50, function()
+        local btnSettings = uiButton("Sound Settings", self.resolution[1]/2-100, yoffset, 200, 50, function()
             state:switch("settings")
         end)
 
@@ -70,11 +77,6 @@ return class "MenuState" (AbstractState) {
             ExitGame()
         end)
 
-        -- TODO: Figure out better place for this
-        if LoadState() ~= nil then
-            config = merge(config, decode(LoadState()))
-        end
-
         inpJoinHost.value = tostring(config.host)
         inpJoinPort.value = tostring(config.port)
         inpHostPort.value = tostring(config.hostPort)
@@ -86,6 +88,7 @@ return class "MenuState" (AbstractState) {
         table.insert(self.elements, btnJoinStart)
         table.insert(self.elements, btnSettings)
         table.insert(self.elements, btnDiscord)
+        -- table.insert(self.elements, nickname)
         table.insert(self.elements, btnQuit)
     end,
 

@@ -14,6 +14,11 @@ return class "PausedState" (AbstractState) {
         local yoffset = self.offsety + 50
 
         yoffset = yoffset + buttonHeight + padding
+        local resume = uiButton("resume", self.resolution[1]/2-100, yoffset, 200, 50, function()
+            state:switch("game")
+        end)
+
+        yoffset = yoffset + buttonHeight + padding
         local btnDisconnect = uiButton("Disconnect", self.resolution[1]/2-100, yoffset, 200, 50, function()
             nativedll.disconnect()
             nativedll.serverStop()
@@ -21,6 +26,11 @@ return class "PausedState" (AbstractState) {
         end)
 
         yoffset = yoffset + groupMargin
+
+        yoffset = yoffset + buttonHeight + padding
+        local settings = uiButton("Sound settings", self.resolution[1]/2-100, yoffset, 200, 50, function()
+            state:switch("settings")
+        end)
 
         yoffset = yoffset + buttonHeight + padding
         local btnDiscord = uiButton("Our discord", self.resolution[1]/2-100, yoffset, 200, 50, function()
@@ -32,6 +42,8 @@ return class "PausedState" (AbstractState) {
             ExitGame()
         end)
 
+        table.insert(self.elements, settings)
+        table.insert(self.elements, resume)
         table.insert(self.elements, btnDisconnect)
         table.insert(self.elements, btnDiscord)
         table.insert(self.elements, btnQuit)

@@ -46,5 +46,6 @@ end
 
 function playSFX(sound, factor)
     sound:setVolume(math.floor(100 * config.volume.sound * (factor or 1.0)))
+    sound:stop()
     sound:play()
 end
