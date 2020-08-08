@@ -14,7 +14,7 @@ set "proj=basic"
 
 :begin
 	cls
-	
+
 	echo Lines game
 	echo =======================
 	echo  1. Exit
@@ -32,11 +32,11 @@ set "proj=basic"
 	echo  E. Run debug
 	echo  G. Open in explorer
 	echo  I. Open itch.io page
-	echo  J. Open libs in lite
+	echo  J. Pull engine changes
 	echo =======================
 	choice /C 123456789ABCDEFGHIJ /N /M "Your choice:"
 	echo.
-	
+
 	if %errorlevel%==1 goto :EOF
 	if %errorlevel%==2 call :build
 	if %errorlevel%==3 call :debug
@@ -54,8 +54,8 @@ set "proj=basic"
 	rem if %errorlevel%==15 call :new_project
 	if %errorlevel%==16 call :open_explorer
 	rem if %errorlevel%==17 call :toggle_base
-	if %errorlevel%==18 start "" "https://zaklaus.itch.io/neon-86"
-	if %errorlevel%==19 call :open_in_lite_libs
+	if %errorlevel%==18 start "" "https://zaklaus.itch.io/neon-slayer"
+	if %errorlevel%==19 call :sync_engine
 
 goto :begin
 
@@ -73,7 +73,7 @@ exit /B 0
 	echo =======================
 	choice /C 12 /N /M "Your choice:"
 	echo.
-	
+
 	if %errorlevel%==1 exit /B 1
 exit /B 0
 
@@ -106,7 +106,7 @@ exit /B 0
 	xcopy /Y README.md build\deploy\
 	del   /S /Q /F build\deploy\*.blend
 	echo.
-	
+
 	:package_prompt
 		echo LINES DEPLOY
 		echo =======================
@@ -129,15 +129,14 @@ goto :package_prompt
 :deploy
 	call :build_release
 	if %errorlevel%==0 exit /B 0
-	
+
 	call :package
 	if %errorlevel%==0 exit /B 0
-	
+
 	rem Upload process
 	pushd build\
 		echo Deploying to itch.io ...
-		echo NOT YET
-		rem butler push deploy zaklaus/neon-86:win32-%proj%-demo
+		butler push deploy zaklaus/neon-slayer:win32-release
 	popd
 	pause
 exit /B 0
@@ -161,8 +160,9 @@ exit /B 0
 	start lite data
 exit /B 0
 
-:open_in_lite_libs
-	start lite libs\
+:sync_engine
+	robocopy "W:\neon86\code\engine" "code\engine" /mir
+	pause
 exit /B 0
 
 :git_pull

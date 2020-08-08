@@ -1,67 +1,9 @@
-boundsMesh = nil
+WORLD_SIZE = 1000.0
+WORLD_TILES = {5,5}
 
-local terrain, terrainMaterial, backdropModel, boundsMaterial, gradientMaterial
-local gradientMesh, sunMesh, sunGlareMesh
-local bdMesh = {}
 local ACTIVE_TILE_TEX_SLOT = 42
 
-world = {}
-local terrainShader
-
-function initWorld()
-    terrain = Model("assets/terrain.fbx")
-    terrainMaterial = Material("assets/tile_base.png")
-    terrainMaterial:setDiffuse(0x815192)
-    terrainMaterial:setPower(120)
-    terrain:getMeshes()[1]:setMaterial(terrainMaterial)
-
-    terrainMaterial:loadFile("assets/tile_active.png", ACTIVE_TILE_TEX_SLOT)
-
-    boundsMaterial = Material("assets/bounds.png")
-    boundsMaterial:setShaded(false)
-    boundsMaterial:alphaIsTransparency(true)
-
-    gradientMaterial = Material("assets/gradient.png")
-    gradientMaterial:setShaded(false)
-
-    world = cols.newWorld()
-
-    local meshNode = terrain:getRootNode():findNode("terrain")
-    local mesh = meshNode:getMeshParts()[1][1]
-    local baseCols = cols.newTriangleMeshFromPart(mesh, meshNode:getFinalTransform():translate(Vector3()))
-
-    for i=0,(WORLD_TILES[1]-1),1 do
-        for j=0,(WORLD_TILES[2]-1),1 do
-            addTile(baseCols, Vector3(WORLD_SIZE*i,0,WORLD_SIZE*j))
-        end
-    end
-
-    terrainShader = Effect("fx/terrain.fx")
-
-    backdropModel = Model("assets/backdrop.fbx")
-    backdropRoot = backdropModel:getRootNode()
-    boundsMesh = backdropRoot:findNode("bounds")
-    gradientMesh = backdropRoot:findNode("gradient")
-    sunMesh = backdropRoot:findNode("sun")
-    sunGlareMesh = backdropRoot:findNode("sunglare")
-    boundsMesh:getMeshes()[1]:setMaterial(boundsMaterial)
-    gradientMesh:getMeshes()[1]:setMaterial(gradientMaterial)
-
-    bdMesh = backdropRoot:findNode("bd"):getNodes()
-
-    for _, bd in pairs(bdMesh) do
-        local dm = bd:getMeshes()[1]
-        local m = dm:getMaterial(1)
-        m:setShaded(false)
-    end
-
-    sunMesh:getMeshes()[1]:getMaterial(1):setShaded(false)
-    sunGlareMesh:getMeshes()[1]:getMaterial(1):setShaded(false)
-    sunGlareMesh:getMeshes()[1]:getMaterial(1):alphaTest(false)
-    sunGlareMesh:getMeshes()[1]:getMaterial(1):setAlphaRef(0)
-end
-
-function addTile(col, pos)
+local function addTile(colsys, col, pos)
     local b = col.bounds
 
     local terrainMesh = setmetatable({
@@ -71,28 +13,91 @@ function addTile(col, pos)
     }, col.__index)
     terrainMesh.pos = Matrix():translate(pos)
 
-    world:addCollision(terrainMesh)
+    colsys:addCollision(terrainMesh)
 end
 
-function drawWorld()
-    terrainShader:begin("Main")
-    terrainShader:beginPass("Default")
-    terrainShader:setFloat("time", time)
-    terrainShader:setVector3("campos", player.pos:neg())
-    terrainShader:setLight("sun", light)
-    terrainShader:setTexture("active_tile", terrainMaterial:getHandle(ACTIVE_TILE_TEX_SLOT))
-    terrainShader:commit()
-    for _, w in pairs(world.shapes) do
-        terrain:draw(w.pos)
-    end
-    terrainShader:endPass()
-    terrainShader:done()
+local class = require "class"
 
-    local wmat = Matrix():scale(WORLD_TILES[1], WORLD_TILES[1], WORLD_TILES[1])
-    gradientMesh:draw(wmat)
-    sunGlareMesh:draw(wmat)
-    sunMesh:draw(wmat)
-    for i=#bdMesh,1,-1 do
-        bdMesh[i]:draw(wmat)
+class "World" {
+    __init__ = function (self)
+        self.terrain = Model("assets/terrain.fbx")
+        self.terrainMaterial = Material("assets/tile_base.png")
+        self.terrainMaterial:setDiffuse(0x815192)
+        self.terrainMaterial:setPower(120)
+        self.terrain:getMeshes()[1]:setMaterial(self.terrainMaterial)
+
+        self.terrainMaterial:loadFile("assets/tile_active.png", ACTIVE_TILE_TEX_SLOT)
+
+        self.boundsMaterial = Material("assets/bounds.png")
+        self.boundsMaterial:setShaded(false)
+        self.boundsMaterial:alphaIsTransparency(true)
+
+        self.gradientMaterial = Material("assets/gradient.png")
+        self.gradientMaterial:setShaded(false)
+
+        self.colsys = cols.newWorld()
+
+        local meshNode = self.terrain:getRootNode():findNode("terrain")
+        local mesh = meshNode:getMeshParts()[1][1]
+        local baseCols = cols.newTriangleMeshFromPart(mesh, meshNode:getFinalTransform():translate(Vector3()))
+
+        for i=0,(WORLD_TILES[1]-1),1 do
+            for j=0,(WORLD_TILES[2]-1),1 do
+                addTile(self.colsys, baseCols, Vector3(WORLD_SIZE*i,0,WORLD_SIZE*j))
+            end
+        end
+
+        self.terrainShader = Effect("fx/terrain.fx")
+
+        self.backdropModel = Model("assets/backdrop.fbx")
+        self.backdropRoot = self.backdropModel:getRootNode()
+        self.boundsMesh = self.backdropRoot:findNode("bounds")
+        self.gradientMesh = self.backdropRoot:findNode("gradient")
+        self.sunMesh = self.backdropRoot:findNode("sun")
+        self.sunGlareMesh = self.backdropRoot:findNode("sunglare")
+        self.boundsMesh:getMeshes()[1]:setMaterial(self.boundsMaterial)
+        self.gradientMesh:getMeshes()[1]:setMaterial(self.gradientMaterial)
+
+        self.bdMesh = self.backdropRoot:findNode("bd"):getNodes()
+
+        for _, bd in pairs(self.bdMesh) do
+            local dm = bd:getMeshes()[1]
+            local m = dm:getMaterial(1)
+            m:setShaded(false)
+        end
+
+        self.sunMesh:getMeshes()[1]:getMaterial(1):setShaded(false)
+        self.sunGlareMesh:getMeshes()[1]:getMaterial(1):setShaded(false)
+        self.sunGlareMesh:getMeshes()[1]:getMaterial(1):alphaTest(false)
+        self.sunGlareMesh:getMeshes()[1]:getMaterial(1):setAlphaRef(0)
+
+        return self
+    end,
+
+    draw = function (self)
+        self.terrainShader:begin("Main")
+        self.terrainShader:beginPass("Default")
+        self.terrainShader:setFloat("time", time)
+        self.terrainShader:setVector3("campos", localPlayer.pos:neg())
+        self.terrainShader:setLight("sun", sun)
+        self.terrainShader:setTexture("active_tile", self.terrainMaterial:getHandle(ACTIVE_TILE_TEX_SLOT))
+        self.terrainShader:commit()
+        for _, w in pairs(world.colsys.shapes) do
+            self.terrain:draw(w.pos)
+        end
+        self.terrainShader:endPass()
+        self.terrainShader:done()
+
+        local wmat = Matrix():scale(WORLD_TILES[1], WORLD_TILES[1], WORLD_TILES[1])
+        CullMode(CULLKIND_NONE)
+        self.gradientMesh:draw(wmat)
+        CullMode(CULLKIND_CCW)
+        self.sunGlareMesh:draw(wmat)
+        self.sunMesh:draw(wmat)
+        for i=#self.bdMesh,1,-1 do
+            self.bdMesh[i]:draw(wmat)
+        end
     end
-end
+}
+
+return World()

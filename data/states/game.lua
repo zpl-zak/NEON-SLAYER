@@ -1,15 +1,15 @@
-local class = require("code/class")
-local state = require("code/state")
-local AbstractState = require("code/states/abstract")
+local class = require "class"
+local state = require("state")
+local AbstractState = require("states/abstract")
 
 return class "GameState" (AbstractState) {
     enter = function(self)
         state:setCursor(false)
-        player.soundPlay()
+        localPlayer:soundPlay()
     end,
 
     leave = function(self)
-        player.soundStop()
+        localPlayer:soundStop()
     end,
 
     update = function(self)

@@ -134,6 +134,7 @@ function uiInputImpl.draw(self)
   if self.hovered then colorMain = 0xffC5C4E0 end
   if ui.focused == self then colorMain = 0xffE6E4FF end
 
+  BindTexture(0)
   DrawQuad(x, w, y, h, ui.borderColor, 0)
   DrawQuad(x+brd, w-brd, y+brd, h-brd, colorMain, 0)
 

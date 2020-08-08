@@ -1,12 +1,10 @@
-local class = require("code/class")
+local class = require "class"
 
 class "StateManager" {
     __init__ = function(self)
         self.registry = {}
         self.current = nil
         self.showingCursor = true
-
-        LogString("StateManager::__init__")
     end,
 
     switch = function(self, newState)

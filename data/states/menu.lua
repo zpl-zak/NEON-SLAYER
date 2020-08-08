@@ -1,8 +1,8 @@
-local class = require("code/class")
-local state = require("code/state")
-local AbstractState = require("code/states/abstract")
+local class = require "class"
+local state = require("state")
+local AbstractState = require("states/abstract")
 
-dofile("code/ui.lua")
+dofile("ui.lua")
 
 return class "MenuState" (AbstractState) {
     __init__ = function(self)
@@ -26,8 +26,10 @@ return class "MenuState" (AbstractState) {
         yoffset = yoffset + buttonHeight + padding
         local btnHostStart = uiButton("Host game", self.resolution[1]/2-100, yoffset, 200, 50, function()
             local port = inpHostPort.value ~= "" and tonumber(inpHostPort.value) or 27666
-            net.serverStart(port)
-            net.connect("localhost", port)
+            config.hostPort = port
+            SaveState(encode(config))
+            nativedll.serverStart(port)
+            nativedll.connect("localhost", port)
             state:switch("game")
         end)
 
@@ -43,21 +45,34 @@ return class "MenuState" (AbstractState) {
         local btnJoinStart = uiButton("Join game", self.resolution[1]/2-100, yoffset, 200, 50, function()
             local host = inpJoinHost.value
             local port = inpJoinPort.value ~= "" and tonumber(inpJoinPort.value) or 27666
-            net.connect(host, port)
+            config.host = host
+            config.port = port
+            SaveState(encode(config))
+            nativedll.connect(host, port)
             state:switch("connecting")
+            LogString("Connecting to " .. host .. ":" .. port)
         end)
 
         yoffset = yoffset + groupMargin
 
         yoffset = yoffset + buttonHeight + padding
         local btnDiscord = uiButton("Our discord", self.resolution[1]/2-100, yoffset, 200, 50, function()
-            net.openLink()
+            nativedll.openLink()
         end)
 
         yoffset = yoffset + buttonHeight + padding
         local btnQuit = uiButton("Quit", self.resolution[1]/2-100, yoffset, 200, 50, function()
             ExitGame()
         end)
+
+        -- TODO: Figure out better place for this
+        if LoadState() ~= nil then
+            config = decode(LoadState())
+        end
+
+        inpJoinHost.value = tostring(config.host)
+        inpJoinPort.value = tostring(config.port)
+        inpHostPort.value = tostring(config.hostPort)
 
         table.insert(self.elements, inpHostPort)
         table.insert(self.elements, inpJoinHost)
