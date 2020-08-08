@@ -36,7 +36,7 @@ end
 function ui.input(key)
     if ui.focused ~= nil then
         ui.focused.value = ui.focused.value .. key
-        if ui.focused:callback ~= nil then
+        if ui.focused.callback ~= nil then
             ui.focused:callback(ui.focused.value)
         end
     end
