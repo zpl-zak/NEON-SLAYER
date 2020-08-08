@@ -11,7 +11,7 @@ config = {
     port = "8000",
     nickname = "",
     volume = {
-        music = 0.30,
+        music = 0.50,
         sound = 0.75,
     },
 }
@@ -21,6 +21,7 @@ nativedll = require "slayernative"
 music = require "music"
 world = require "world"
 state = require "state"
+notify = require "notify"
 
 -- Game
 Tank = require "tank"
@@ -102,7 +103,7 @@ nativedll.setCollide(function(killer_id, victim_id)
     else
         if tanks[victim_id] ~= nil then
             if tanks[-1].entity_id == killer_id then
-                LogString("BOOM WE DESTROYYED A PLAYER: " .. victim_id)
+                notify:push("You've annihilated another player")
             end
             tanks[victim_id].alive = false
             tanks[victim_id].trails = {}

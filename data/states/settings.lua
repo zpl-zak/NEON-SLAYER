@@ -31,7 +31,8 @@ return class "SettingsState" (AbstractState) {
             config.volume.sound = value
             SaveState(encode(config))
         end)
-        -- yoffset = yoffset + groupMargin
+
+        yoffset = yoffset + groupMargin
 
         yoffset = yoffset + buttonHeight + padding
         local btnQuit = uiButton("< Back", self.resolution[1]/2-100, yoffset, 200, 50, function()
