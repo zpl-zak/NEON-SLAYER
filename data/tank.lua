@@ -154,6 +154,9 @@ class "Tank" {
                 self.pos:y(-0)
                 self.vel:y(0)
             end
+
+            -- IMPORTANT: send data to server
+            nativedll.send(self.pos:x(), self.pos:y(), self.pos:z(), 0)
         end
 
         if self.aliveTime ~= nil and self.aliveTime < getTime() then

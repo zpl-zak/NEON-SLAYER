@@ -1,5 +1,4 @@
 SPEED = 1
-SEND_TIME = 0.05
 
 local class = require "class"
 
@@ -89,12 +88,6 @@ class "Player" {
             end
 
             self.soundEngine:setFrequency(44100 + math.floor(self.tank.vel:mag() * 4500))
-        end
-
-        if self.sendTime < time then
-            self.sendTime = time + SEND_TIME
-            local npos = self.tank.pos
-            nativedll.send(npos:x(), npos:y(), npos:z(), self.heading)
         end
     end
 }

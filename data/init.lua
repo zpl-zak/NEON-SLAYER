@@ -76,9 +76,9 @@ nativedll.setUpdate(function (entity_id, x, y, z, r, c, islocal, serverTrail)
 
     tank.color = c
     -- tank.pos = Vector3(x,y,z)
-    local nx = lerp(tank.pos:x(), x, 0.1)
-    local ny = lerp(tank.pos:y(), y, 0.1)
-    local nz = lerp(tank.pos:z(), z, 0.1)
+    local nx = lerp(tank.pos:x(), x, 1.05)
+    local ny = lerp(tank.pos:y(), y, 1.05)
+    local nz = lerp(tank.pos:z(), z, 1.05)
     tank.pos = Vector3(nx, ny, nz)
     tank.rot = Matrix():rotate(r+math.rad(90),0,0)
     tank.aliveTime = getTime() + 5
