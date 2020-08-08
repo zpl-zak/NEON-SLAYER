@@ -158,7 +158,7 @@ class "Tank" {
 
             -- TODO handle proper shit
             for _, ot in pairs(tanks) do
-                if ot.isLocal and not ot.alive then goto _ end
+                if ot.isLocal or not ot.alive then goto _ end
                 local dist = (ot.pos - self.pos):mag()
 
                 if dist <= SPHERE_BOUNCE_RADIUS then

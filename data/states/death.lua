@@ -13,6 +13,7 @@ return class "DeathState" (AbstractState) {
             20,
             math.random(WORLD_SIZE,(WORLD_SIZE)*WORLD_TILES[2])
         )
+        tanks[-1].vel = Vector3()
     end,
 
     update = function(self, dt)
