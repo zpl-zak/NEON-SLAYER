@@ -11,8 +11,8 @@ config = {
     port = "8000",
     nickname = "",
     volume = {
-        music = 0.75,
-        sound = 0.5,
+        music = 0.30,
+        sound = 0.75,
     },
 }
 
@@ -62,6 +62,7 @@ nativedll.setUpdate(function (entity_id, x, y, z, r, c, islocal, serverTrail)
         if serverTrail ~= nil then
             tanks[-1].serverTrail = serverTrail
         end
+        tanks[-1].entity_id = entity_id
         return
     end
 
@@ -81,6 +82,7 @@ nativedll.setUpdate(function (entity_id, x, y, z, r, c, islocal, serverTrail)
     tank.rot = Matrix():rotate(r+math.rad(90),0,0)
     tank.aliveTime = getTime() + 5
     tank.heading = r
+    tank.entity_id = entity_id
 
     if serverTrail ~= nil then
         tank.serverTrail = serverTrail
@@ -99,7 +101,9 @@ nativedll.setCollide(function(killer_id, victim_id)
         LogString("BOOM WE GOT KILLED BY " .. killer_id)
     else
         if tanks[victim_id] ~= nil then
-            LogString("Removing PLAYERS TRAIL KILLING IT AND STUFF")
+            if tanks[-1].entity_id == killer_id then
+                LogString("BOOM WE DESTROYYED A PLAYER: " .. victim_id)
+            end
             tanks[victim_id].alive = false
             tanks[victim_id].trails = {}
         end

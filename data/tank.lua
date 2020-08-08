@@ -31,6 +31,7 @@ class "Tank" {
             10,
             math.random(WORLD_SIZE,(WORLD_SIZE)*WORLD_TILES[2])
         )
+        self.entity_id = "0"
         self.movedir = Vector3()
         self.hover = Vector3()
         self.vel = Vector()
