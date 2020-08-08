@@ -1,7 +1,7 @@
 BOUNDS_PUSHBACK = 1
 MAX_TRAILS = 150.0
 TRAIL_TIME = 0.05
-SPHERE_BOUNCE_RADIUS = 80
+SPHERE_BOUNCE_RADIUS = 60
 
 localPlayerColor = 0
 
@@ -162,9 +162,8 @@ class "Tank" {
                 local dist = (ot.pos - self.pos):mag()
 
                 if dist <= SPHERE_BOUNCE_RADIUS then
-                    local vel = self.vel:normalize()
-                    self.vel:x(-vel:x()*20)
-                    self.vel:z(-vel:z()*20)
+                    self.vel:x(-self.vel:x()*3)
+                    self.vel:z(-self.vel:z()*3)
                 end
                 ::_::
             end
