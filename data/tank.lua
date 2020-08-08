@@ -157,22 +157,6 @@ class "Tank" {
                 self.vel:y(0)
             end
 
-            -- TODO handle proper shit
-            local vel = Vector3(self.vel:x(), 0, self.vel:z())
-
-            for _, ot in pairs(tanks) do
-                if ot.isLocal or not ot.alive or self.bounceTime > getTime() then goto _ end
-                local dist = (ot.pos - self.pos):mag()
-
-                if dist <= SPHERE_BOUNCE_RADIUS then
-                    self.vel:x(-self.vel:x()*1.5)
-                    self.vel:z(-self.vel:z()*1.5)
-                    self.bounceTime = getTime() + 0.5
-                    playSFX(borderHitSound, 0.25)
-                end
-                ::_::
-            end
-
             -- IMPORTANT: send data to server
             nativedll.send(self.pos:x(), self.pos:y(), self.pos:z(), 0)
         end
