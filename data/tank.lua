@@ -1,7 +1,7 @@
 BOUNDS_PUSHBACK = 1
 MAX_TRAILS = 150.0
 TRAIL_TIME = 0.05
-SPHERE_BOUNCE_RADIUS = 45
+SPHERE_BOUNCE_RADIUS = 50
 
 localPlayerColor = 0
 
@@ -159,17 +159,18 @@ class "Tank" {
 
             -- TODO handle proper shit
             local vel = Vector3(self.vel:x(), 0, self.vel:z())
-            local speed = clamp(1, vel:mag() / 5, 2)
+            local speed = clamp(1, vel:mag() / 7, 1.5)
 
             for _, ot in pairs(tanks) do
                 if ot.isLocal or not ot.alive or self.bounceTime > getTime() then goto _ end
                 local dist = (ot.pos - self.pos):mag()
 
                 if dist <= SPHERE_BOUNCE_RADIUS * speed then
-                    self.vel:x(-self.vel:x()*3)
-                    self.vel:z(-self.vel:z()*3)
+                    self.vel:x(-self.vel:x()*1.5)
+                    self.vel:z(-self.vel:z()*1.5)
                     self.bounceTime = getTime() + 0.5
                     LogString("bump size: ".. (SPHERE_BOUNCE_RADIUS * speed))
+                    playSFX(borderHitSound, 0.25)
                 end
                 ::_::
             end

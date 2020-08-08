@@ -11,6 +11,8 @@ class "Player" {
         self.heading = 0
         self.sendTime = 0
         self.soundEngine = Sound("assets/sounds/engine.wav")
+        self.soundDeath = Sound("assets/sounds/death.wav")
+        self.soundKill = Sound("assets/sounds/kill.wav")
         self.soundEngine:loop(true)
         tanks[-1] = self.tank
     end,

@@ -100,10 +100,12 @@ nativedll.setCollide(function(killer_id, victim_id)
     if victim_id == -1 then
         state:switch("death")
         LogString("BOOM WE GOT KILLED BY " .. killer_id)
+        playSFX(localPlayer.soundDeath, 0.25)
     else
         if tanks[victim_id] ~= nil then
             if tanks[-1].entity_id == killer_id then
                 notify:push("You've annihilated another player")
+                playSFX(localPlayer.soundKill, 0.25)
             end
             tanks[victim_id].alive = false
             tanks[victim_id].trails = {}
