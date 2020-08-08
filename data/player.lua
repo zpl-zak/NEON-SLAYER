@@ -12,14 +12,12 @@ class "Player" {
         self.heading = 0
         self.sendTime = 0
         self.soundEngine = Sound("assets/sounds/engine.wav")
-
-        self.soundEngine:setVolume(85)
         self.soundEngine:loop(true)
         tanks[-1] = self.tank
     end,
 
     soundPlay = function (self)
-        self.soundEngine:play()
+        playSFX(self.soundEngine, 0.85)
     end,
 
     soundStop = function (self)

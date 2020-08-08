@@ -77,6 +77,8 @@ class "MusicManager" {
             self.fade = self.time + DURATION_FADEINOUT
             self.fadestate = FADE_IN
         end
+
+        self.playing[2]:setVolume(math.floor(config.volume.music*100))
     end,
 
     draw2d = function (self)

@@ -38,4 +38,13 @@ end
 
 function lerp(v0, v1, t)
      return v0 + t * (v1 - v0);
- end
+end
+
+function scaleBetween(x, a, b, na, nb)
+    return (b - a) * (x - na) / (nb - na) + a
+end
+
+function playSFX(sound, factor)
+    sound:setVolume(math.floor(100 * config.volume.sound * (factor or 1.0)))
+    sound:play()
+end

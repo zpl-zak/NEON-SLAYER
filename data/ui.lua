@@ -10,6 +10,7 @@ ui = {
     -- internals
     focused = nil,
     blinker = 0,
+    res = GetResolution(),
 }
 
 function ui.init()
@@ -35,6 +36,7 @@ end
 function ui.input(key)
     if ui.focused ~= nil then
         ui.focused.value = ui.focused.value .. key
+        ui.focused:callback(ui.focused.value)
     end
 end
 
@@ -171,5 +173,78 @@ function uiInputImpl.update(self)
 
     if not obj.hovered and pressLeft and ui.focused == obj then
         ui.focused = nil
+    end
+end
+
+-- SLIDERS
+
+local uiSliderImpl = {}
+uiSliderImpl.__index = uiSliderImpl
+
+function uiSlider(values, text, x, y, w, h, callback)
+    local self = setmetatable({}, uiSliderImpl)
+    self.text = text
+    self.x = x
+    self.y = y
+    self.w = w
+    self.h = h
+    self.xw = x+w
+    self.yh = y+h
+    self.hovered = false
+    self.clicked = false
+    self.value = values.cur or 0
+    self.minimum = values.min or 0
+    self.maximum = values.max or 1
+    self.step = values.step or 0.1
+    self.callback = callback
+    return self
+end
+
+function uiSliderImpl.draw(self)
+    local brd = ui.borderWidth
+    local x = self.x
+    local y = self.y
+    local w = self.x+self.w
+    local h = self.y+self.h
+
+    local colorMain = 0xff58548e
+    if self.hovered then colorMain = 0xff7672ad end
+    if self.clicked then colorMain = 0xff6e6b9e end
+
+    DrawQuad(x, w, y, h, ui.borderColor, 0)
+
+    local px = lerp(x+brd, w-brd-30, self.value)
+    local pw = px+30
+    DrawQuad(px, pw, y+brd, h-brd, colorMain, 0)
+
+    ui.font:drawText(ui.textColor, self.text, x, y, self.w, self.h, FONTFLAG_VCENTER|FONTFLAG_CENTER|FONTFLAG_SINGLELINE)
+end
+
+function uiSliderImpl.update(self)
+    local pos = GetMouseXY()
+    local obj = self
+
+    -- handle Sliders
+    local pressLeft = GetMouse(MOUSE_LEFT_BUTTON)
+    local releaseLeft = GetMouseUp(MOUSE_LEFT_BUTTON)
+
+    if (pos[1] > obj.x and pos[1] < obj.xw
+        and pos[2] > obj.y and pos[2] < obj.yh) or obj.clicked then
+        obj.hovered = true
+    else
+        obj.hovered = false
+    end
+
+    local v = clamp(0, scaleBetween(pos[1], self.minimum, self.maximum, obj.x, obj.xw), 1)
+
+    if obj.hovered and pressLeft then
+        obj.clicked = true
+    else
+        obj.clicked = false
+    end
+
+    if obj.clicked and self.value ~= v then
+        self.value = v
+        obj:callback(v)
     end
 end

@@ -8,7 +8,12 @@ dofile("utils.lua")
 config = {
     hostPort = "8000",
     host = "lab.zakto.pw",
-    port = "8000"
+    port = "8000",
+    nickname = "",
+    volume = {
+        music = 0.75,
+        sound = 0.5,
+    },
 }
 
 -- Modules
@@ -115,6 +120,7 @@ state:add("game", require "states/game" ())
 state:add("death", require "states/death" ())
 state:add("pause", require "states/pause" ())
 state:add("connecting", require "states/connecting" ())
+state:add("settings", require "states/settings" ())
 state:switch("menu")
 ui.init()
 

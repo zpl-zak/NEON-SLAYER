@@ -56,6 +56,11 @@ return class "MenuState" (AbstractState) {
         yoffset = yoffset + groupMargin
 
         yoffset = yoffset + buttonHeight + padding
+        local btnSettings = uiButton("Settings", self.resolution[1]/2-100, yoffset, 200, 50, function()
+            state:switch("settings")
+        end)
+
+        yoffset = yoffset + buttonHeight + padding
         local btnDiscord = uiButton("Our discord", self.resolution[1]/2-100, yoffset, 200, 50, function()
             nativedll.openLink()
         end)
@@ -67,7 +72,7 @@ return class "MenuState" (AbstractState) {
 
         -- TODO: Figure out better place for this
         if LoadState() ~= nil then
-            config = decode(LoadState())
+            config = merge(config, decode(LoadState()))
         end
 
         inpJoinHost.value = tostring(config.host)
@@ -79,6 +84,7 @@ return class "MenuState" (AbstractState) {
         table.insert(self.elements, inpJoinPort)
         table.insert(self.elements, btnHostStart)
         table.insert(self.elements, btnJoinStart)
+        table.insert(self.elements, btnSettings)
         table.insert(self.elements, btnDiscord)
         table.insert(self.elements, btnQuit)
     end,

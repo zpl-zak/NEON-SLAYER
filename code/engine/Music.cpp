@@ -68,7 +68,9 @@ VOID CMusic::Stop()
 
 VOID CMusic::SetVolume(LONG vol)
 {
-    LONG realVol = (LONG)ScaleBetween((FLOAT)vol, DSBVOLUME_MIN, DSBVOLUME_MAX, 0, 100);
+    double attenuation = 1.0 / 1024.0 + vol / 100.0 * 1023.0 / 1024.0;
+    double db = 10 * log10(attenuation) / log10(2);
+    LONG realVol = (LONG)(db * 100);
     mBuffer->SetVolume(realVol);
 }
 
@@ -82,7 +84,8 @@ LONG CMusic::GetVolume()
 {
     LONG vol;
     mBuffer->GetVolume(&vol);
-    return (LONG)ScaleBetween((FLOAT)vol, 0, 100, DSBVOLUME_MIN, DSBVOLUME_MAX);
+    float actVol = powf(10, (((float)vol)/100.0f)*log10f(2)/10.0f)*100.0f;
+    return (LONG)floor(actVol);
 }
 
 LONG CMusic::GetPan()
