@@ -168,7 +168,7 @@ class "Tank" {
                 if dist <= SPHERE_BOUNCE_RADIUS * speed then
                     self.vel:x(-self.vel:x()*3)
                     self.vel:z(-self.vel:z()*3)
-                    self.bounceTime = getTime() + 1.5
+                    self.bounceTime = getTime() + 0.5
                     LogString("bump size: ".. (SPHERE_BOUNCE_RADIUS * speed))
                 end
                 ::_::
