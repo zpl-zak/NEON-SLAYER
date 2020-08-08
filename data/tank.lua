@@ -46,6 +46,7 @@ class "Tank" {
         self.aliveTime = nil
         self.color = 0
         self.heading = 0
+        self.bounceTime = 0
 
         if color ~= nil then
             self.color = color
@@ -158,12 +159,13 @@ class "Tank" {
 
             -- TODO handle proper shit
             for _, ot in pairs(tanks) do
-                if ot.isLocal or not ot.alive then goto _ end
+                if ot.isLocal or not ot.alive or self.bounceTime < getTime() then goto _ end
                 local dist = (ot.pos - self.pos):mag()
 
                 if dist <= SPHERE_BOUNCE_RADIUS then
                     self.vel:x(-self.vel:x()*3)
                     self.vel:z(-self.vel:z()*3)
+                    self.bounceTime = getTime() + 1.5
                 end
                 ::_::
             end
