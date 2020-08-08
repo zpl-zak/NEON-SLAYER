@@ -28,6 +28,8 @@ INT tankrespawnref = 0;
 #define SLAYER_DEATHTIME 5.0f
 #define SLAYER_GODTIME 3.0f
 #define SLAYER_RADIUS 30.0f
+#define MAX_TRAILS 200
+#define TRAILS_PERCENT 0.99
 
 /// helpers
 template <typename T>
@@ -206,7 +208,6 @@ static INT ne_disconnect(lua_State* L) {
     return 1;
 }
 
-#define MAX_TRAILS 140
 
 typedef struct {
     float x, y, z;
@@ -219,6 +220,7 @@ typedef struct {
     int alive;
     float collision_resolve_time;
     ENetPeer* peer;
+    uint64_t ticker;
 } ne_data;
 
 std::unordered_map<uint64_t, ne_data> ne_server_data;
@@ -276,6 +278,7 @@ void ne_server_update(lua_State* L) {
                 ne_server_data[entity_id] = _ent;
                 ne_server_data[entity_id].c = rand() % 360;
                 ne_server_data[entity_id].alive = 1;
+                ne_server_data[entity_id].ticker = 0;
                 ne_server_data[entity_id].trail = new NEArray<ne_vec3>();
                 ne_server_data[entity_id].collision_resolve_time = GetTime() + SLAYER_GODTIME;
                 // zpl_ring_ne_vec3_init(&ne_server_data[entity_id].trail, zpl_heap(), MAX_TRAILS);
@@ -306,7 +309,8 @@ void ne_server_update(lua_State* L) {
                 char *buffer = (char *)event.packet->data;
                 int offset = 0;
 
-                if (ne_server_data[entity_id].x != 0 && (ne_server_data[entity_id].collision_resolve_time - SLAYER_GODTIME*0.7f) < GetTime()) {
+                if (ne_server_data[entity_id].x != 0 && (++ne_server_data[entity_id].ticker) % 2 == 0
+                    && (ne_server_data[entity_id].collision_resolve_time - SLAYER_GODTIME*0.7f) < GetTime()) {
                     ne_vec3 pos = {ne_server_data[entity_id].x, ne_server_data[entity_id].y, ne_server_data[entity_id].z};
                     ne_server_data[entity_id].trail->Push(pos);
 
@@ -349,7 +353,7 @@ void ne_server_update(lua_State* L) {
         for (auto it2 = ne_server_data.begin(); it2 != ne_server_data.end() && !collided; ++it2) {
             if (entity_id == it2->first) continue;
 
-            for (int i = 0; i < ((int)it2->second.trail->GetCount())-1; ++i) {
+            for (int i = 0; i < ((int)floor(it2->second.trail->GetCount()*TRAILS_PERCENT))-1; ++i) {
                 auto p1 = (*it2->second.trail)[i];
                 auto p2 = (*it2->second.trail)[i+1];
 
@@ -451,9 +455,9 @@ void ne_server_update(lua_State* L) {
             *(uint8_t*)(buffer + offset) = (currentPeer->incomingPeerID == it->first); offset += sizeof(uint8_t);
 
 #ifdef DEBUG_LINES
-            *(uint16_t*)(buffer + offset) = it->second.trail->GetCount(); offset += sizeof(uint16_t);
+            *(uint16_t*)(buffer + offset) = floor(it->second.trail->GetCount() * TRAILS_PERCENT); offset += sizeof(uint16_t);
 
-            for (int i = 0; i < it->second.trail->GetCount(); ++i) {
+            for (int i = 0; i < floor(it->second.trail->GetCount()*TRAILS_PERCENT); ++i) {
                 auto p1 = (*it->second.trail)[i];
                 *(float*)(buffer + offset) = p1.x; offset += sizeof(float);
                 *(float*)(buffer + offset) = p1.y; offset += sizeof(float);
