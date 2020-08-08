@@ -266,6 +266,7 @@ bool ne_check_collision(ne_vec3 p1, ne_vec3 p2, float cx, float cy, float cz) {
 }
 
 void ne_server_update(lua_State* L) {
+    static int color_counter = 11;
     ENetEvent event = {0};
     while (enet_host_service(server, &event, 2) > 0) {
         switch (event.type) {
@@ -274,9 +275,10 @@ void ne_server_update(lua_State* L) {
                 uint16_t entity_id = event.peer->incomingPeerID;
 
                 /* allocate and store entity data in the data part of peer */
+                color_counter = (color_counter + 1) % 12;
                 ne_data _ent = { 0 }; _ent.peer = event.peer;
                 ne_server_data[entity_id] = _ent;
-                ne_server_data[entity_id].c = rand() % 360;
+                ne_server_data[entity_id].c = color_counter * 30;
                 ne_server_data[entity_id].alive = 1;
                 ne_server_data[entity_id].ticker = 0;
                 ne_server_data[entity_id].trail = new NEArray<ne_vec3>();
