@@ -120,6 +120,11 @@ nativedll.setRespawn(function(entity_id)
     tank.trails = {}
 end)
 
+-- TODO: Figure out better place for this
+if LoadState() ~= nil then
+    config = merge(config, decode(LoadState()))
+end
+
 state:add("menu", require "states/menu" ())
 state:add("game", require "states/game" ())
 state:add("death", require "states/death" ())
