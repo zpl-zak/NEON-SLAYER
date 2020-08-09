@@ -168,8 +168,18 @@ exit /B 0
 		if %errorlevel%==3 (
 			call npm run release-patch
 		)
-		pause
 		if %errorlevel%==4 exit /B 0
+
+		echo.
+		echo NEON SLAYER RELEASE
+		echo =======================
+		echo  1. RELEASE IT!!!
+		echo  2. Cancel deployment
+		echo =======================
+		choice /C 12 /N /M "Your choice:"
+		echo.
+
+		if %errorlevel%==2 exit /B 0
 	cls
 
 	rem Upload process
