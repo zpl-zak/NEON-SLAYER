@@ -191,7 +191,7 @@ exit /B 0
 exit /B 0
 
 :butler_builds
-	butler status zaklaus/neon-86
+	butler status zaklaus/neon-slayer
 	pause
 exit /B 0
 
