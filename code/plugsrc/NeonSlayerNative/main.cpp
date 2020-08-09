@@ -8,8 +8,6 @@
 
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 #define ENET_IMPLEMENTATION
-#define ZPL_IMPL
-#define ZPL_NANO
 #include "enet.h"
 
 #include <lua/lua.hpp>
@@ -75,12 +73,12 @@ public:
     inline HRESULT Push(T elem)
     {
         if (!mData)
-            mData = (T*)realloc(mData, mCapacity * sizeof(T));
+            mData = (T*)::realloc(mData, mCapacity * sizeof(T));
 
         if (mCount >= mCapacity)
         {
             mCapacity += 4;
-            mData = (T*)realloc(mData, mCapacity * sizeof(T));
+            mData = (T*)::realloc(mData, mCapacity * sizeof(T));
 
             if (!mData)
             {
@@ -88,7 +86,7 @@ public:
             }
         }
 
-        mData[mCount++] = elem;
+        mData[mCount++] = (T)elem;
         return ERROR_SUCCESS;
     }
 
@@ -216,7 +214,7 @@ typedef struct {
 typedef struct {
     float x, y, z, r;
     int c;
-    NEArray<ne_vec3> *trail;
+    NEArray<ne_vec3> *tail;
     int alive;
     float collision_resolve_time;
     ENetPeer* peer;
@@ -281,7 +279,7 @@ void ne_server_update(lua_State* L) {
                 ne_server_data[entity_id].c = color_counter * 30;
                 ne_server_data[entity_id].alive = 1;
                 ne_server_data[entity_id].ticker = 0;
-                ne_server_data[entity_id].trail = new NEArray<ne_vec3>();
+                ne_server_data[entity_id].tail = new NEArray<ne_vec3>();
                 ne_server_data[entity_id].collision_resolve_time = GetTime() + SLAYER_GODTIME;
                 // zpl_ring_ne_vec3_init(&ne_server_data[entity_id].trail, zpl_heap(), MAX_TRAILS);
 
@@ -300,7 +298,7 @@ void ne_server_update(lua_State* L) {
                 UI->PushLog("[server]  A user disconnected.\n");
                 uint16_t entity_id = event.peer->incomingPeerID;
                 // zpl_ring_ne_vec3_free(&ne_server_data[entity_id].trail);
-                delete ne_server_data[entity_id].trail;
+                delete ne_server_data[entity_id].tail;
 
                 ne_server_data.erase(entity_id);
             } break;
@@ -314,10 +312,10 @@ void ne_server_update(lua_State* L) {
                 if (ne_server_data[entity_id].x != 0 && (++ne_server_data[entity_id].ticker) % 2 == 0
                     && (ne_server_data[entity_id].collision_resolve_time - SLAYER_GODTIME*0.7f) < GetTime()) {
                     ne_vec3 pos = {ne_server_data[entity_id].x, ne_server_data[entity_id].y, ne_server_data[entity_id].z};
-                    ne_server_data[entity_id].trail->Push(pos);
+                    ne_server_data[entity_id].tail->Push(pos);
 
-                    if (ne_server_data[entity_id].trail->GetCount() > MAX_TRAILS) {
-                        ne_server_data[entity_id].trail->RemoveByIndex(0);
+                    if (ne_server_data[entity_id].tail->GetCount() > MAX_TRAILS) {
+                        ne_server_data[entity_id].tail->RemoveByIndex(0);
                     }
                 }
 
@@ -355,9 +353,9 @@ void ne_server_update(lua_State* L) {
         for (auto it2 = ne_server_data.begin(); it2 != ne_server_data.end() && !collided; ++it2) {
             if (entity_id == it2->first) continue;
 
-            for (int i = 0; i < ((int)floor(it2->second.trail->GetCount()*TRAILS_PERCENT))-1; ++i) {
-                auto p1 = (*it2->second.trail)[i];
-                auto p2 = (*it2->second.trail)[i+1];
+            for (int i = 0; i < ((int)floor(it2->second.tail->GetCount()*TRAILS_PERCENT))-1; ++i) {
+                auto p1 = (*it2->second.tail)[i];
+                auto p2 = (*it2->second.tail)[i+1];
 
                 if (ne_check_collision(p1, p2, data->x, data->y, data->z)) {
                     collided = true;
@@ -404,7 +402,7 @@ void ne_server_update(lua_State* L) {
     for (auto it = ne_server_data.begin(); it != ne_server_data.end(); ++it) {
         if (it->second.alive) continue;
 
-        it->second.trail->Clear();
+        it->second.tail->Clear();
 
         if ((it->second.collision_resolve_time - SLAYER_GODTIME) < GetTime()) {
             it->second.alive = 1;
@@ -457,10 +455,10 @@ void ne_server_update(lua_State* L) {
             *(uint8_t*)(buffer + offset) = (currentPeer->incomingPeerID == it->first); offset += sizeof(uint8_t);
 
 #ifdef DEBUG_LINES
-            *(uint16_t*)(buffer + offset) = floor(it->second.trail->GetCount() * TRAILS_PERCENT); offset += sizeof(uint16_t);
+            *(uint16_t*)(buffer + offset) = floor(it->second.tail->GetCount() * TRAILS_PERCENT); offset += sizeof(uint16_t);
 
-            for (int i = 0; i < floor(it->second.trail->GetCount()*TRAILS_PERCENT); ++i) {
-                auto p1 = (*it->second.trail)[i];
+            for (int i = 0; i < floor(it->second.tail->GetCount()*TRAILS_PERCENT); ++i) {
+                auto p1 = (*it->second.tail)[i];
                 *(float*)(buffer + offset) = p1.x; offset += sizeof(float);
                 *(float*)(buffer + offset) = p1.y; offset += sizeof(float);
                 *(float*)(buffer + offset) = p1.z; offset += sizeof(float);
@@ -520,7 +518,7 @@ void ne_client_update(lua_State* L) {
                         lua_pushvalue(L, 1);
 
                         if (!lua_isfunction(L, -1))
-                            goto ne_srv_clenaup;
+                            goto ne_srv_cleanup;
 
                         lua_pushnumber(L, entity_id);
                         lua_pushnumber(L, x);
@@ -561,7 +559,8 @@ void ne_client_update(lua_State* L) {
                         lua_pushnil(L);
 #endif
 
-                        lua_pcall(L, 8, 0, 0);
+                        int err = lua_pcall(L, 8, 0, 0);
+                        VM->CheckVMErrors(err);
 
                         tankupdateref = luaL_ref(L, LUA_REGISTRYINDEX);
                     }
@@ -573,11 +572,12 @@ void ne_client_update(lua_State* L) {
                     lua_pushvalue(L, 1);
 
                     if (!lua_isfunction(L, -1))
-                        goto ne_srv_clenaup;
+                        goto ne_srv_cleanup;
 
                     lua_pushnumber(L, killer_id);
                     lua_pushinteger(L, -1);
-                    lua_pcall(L, 2, 0, 0);
+                    int err = lua_pcall(L, 2, 0, 0);
+                    VM->CheckVMErrors(err);
                     tankcollideref = luaL_ref(L, LUA_REGISTRYINDEX);
                 }
                 else if (packetid == 3) {
@@ -588,11 +588,12 @@ void ne_client_update(lua_State* L) {
                     lua_pushvalue(L, 1);
 
                     if (!lua_isfunction(L, -1))
-                        goto ne_srv_clenaup;
+                        goto ne_srv_cleanup;
 
                     lua_pushnumber(L, killer_id);
                     lua_pushnumber(L, victim_id);
-                    lua_pcall(L, 2, 0, 0);
+                    int err = lua_pcall(L, 2, 0, 0);
+                    VM->CheckVMErrors(err);
                     tankcollideref = luaL_ref(L, LUA_REGISTRYINDEX);
                 }
                 else if (packetid == 4) {
@@ -609,13 +610,15 @@ void ne_client_update(lua_State* L) {
                     lua_pushvalue(L, 1);
 
                     if (!lua_isfunction(L, -1))
-                        goto ne_srv_clenaup;
+                        goto ne_srv_cleanup;
 
                     lua_pushnumber(L, entity_id);
-                    lua_pcall(L, 1, 0, 0);
+                    int err = lua_pcall(L, 1, 0, 0);
+
+                    VM->CheckVMErrors(err);
                     tankrespawnref = luaL_ref(L, LUA_REGISTRYINDEX);
                 }
-ne_srv_clenaup:
+ne_srv_cleanup:
                 /* Clean up the packet now that we're done using it. */
                 enet_packet_destroy(event.packet);
             } break;

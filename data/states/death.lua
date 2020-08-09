@@ -21,7 +21,7 @@ return class "DeathState" (AbstractState) {
             state:switch("game")
 
             tanks[-1].alive = true
-            tanks[-1].trails = {}
+            tanks[-1].tails = {}
         end
     end,
 

@@ -37,9 +37,9 @@ class "Tank" {
         self.hover = Vector3()
         self.vel = Vector()
         self.rot = Matrix()
-        self.trails = {}
+        self.tails = {}
         self.serverTrail = {}
-        self.trailTime = 0
+        self.tailTime = 0
         self.crot = 0
         self.health = 100
         self.alive = true
@@ -65,33 +65,33 @@ class "Tank" {
     end,
 
     refreshMaterial = function (self)
-        local trailMaterial = Material("assets/trail.png")
-        self.material = trailMaterial
+        local tailMaterial = Material("assets/tail.png")
+        self.material = tailMaterial
 
         local r, g, b = HSVToRGB(math.pi*2*(self.color/360), 0.5, 1)
         self.material:setDiffuse(r,g,b)
         self.material:setEmission(r,g,b)
         self.material:setAmbient(r,g,b)
 
-        self.trailMaterial = Material("assets/trail.png")
-        self.trailMaterial:setDiffuse(r,g,b)
-        self.trailMaterial:setEmission(r,g,b)
-        self.trailMaterial:setAmbient(r,g,b)
-        self.trailMaterial:setOpacity(1)
-        self.trailMaterial:setShaded(false)
-        self.trailMaterial:alphaIsTransparency(true)
+        self.tailMaterial = Material("assets/tail.png")
+        self.tailMaterial:setDiffuse(r,g,b)
+        self.tailMaterial:setEmission(r,g,b)
+        self.tailMaterial:setAmbient(r,g,b)
+        self.tailMaterial:setOpacity(1)
+        self.tailMaterial:setShaded(false)
+        self.tailMaterial:alphaIsTransparency(true)
     end,
 
     updateTrail = function (self)
-        if self.trailTime < time and self.alive then
-            self.trailTime = time + TRAIL_TIME
+        if self.tailTime < time and self.alive then
+            self.tailTime = time + TRAIL_TIME
 
-            if #self.trails > MAX_TRAILS then
-                table.remove(self.trails, 1)
+            if #self.tails > MAX_TRAILS then
+                table.remove(self.tails, 1)
             end
 
             if self.pos:magSq() > 0.01 then
-                table.insert(self.trails, getTrailPos(self))
+                table.insert(self.tails, getTrailPos(self))
             end
         end
     end,
@@ -177,30 +177,30 @@ class "Tank" {
             BindTexture(0, self.material)
             tankModel:draw(Matrix():scale(20.0,20.0,20.0):translate(self.pos+Vector3(0, 15, 0)))
             BindTexture(0)
-            self:drawTrails(self.trails, 20)
+            self:drawTrails(self.tails, 20)
             ToggleWireframe(true)
             self:drawTrails(self.serverTrail, 30)
             ToggleWireframe(false)
         end
     end,
 
-    drawTrails = function (self, trails, height)
-        for i=1,#trails,1 do
-            local tr1 = trails[i]
-            local tr2 = trails[i+1]
+    drawTrails = function (self, tails, height)
+        for i=1,#tails,1 do
+            local tr1 = tails[i]
+            local tr2 = tails[i+1]
 
             local alpha = math.min(i, 20.0) / 20.0
 
             if tr1 ~= nil then
-                if #trails > MAX_TRAILS then
-                        self.trailMaterial:setOpacity(alpha)
+                if #tails > MAX_TRAILS then
+                        self.tailMaterial:setOpacity(alpha)
                 end
                 if tr2 == nil then
                         tr2 = getTrailPos(self)
-                        self.trailMaterial:setOpacity(1)
+                        self.tailMaterial:setOpacity(1)
                 end
 
-                BindTexture(0, self.trailMaterial)
+                BindTexture(0, self.tailMaterial)
                 Matrix():bind(WORLD)
                 CullMode(CULLKIND_NONE)
                 AmbientColor(255, 255, 255)

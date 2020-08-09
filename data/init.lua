@@ -109,7 +109,7 @@ nativedll.setCollide(function(killer_id, victim_id)
                 playSFX(localPlayer.soundKill, 0.25)
             end
             tanks[victim_id].alive = false
-            tanks[victim_id].trails = {}
+            tanks[victim_id].tails = {}
         end
     end
 end)
@@ -120,7 +120,7 @@ nativedll.setRespawn(function(entity_id)
 
     if tank == nil then return end
     tank.alive = true
-    tank.trails = {}
+    tank.tails = {}
 end)
 
 -- TODO: Figure out better place for this
