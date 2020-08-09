@@ -20,8 +20,8 @@ set "proj=basic"
 	echo  1. Exit
 	echo  2. Build
 	echo  3. Debug
-	echo  4. Deploy (Pilot)
-	echo  5. Deploy (Prod)
+	echo  4. Deploy - Staging
+	echo  5. Deploy - Prod
 	echo  6. Open in VS
 	echo  7. Open in VS Code
 	echo  8. Pull upstream
