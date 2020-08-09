@@ -15,15 +15,15 @@ set "proj=basic"
 :begin
 	cls
 
-	echo Lines game
+	echo NEON SLAYER game
 	echo =======================
 	echo  1. Exit
 	echo  2. Build
 	echo  3. Debug
-	echo  4. Deploy (itch.io)
-	echo  5. Open in VS
-	echo  6. Open in VS Code
-	echo  7. Open in lite
+	echo  4. Deploy (Pilot)
+	echo  5. Deploy (Prod)
+	echo  6. Open in VS
+	echo  7. Open in VS Code
 	echo  8. Pull upstream
 	echo  9. itch.io build log
 	echo  A. Open shell
@@ -41,9 +41,9 @@ set "proj=basic"
 	if %errorlevel%==2 call :build
 	if %errorlevel%==3 call :debug
 	if %errorlevel%==4 call :deploy
-	if %errorlevel%==5 call :open_in_vs
-	if %errorlevel%==6 call :open_in_vscode
-	if %errorlevel%==7 call :open_in_lite
+	if %errorlevel%==5 call :deploy_prod
+	if %errorlevel%==6 call :open_in_vs
+	if %errorlevel%==7 call :open_in_vscode
 	if %errorlevel%==8 call :git_pull
 	if %errorlevel%==9 call :butler_builds
 	if %errorlevel%==10 call :shell
@@ -108,7 +108,7 @@ exit /B 0
 	echo.
 
 	:package_prompt
-		echo LINES DEPLOY
+		echo NEON SLAYER DEPLOY
 		echo =======================
 		echo  1. Upload to itch.io
 		echo  2. Cancel deployment
@@ -132,6 +132,44 @@ goto :package_prompt
 
 	call :package
 	if %errorlevel%==0 exit /B 0
+
+	rem Upload process
+	pushd build\
+		echo Deploying to itch.io ...
+		butler push deploy zaklaus/neon-slayer:win32-test
+	popd
+	pause
+exit /B 0
+
+:deploy_prod
+	call :build_release
+	if %errorlevel%==0 exit /B 0
+
+	call :package
+	if %errorlevel%==0 exit /B 0
+
+	:deploy_version
+		echo NEON SLAYER VERSION
+		echo =======================
+		echo  1. Major
+		echo  2. Minor
+		echo  3. Patch
+		echo  4. Cancel deployment
+		echo =======================
+		choice /C 1234 /N /M "Your choice:"
+		echo.
+		if %errorlevel%==1 (
+			npm run release-major
+		)
+		if %errorlevel%==2 (
+			npm run release-minor
+		)
+		if %errorlevel%==3 (
+			npm run release-patch
+		)
+		pause
+		if %errorlevel%==4 exit /B 0
+	cls
 
 	rem Upload process
 	pushd build\

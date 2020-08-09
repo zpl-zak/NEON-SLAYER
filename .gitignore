@@ -14,6 +14,7 @@ imgui.ini
 *.exp
 libs/*.dll
 save.neon
+node_modules
 
 .lite_workspace.lua
 *.code-workspace
