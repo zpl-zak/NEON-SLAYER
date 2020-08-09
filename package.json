@@ -24,7 +24,7 @@
   "bugs": {
     "url": "https://github.com/zaklaus/neon-lines/issues"
   },
-  "homepage": "https://github.com/zaklaus/neon-lines#readme",
+  "homepage": "https://zaklaus.itch.io/neon-slayer",
   "devDependencies": {
     "release-it": "^13.6.6"
   },
@@ -36,7 +36,7 @@
       "release": false
     },
     "plugins": {
-      "./Scripts/release-bump.js": {}
+      "./scripts/release-bump.js": {}
     }
   }
 }
