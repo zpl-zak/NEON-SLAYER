@@ -160,17 +160,20 @@ exit /B 0
 		echo  4. Cancel deployment
 		echo =======================
 		choice /C 1234 /N /M "Your choice:"
+		set ch=%errorlevel%
+		set /P AREYOUSURE="Are you sure (Y/[N])? "
+		IF /I "%AREYOUSURE%" NEQ "Y" exit /B 0
 		echo.
-		if %errorlevel%==1 (
+		if %ch%==1 (
 			call npm run release-major
 		)
-		if %errorlevel%==2 (
+		if %ch%==2 (
 			call npm run release-minor
 		)
-		if %errorlevel%==3 (
+		if %ch%==3 (
 			call npm run release-patch
 		)
-		if %errorlevel%==4 exit /B 0
+		if %ch%==4 exit /B 0
 
 		echo.
 		echo NEON SLAYER RELEASE
