@@ -110,7 +110,7 @@ exit /B 0
 	:package_prompt
 		echo NEON SLAYER DEPLOY
 		echo =======================
-		echo  1. Upload to itch.io
+		echo  1. Proceed with upload
 		echo  2. Cancel deployment
 		echo  3. Test it first
 		echo =======================
@@ -147,6 +147,7 @@ exit /B 0
 
 	call :package
 	if %errorlevel%==0 exit /B 0
+	cls
 
 	:deploy_version
 		echo NEON SLAYER VERSION
