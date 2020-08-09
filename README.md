@@ -9,7 +9,7 @@
 
 <br />
 <div align="center">
-  A Tron-like game!
+  NEON SLAYER is an action-packed fast-paced deathmatch arena, where your only weapons are reflexes.
 </div>
 
 <div align="center">
@@ -22,7 +22,7 @@
 
 # Introduction
 
-TODO
+In our game, you're supposed to leave behind a tail that other players can run into, effectively eliminating them. It is set in a futuristic abstraction of a vaporwave inspired/themed world. The game is heavily inspired by the vaporwave synth-wave retro sub-culture.
 
 ## License
 
