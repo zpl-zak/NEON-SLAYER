@@ -22,6 +22,7 @@ music = require "music"
 world = require "world"
 state = require "state"
 notify = require "notify"
+gameVersion = require "version"
 
 -- Game
 Tank = require "tank"
@@ -207,4 +208,6 @@ end
 function _render2d()
     state:draw2d()
     music:draw2d()
+
+    ui.font:drawText(0xFFFFFFFF, "Version "..gameVersion, 5, 5 + (function() if IsDebugMode() then return 15 else return 0 end end)(), 0, 0, FF_NOCLIP)
 end
