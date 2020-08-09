@@ -160,13 +160,13 @@ exit /B 0
 		choice /C 1234 /N /M "Your choice:"
 		echo.
 		if %errorlevel%==1 (
-			npm run release-major
+			call npm run release-major
 		)
 		if %errorlevel%==2 (
-			npm run release-minor
+			call npm run release-minor
 		)
 		if %errorlevel%==3 (
-			npm run release-patch
+			call npm run release-patch
 		)
 		pause
 		if %errorlevel%==4 exit /B 0
