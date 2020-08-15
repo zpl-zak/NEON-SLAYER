@@ -78,19 +78,19 @@ exit /B 0
 exit /B 0
 
 :debug
-	if not exist build\debug\player.exe call :build
-	build\debug\player.exe data
+	if not exist build\debug\neon_slayer.exe call :build
+	build\debug\neon_slayer.exe data
 exit /B 0
 
 :run_release
-	if not exist build\release\player.exe call :build_release
+	if not exist build\release\neon_slayer.exe call :build_release
 	if %errorlevel%==0 exit /B 0
-	build\release\player.exe data
+	build\release\neon_slayer.exe data
 exit /B 0
 
 :open_in_vs_minimal
-	if not exist build\debug\player.exe call :build
-	call %devenv_cmd% build\debug\player.exe
+	if not exist build\debug\neon_slayer.exe call :build
+	call %devenv_cmd% build\debug\neon_slayer.exe
 exit /B 0
 
 :package
@@ -99,7 +99,7 @@ exit /B 0
 	if exist build\deploy rmdir /S /Q build\deploy
 	mkdir build\deploy
 	xcopy /Y build\release\*.dll build\deploy\
-	xcopy /Y build\release\player.exe build\deploy\
+	xcopy /Y build\release\neon_slayer.exe build\deploy\
 	xcopy /Y /E /exclude:.gitignore "data" "build\deploy\data\"
 	xcopy /Y /E /I /exclude:.gitignore libs build\deploy\libs
 	xcopy /Y LICENSE.md build\deploy\
@@ -120,7 +120,7 @@ exit /B 0
 		if %errorlevel%==2 exit /B 0
 		if %errorlevel%==3 (
 			pushd build\deploy\
-				player.exe data
+				neon_slayer.exe data
 				rem Delete save files
 				del /Q /F data\save.neon
 			popd
