@@ -1,5 +1,5 @@
 <div align="center">
-    <a href="https://github.com/zaklaus/neon86"><img src="https://user-images.githubusercontent.com/9026786/82740331-1db79c80-9d48-11ea-85b4-615d204f030a.png" alt="neon86" /></a>
+    <a href="https://github.com/zaklaus/neon86"><img src="https://img.itch.zone/aW1nLzQwNjE4MTcucG5n/original/8abD81.png" alt="neon86" /></a>
 </div>
 
 <div align="center">
