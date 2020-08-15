@@ -3,8 +3,6 @@ MAX_TRAILS = 150.0
 TRAIL_TIME = 0.05
 SPHERE_BOUNCE_RADIUS = 60
 
-localPlayerColor = 0
-
 local tankModel = Model("assets/sphere.fbx", false)
 
 -- Sounds
@@ -68,15 +66,14 @@ class "Tank" {
         local trailMaterial = Material("assets/trail.png")
         self.material = trailMaterial
 
-        local r, g, b = HSVToRGB(math.pi*2*(self.color/360), 0.5, 1)
-        self.material:setDiffuse(r,g,b)
-        self.material:setEmission(r,g,b)
-        self.material:setAmbient(r,g,b)
+        self.material:setDiffuse(self.color)
+        self.material:setEmission(self.color)
+        self.material:setAmbient(self.color)
 
         self.trailMaterial = Material("assets/trail.png")
-        self.trailMaterial:setDiffuse(r,g,b)
-        self.trailMaterial:setEmission(r,g,b)
-        self.trailMaterial:setAmbient(r,g,b)
+        self.trailMaterial:setDiffuse(self.color)
+        self.trailMaterial:setEmission(self.color)
+        self.trailMaterial:setAmbient(self.color)
         self.trailMaterial:setOpacity(1)
         self.trailMaterial:setShaded(false)
         self.trailMaterial:alphaIsTransparency(true)
@@ -101,11 +98,6 @@ class "Tank" {
 
         if not self.alive then
             return
-        end
-
-        if self.isLocal and self.color ~= localPlayerColor then
-            self.color = localPlayerColor
-            self:refreshMaterial()
         end
 
         if self.isLocal then

@@ -54,27 +54,33 @@ sun:enable(true, 0)
 RegisterFontFile("assets/slkscr.ttf")
 
 -- Set up nativedllwork update event
-nativedll.setUpdate(function (entity_id, x, y, z, r, c, islocal, serverTrail)
+nativedll.setUpdate(function (entity_id, x, y, z, r, color, islocal, serverTrail)
     if state:is("connecting") then
         state:switch("game")
     end
+
+    LogString("using color: " .. color)
 
     if islocal == 1 then
         if serverTrail ~= nil then
             tanks[-1].serverTrail = serverTrail
         end
         tanks[-1].entity_id = entity_id
+        if tanks[-1].color ~= color then
+            tanks[-1].color = color
+            tanks[-1]:refreshMaterial()
+        end
         return
     end
 
     if tanks[entity_id] == nil then
-        tanks[entity_id] = Tank(entity_id, c)
+        tanks[entity_id] = Tank(entity_id, color)
         tanks[entity_id].pos = Vector3(x, y, z)
     end
 
     local tank = tanks[entity_id]
 
-    tank.color = c
+    tank.color = color
     -- tank.pos = Vector3(x,y,z)
     local nx = lerp(tank.pos:x(), x, 1.05)
     local ny = lerp(tank.pos:y(), y, 1.05)

@@ -15,69 +15,69 @@
 
 inline std::vector<std::string> split(const std::string& str, const std::string& delim)
 {
-    std::vector<std::string> tokens;
-    size_t prev = 0, pos = 0;
-    do
-    {
-        pos = str.find(delim, prev);
-        if (pos == std::string::npos) pos = str.length();
-        std::string token = str.substr(prev, pos - prev);
-        if (!token.empty()) tokens.push_back(token);
-        prev = pos + delim.length();
-    } while (pos < str.length() && prev < str.length());
-    return tokens;
+	std::vector<std::string> tokens;
+	size_t prev = 0, pos = 0;
+	do
+	{
+		pos = str.find(delim, prev);
+		if (pos == std::string::npos) pos = str.length();
+		std::string token = str.substr(prev, pos - prev);
+		if (!token.empty()) tokens.push_back(token);
+		prev = pos + delim.length();
+	} while (pos < str.length() && prev < str.length());
+	return tokens;
 }
 
 D3DXVECTOR4 luaH_getcomps(lua_State* L, UINT offset)
 {
-    if (luaL_testudata(L, 2+offset, L_VECTOR))
-    {
-        return *(D3DXVECTOR4*)luaL_checkudata(L, 2+offset, L_VECTOR);
-    }
+	if (luaL_testudata(L, 2+offset, L_VECTOR))
+	{
+		return *(D3DXVECTOR4*)luaL_checkudata(L, 2+offset, L_VECTOR);
+	}
 
-    FLOAT x = (FLOAT)lua_tonumber(L, 2+offset);
-    FLOAT y = (FLOAT)lua_tonumber(L, 3+offset);
-    FLOAT z = (FLOAT)lua_tonumber(L, 4+offset);
+	FLOAT x = (FLOAT)lua_tonumber(L, 2+offset);
+	FLOAT y = (FLOAT)lua_tonumber(L, 3+offset);
+	FLOAT z = (FLOAT)lua_tonumber(L, 4+offset);
 	FLOAT w = (FLOAT)lua_tonumber(L, 5+offset);
 
 
-    if (lua_gettop(L) == 2+offset)
-        w = y = z = x;
+	if (lua_gettop(L) == 2+offset)
+		w = y = z = x;
 
-    if (lua_gettop(L) == 3+offset)
-        w = z = x;
+	if (lua_gettop(L) == 3+offset)
+		w = z = x;
 
 	if (lua_gettop(L) == 4 + offset)
 		w = 0;
 
-    return D3DXVECTOR4(x, y, z, w);
+	return D3DXVECTOR4(x, y, z, w);
 }
 
 DWORD luaH_getcolor(lua_State* L, UINT offset)
 {
-    DWORD color = 0x0;
+	DWORD color = 0x0;
 
-    if (luaL_testudata(L, 1 + offset, L_VECTOR))
-    {
-        D3DXVECTOR4* vec = (D3DXVECTOR4*)luaL_checkudata(L, 1+offset, L_VECTOR);
-        BYTE col[4] = { (BYTE)(vec->w * 0xFF), (BYTE)(vec->x * 0xFF), (BYTE)(vec->y * 0xFF), (BYTE)(vec->z * 0xFF) };
+	if (luaL_testudata(L, 1 + offset, L_VECTOR))
+	{
+		D3DXVECTOR4* vec = (D3DXVECTOR4*)luaL_checkudata(L, 1+offset, L_VECTOR);
+		BYTE col[4] = { (BYTE)(vec->w * 0xFF), (BYTE)(vec->x * 0xFF), (BYTE)(vec->y * 0xFF), (BYTE)(vec->z * 0xFF) };
 		color = D3DCOLOR_ARGB(col[0], col[1], col[2], col[3]);
-    }
-    else if (lua_gettop(L) == 1+offset)
-    {
-        color = (DWORD)luaL_checkinteger(L, 1+offset);
-    }
-    else if ((UINT)lua_gettop(L) == 3+offset)
-    {
-        UINT r = 0, g = 0, b = 0;
+	}
+	else if (lua_gettop(L) == 1+offset)
+	{
+		color = (DWORD)luaL_checkinteger(L, 1+offset);
+	}
+	else if ((UINT)lua_gettop(L) == 3+offset)
+	{
+		UINT r = 0, g = 0, b = 0;
 
-        r = (UINT)luaL_checknumber(L, 1+offset);
-        g = (UINT)luaL_checknumber(L, 2+offset);
-        b = (UINT)luaL_checknumber(L, 3+offset);
-        color = D3DCOLOR_ARGB(255, r, g, b);
-        lua_remove(L, 2 + offset);
-        lua_remove(L, 2 + offset);
-    }
+		r = (UINT)luaL_checknumber(L, 1+offset);
+		g = (UINT)luaL_checknumber(L, 2+offset);
+		b = (UINT)luaL_checknumber(L, 3+offset);
+		color = D3DCOLOR_ARGB(255, r, g, b);
+		lua_remove(L, 2 + offset);
+		lua_remove(L, 2 + offset);
+	}
 
 	return color;
 }
@@ -90,27 +90,39 @@ D3DCOLORVALUE luaH_getcolorlinear(lua_State* L, UINT offset)
 	{
 		color = *(D3DCOLORVALUE*)luaL_checkudata(L, 1 + offset, L_VECTOR);
 	}
-    else if ((UINT)lua_gettop(L) == 1+offset)
-    {
-        DWORD encodedColor = (DWORD)luaL_checkinteger(L, 1 + offset);
-        BYTE r = (BYTE)((encodedColor & 0x00FF0000) >> 16);
-		BYTE g = (BYTE)((encodedColor & 0x0000FF00) >> 8);
-		BYTE b = (BYTE)((encodedColor & 0x000000FF) >> 0);
-		color = { (FLOAT)r / 0xFF, (FLOAT)g / 0xFF, (FLOAT)b / 0xFF, 1.0f};
-    }
-    else if ((UINT)lua_gettop(L) == 3+offset)
-    {
-        UINT r = 0, g = 0, b = 0;
+	else if ((UINT)lua_gettop(L) == 1+offset)
+	{
+		DWORD encodedColor = (DWORD)luaL_checkinteger(L, 1 + offset);
+		BYTE r, g, b, a;
 
-        r = (UINT)luaL_checknumber(L, 1 + offset);
-        g = (UINT)luaL_checknumber(L, 2 + offset);
-        b = (UINT)luaL_checknumber(L, 3 + offset);
-        color = { (FLOAT)r / 0xFF, (FLOAT)g / 0xFF, (FLOAT)b / 0xFF, 1.0f };
-        lua_remove(L, 2 + offset);
-        lua_remove(L, 2 + offset);
-    }
+		if (encodedColor <= 0xFFFFFF) {
+			r = (BYTE)((encodedColor & 0xFF0000) >> 16);
+			g = (BYTE)((encodedColor & 0x00FF00) >> 8);
+			b = (BYTE)((encodedColor & 0x0000FF) >> 0);
+		} else {
+			a = (BYTE)((encodedColor & 0xFF000000) >> 24);
+			r = (BYTE)((encodedColor & 0x00FF0000) >> 16);
+			g = (BYTE)((encodedColor & 0x0000FF00) >> 8);
+			b = (BYTE)((encodedColor & 0x000000FF) >> 0);
+		}
 
-    return color;
+		PushLog(CString::Format("decoded color: [%d %d %d %d]\n", a, r, g, b).Str());
+
+		color = { (FLOAT)r / 0xFF, (FLOAT)g / 0xFF, (FLOAT)b / 0xFF, (FLOAT)a / 0xFF };
+	}
+	else if ((UINT)lua_gettop(L) == 3+offset)
+	{
+		UINT r = 0, g = 0, b = 0;
+
+		r = (UINT)luaL_checknumber(L, 1 + offset);
+		g = (UINT)luaL_checknumber(L, 2 + offset);
+		b = (UINT)luaL_checknumber(L, 3 + offset);
+		color = { (FLOAT)r / 0xFF, (FLOAT)g / 0xFF, (FLOAT)b / 0xFF, 1.0f };
+		lua_remove(L, 2 + offset);
+		lua_remove(L, 2 + offset);
+	}
+
+	return color;
 }
 
 #include "LuaMatrix.h"
@@ -138,9 +150,9 @@ LUAF(Base, ShowMessage)
 }
 LUAF(Base, LogString)
 {
-    const char* text = luaL_checkstring(L, 1);
+	const char* text = luaL_checkstring(L, 1);
 	PushLog(CString::Format("%s\n", text).Str());
-    return 0;
+	return 0;
 }
 LUAF(Base, ExitGame)
 {
@@ -150,7 +162,7 @@ LUAF(Base, ExitGame)
 LUAF(Base, RestartGame)
 {
 	VM->Restart();
-    return 0;
+	return 0;
 }
 LUAF(Base, IsDebugMode)
 {
@@ -190,21 +202,21 @@ LUAF(Base, dofile)
 }
 LUAF(Base, loadfile)
 {
-    const char* scriptName = luaL_checkstring(L, 1);
+	const char* scriptName = luaL_checkstring(L, 1);
 
-    FDATA fd = FILESYSTEM->GetResource((LPSTR)scriptName);
+	FDATA fd = FILESYSTEM->GetResource((LPSTR)scriptName);
 
-    if (!fd.data)
-    {
-        MessageBoxA(NULL, "No loadfile content found!", "Resource error", MB_OK);
-        ENGINE->Shutdown();
-        return 0;
-    }
+	if (!fd.data)
+	{
+		MessageBoxA(NULL, "No loadfile content found!", "Resource error", MB_OK);
+		ENGINE->Shutdown();
+		return 0;
+	}
 
-    lua_pushlstring(L, (char*)fd.data, fd.size);
-    FILESYSTEM->FreeResource(fd.data);
+	lua_pushlstring(L, (char*)fd.data, fd.size);
+	FILESYSTEM->FreeResource(fd.data);
 
-    return 1;
+	return 1;
 }
 LUAF(Base, SaveState)
 {
@@ -245,7 +257,7 @@ LUAF(Base, LoadState)
 LUAF(Base, getTime)
 {
 	lua_pushnumber(L, VM->GetRunTime());
-    return 1;
+	return 1;
 }
 ///<END
 
@@ -253,9 +265,9 @@ VOID CLuaBindings::BindBase(lua_State* L)
 {
 	REGF(Base, ShowMessage);
 	REGF(Base, LogString);
-    REGF(Base, ExitGame);
+	REGF(Base, ExitGame);
 	REGF(Base, IsDebugMode);
-    REGF(Base, RestartGame);
+	REGF(Base, RestartGame);
 	REGF(Base, SetFPS);
 	REGF(Base, dofile);
 	REGF(Base, loadfile);
@@ -287,48 +299,48 @@ LUAF(Math, Color)
 }
 LUAF(Math, ColorLinear)
 {
-    FLOAT r = (FLOAT)luaL_checknumber(L, 1) / (FLOAT)0xFF;
-    FLOAT g = (FLOAT)luaL_checknumber(L, 2) / (FLOAT)0xFF;
-    FLOAT b = (FLOAT)luaL_checknumber(L, 3) / (FLOAT)0xFF;
-    FLOAT a = 0xFF;
+	FLOAT r = (FLOAT)luaL_checknumber(L, 1) / (FLOAT)0xFF;
+	FLOAT g = (FLOAT)luaL_checknumber(L, 2) / (FLOAT)0xFF;
+	FLOAT b = (FLOAT)luaL_checknumber(L, 3) / (FLOAT)0xFF;
+	FLOAT a = 0xFF;
 
-    if (lua_gettop(L) == 4)
-        a = (FLOAT)luaL_checknumber(L, 4) / (FLOAT)0xFF;
+	if (lua_gettop(L) == 4)
+		a = (FLOAT)luaL_checknumber(L, 4) / (FLOAT)0xFF;
 
-    lua_pushnumber(L, r);
+	lua_pushnumber(L, r);
 	lua_pushnumber(L, g);
 	lua_pushnumber(L, b);
 	lua_pushnumber(L, a);
-    return 4;
+	return 4;
 }
 LUAF(Math, WorldToScreen)
 {
 	D3DXVECTOR3* pos3D = (D3DXVECTOR3*)luaL_checkudata(L, 1, L_VECTOR);
-    D3DXMATRIX view = *(D3DXMATRIX*)luaL_checkudata(L, 2, L_MATRIX);
-    D3DXMATRIX proj = *(D3DXMATRIX*)luaL_checkudata(L, 3, L_MATRIX);
-    D3DXMATRIX world;
+	D3DXMATRIX view = *(D3DXMATRIX*)luaL_checkudata(L, 2, L_MATRIX);
+	D3DXMATRIX proj = *(D3DXMATRIX*)luaL_checkudata(L, 3, L_MATRIX);
+	D3DXMATRIX world;
 	D3DXMatrixIdentity(&world);
 
 	D3DXVECTOR3* pos2D = (D3DXVECTOR3*)vector4_ctor(L);
-    D3DVIEWPORT9 viewport;
+	D3DVIEWPORT9 viewport;
 	RENDERER->GetDevice()->GetViewport(&viewport);
 
-    D3DXVec3Project(pos2D, pos3D, &viewport, &proj, &view, &world);
+	D3DXVec3Project(pos2D, pos3D, &viewport, &proj, &view, &world);
 	return 1;
 }
 LUAF(Math, ScreenToWorld)
 {
 	D3DXVECTOR3* pos2D = (D3DXVECTOR3*)luaL_checkudata(L, 1, L_VECTOR);
-    D3DXMATRIX view = *(D3DXMATRIX*)luaL_checkudata(L, 2, L_MATRIX);
-    D3DXMATRIX proj = *(D3DXMATRIX*)luaL_checkudata(L, 3, L_MATRIX);
-    D3DXMATRIX world;
+	D3DXMATRIX view = *(D3DXMATRIX*)luaL_checkudata(L, 2, L_MATRIX);
+	D3DXMATRIX proj = *(D3DXMATRIX*)luaL_checkudata(L, 3, L_MATRIX);
+	D3DXMATRIX world;
 	D3DXMatrixIdentity(&world);
 
 	D3DXVECTOR3* pos3D = (D3DXVECTOR3*)vector4_ctor(L);
-    D3DVIEWPORT9 viewport;
+	D3DVIEWPORT9 viewport;
 	RENDERER->GetDevice()->GetViewport(&viewport);
 
-    D3DXVec3Unproject(pos2D, pos3D, &viewport, &proj, &view, &world);
+	D3DXVec3Unproject(pos2D, pos3D, &viewport, &proj, &view, &world);
 	return 1;
 }
 LUAF(Math, str2vec)
@@ -411,19 +423,19 @@ LUAF(Rend, CameraPerspective)
 
 	if (flipHandedness)
 	{
-        D3DXMatrixPerspectiveFovRH(&matProjection,
-            D3DXToRadian(fov),
-            (FLOAT)res.right / (FLOAT)res.bottom,
-            zNear,
-            zFar);
+		D3DXMatrixPerspectiveFovRH(&matProjection,
+			D3DXToRadian(fov),
+			(FLOAT)res.right / (FLOAT)res.bottom,
+			zNear,
+			zFar);
 	}
 	else
 	{
-        D3DXMatrixPerspectiveFovLH(&matProjection,
-            D3DXToRadian(fov),
-            (FLOAT)res.right / (FLOAT)res.bottom,
-            zNear,
-            zFar);
+		D3DXMatrixPerspectiveFovLH(&matProjection,
+			D3DXToRadian(fov),
+			(FLOAT)res.right / (FLOAT)res.bottom,
+			zNear,
+			zFar);
 	}
 
 	RENDERER->SetMatrix(MATRIXKIND_PROJECTION, matProjection);
@@ -434,12 +446,12 @@ LUAF(Rend, CameraOrthographic)
 {
 	RECT res = RENDERER->GetSurfaceResolution();
 	FLOAT w=(FLOAT)res.right, h=(FLOAT)res.bottom;
-    BOOL flipHandedness = FALSE;
+	BOOL flipHandedness = FALSE;
 
 	if (lua_gettop(L) >= 2)
 	{
-        w = (FLOAT)luaL_checknumber(L, 1) * ((FLOAT)res.right / (FLOAT)res.bottom);
-        h = (FLOAT)luaL_checknumber(L, 2);
+		w = (FLOAT)luaL_checknumber(L, 1) * ((FLOAT)res.right / (FLOAT)res.bottom);
+		h = (FLOAT)luaL_checknumber(L, 2);
 	}
 
 	FLOAT zNear=0.01f, zFar=100.0f;
@@ -450,28 +462,28 @@ LUAF(Rend, CameraOrthographic)
 		zFar = (FLOAT)luaL_checknumber(L, 4);
 	}
 
-    if (lua_gettop(L) >= 5)
-    {
-        flipHandedness = (BOOL)lua_toboolean(L, 5);
-    }
+	if (lua_gettop(L) >= 5)
+	{
+		flipHandedness = (BOOL)lua_toboolean(L, 5);
+	}
 
 	D3DXMATRIX matProjection;
 
 	if (flipHandedness)
 	{
-        D3DXMatrixOrthoRH(&matProjection,
-            w,
-            h,
-            zNear,
-            zFar);
+		D3DXMatrixOrthoRH(&matProjection,
+			w,
+			h,
+			zNear,
+			zFar);
 	}
 	else
 	{
-        D3DXMatrixOrthoLH(&matProjection,
-            w,
-            h,
-            zNear,
-            zFar);
+		D3DXMatrixOrthoLH(&matProjection,
+			w,
+			h,
+			zNear,
+			zFar);
 	}
 
 	RENDERER->SetMatrix(MATRIXKIND_PROJECTION, matProjection);
@@ -480,52 +492,52 @@ LUAF(Rend, CameraOrthographic)
 }
 LUAF(Rend, CameraOrthographicEx)
 {
-    RECT res = RENDERER->GetSurfaceResolution();
+	RECT res = RENDERER->GetSurfaceResolution();
 	FLOAT l = 0.0f, t = 0.0f;
-    FLOAT r = (FLOAT)res.right, b = (FLOAT)res.bottom;
-    BOOL flipHandedness = FALSE;
+	FLOAT r = (FLOAT)res.right, b = (FLOAT)res.bottom;
+	BOOL flipHandedness = FALSE;
 
-    if (lua_gettop(L) >= 4)
-    {
+	if (lua_gettop(L) >= 4)
+	{
 		l = (FLOAT)luaL_checknumber(L, 1);
 		r = (FLOAT)luaL_checknumber(L, 2);
 		b = (FLOAT)luaL_checknumber(L, 3);
 		t = (FLOAT)luaL_checknumber(L, 4);
-    }
+	}
 
-    FLOAT zNear = 0.01f, zFar = 100.0f;
+	FLOAT zNear = 0.01f, zFar = 100.0f;
 
-    if (lua_gettop(L) >= 5)
-    {
-        zNear = (FLOAT)luaL_checknumber(L, 5);
-        zFar = (FLOAT)luaL_checknumber(L, 6);
-    }
+	if (lua_gettop(L) >= 5)
+	{
+		zNear = (FLOAT)luaL_checknumber(L, 5);
+		zFar = (FLOAT)luaL_checknumber(L, 6);
+	}
 
-    if (lua_gettop(L) >= 7)
-    {
-        flipHandedness = (BOOL)lua_toboolean(L, 7);
-    }
+	if (lua_gettop(L) >= 7)
+	{
+		flipHandedness = (BOOL)lua_toboolean(L, 7);
+	}
 
-    D3DXMATRIX matProjection;
+	D3DXMATRIX matProjection;
 
-    if (flipHandedness)
-    {
-        D3DXMatrixOrthoOffCenterRH(&matProjection,
-            l, r, b, t,
-            zNear,
-            zFar);
-    }
-    else
-    {
-        D3DXMatrixOrthoOffCenterLH(&matProjection,
+	if (flipHandedness)
+	{
+		D3DXMatrixOrthoOffCenterRH(&matProjection,
 			l, r, b, t,
-            zNear,
-            zFar);
-    }
+			zNear,
+			zFar);
+	}
+	else
+	{
+		D3DXMatrixOrthoOffCenterLH(&matProjection,
+			l, r, b, t,
+			zNear,
+			zFar);
+	}
 
-    RENDERER->SetMatrix(MATRIXKIND_PROJECTION, matProjection);
+	RENDERER->SetMatrix(MATRIXKIND_PROJECTION, matProjection);
 
-    return 0;
+	return 0;
 }
 LUAF(Rend, BindTexture)
 {
@@ -557,35 +569,35 @@ LUAF(Rend, BindTexture)
 }
 LUAF(Rend, GetResolution)
 {
-    RECT res = RENDERER->GetResolution();
-    lua_newtable(L);
+	RECT res = RENDERER->GetResolution();
+	lua_newtable(L);
 
-    // x
-    lua_pushinteger(L, 1);
-    lua_pushnumber(L, res.right);
-    lua_settable(L, -3);
+	// x
+	lua_pushinteger(L, 1);
+	lua_pushnumber(L, res.right);
+	lua_settable(L, -3);
 
-    // y
-    lua_pushinteger(L, 2);
-    lua_pushnumber(L, res.bottom);
-    lua_settable(L, -3);
+	// y
+	lua_pushinteger(L, 2);
+	lua_pushnumber(L, res.bottom);
+	lua_settable(L, -3);
 
-    return 1;
+	return 1;
 }
 LUAF(Rend, GetMatrix)
 {
-    DWORD kind = (DWORD)luaL_checkinteger(L, 1);
+	DWORD kind = (DWORD)luaL_checkinteger(L, 1);
 
 	matrix_new(L);
 	D3DXMATRIX* mat = (D3DXMATRIX*)luaL_checkudata(L, 2, L_MATRIX);
 	*mat = RENDERER->GetDeviceMatrix(kind);
 
-    return 1;
+	return 1;
 }
 LUAF(Rend, IsFocused)
 {
 	lua_pushboolean(L, RENDERER->IsFocused());
-    return 1;
+	return 1;
 }
 LUAF(Rend, RenderState)
 {
@@ -612,8 +624,8 @@ LUAF(Rend, ToggleWireframe)
 }
 LUAF(Rend, SetFog)
 {
-    DWORD color = luaH_getcolor(L);
-    DWORD mode = (DWORD)luaL_checkinteger(L, 2);
+	DWORD color = luaH_getcolor(L);
+	DWORD mode = (DWORD)luaL_checkinteger(L, 2);
 	FLOAT start = (FLOAT)luaL_checknumber(L, 3);
 	FLOAT end = 0.0f;
 
@@ -621,28 +633,28 @@ LUAF(Rend, SetFog)
 		end = (FLOAT)luaL_checknumber(L, 4);
 
 	RENDERER->SetFog(color, mode, start, end);
-    return 0;
+	return 0;
 }
 LUAF(Rend, ClearFog)
 {
 	RENDERER->ClearFog();
-    return 0;
+	return 0;
 }
 LUAF(Rend, SamplerState)
 {
-    DWORD stage = (DWORD)luaL_checkinteger(L, 1);
-    DWORD kind = (DWORD)luaL_checkinteger(L, 2);
-    DWORD state = (DWORD)luaL_checkinteger(L, 3);
+	DWORD stage = (DWORD)luaL_checkinteger(L, 1);
+	DWORD kind = (DWORD)luaL_checkinteger(L, 2);
+	DWORD state = (DWORD)luaL_checkinteger(L, 3);
 
-    RENDERER->SetSamplerState(stage, kind, state);
-    return 0;
+	RENDERER->SetSamplerState(stage, kind, state);
+	return 0;
 }
 LUAF(Rend, EnableLighting)
 {
-    BOOL state = (BOOL)lua_toboolean(L, 1);
+	BOOL state = (BOOL)lua_toboolean(L, 1);
 
-    RENDERER->EnableLighting(state);
-    return 0;
+	RENDERER->EnableLighting(state);
+	return 0;
 }
 LUAF(Rend, AmbientColor)
 {
@@ -655,39 +667,39 @@ LUAF(Rend, AmbientColor)
 	}
 
 	RENDERER->SetRenderState(D3DRS_AMBIENT, luaH_getcolor(L));
-    return 0;
+	return 0;
 }
 LUAF(Rend, ClearTarget)
 {
 	RENDERER->SetRenderTarget(NULL);
-    return 0;
+	return 0;
 }
 LUAF(Rend, DrawBox)
 {
 	D3DXMATRIX mat = *(D3DXMATRIX*)luaL_checkudata(L, 1, L_MATRIX);
 	D3DXVECTOR4 dims = *(D3DXVECTOR4*)luaL_checkudata(L, 2, L_VECTOR);
-    DWORD color = (DWORD)luaL_checkinteger(L, 3);
+	DWORD color = (DWORD)luaL_checkinteger(L, 3);
 
-    RENDERER->DrawBox(mat, dims, color);
-    return 0;
+	RENDERER->DrawBox(mat, dims, color);
+	return 0;
 }
 LUAF(Rend, ReadyAlphaBlend)
 {
 	RENDERER->GetDevice()->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-    RENDERER->GetDevice()->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
-    RENDERER->GetDevice()->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-    RENDERER->GetDevice()->SetRenderState(D3DRS_ALPHATESTENABLE, TRUE);
-    RENDERER->GetDevice()->SetRenderState(D3DRS_ALPHAREF, 0x08);
-    RENDERER->GetDevice()->SetRenderState(D3DRS_ALPHAFUNC, D3DCMP_GREATEREQUAL);
-    RENDERER->GetDevice()->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
-    RENDERER->GetDevice()->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
-    RENDERER->GetDevice()->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
-    RENDERER->GetDevice()->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
-    RENDERER->GetDevice()->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-    RENDERER->GetDevice()->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_ANISOTROPIC);
-    RENDERER->GetDevice()->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_ANISOTROPIC);
-    RENDERER->GetDevice()->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_ANISOTROPIC);
-    return 0;
+	RENDERER->GetDevice()->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+	RENDERER->GetDevice()->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+	RENDERER->GetDevice()->SetRenderState(D3DRS_ALPHATESTENABLE, TRUE);
+	RENDERER->GetDevice()->SetRenderState(D3DRS_ALPHAREF, 0x08);
+	RENDERER->GetDevice()->SetRenderState(D3DRS_ALPHAFUNC, D3DCMP_GREATEREQUAL);
+	RENDERER->GetDevice()->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+	RENDERER->GetDevice()->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
+	RENDERER->GetDevice()->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
+	RENDERER->GetDevice()->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
+	RENDERER->GetDevice()->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+	RENDERER->GetDevice()->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_ANISOTROPIC);
+	RENDERER->GetDevice()->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_ANISOTROPIC);
+	RENDERER->GetDevice()->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_ANISOTROPIC);
+	return 0;
 }
 LUAF(Rend, DrawQuad)
 {
@@ -699,7 +711,7 @@ LUAF(Rend, DrawQuad)
 	BOOL flipY = (BOOL)lua_toboolean(L, 6);
 
 	RENDERER->DrawQuad(x1, x2, y1, y2, color, flipY);
-    return 0;
+	return 0;
 }
 LUAF(Rend, DrawQuadEx)
 {
@@ -711,29 +723,29 @@ LUAF(Rend, DrawQuadEx)
 	BOOL flipY = (BOOL)lua_toboolean(L, 6);
 
 	RENDERER->DrawQuadEx(pos.x, pos.y, pos.z, w, h, color, usesDepth, flipY);
-    return 0;
+	return 0;
 }
 LUAF(Rend, DrawQuad3D)
 {
-    FLOAT x1 = (FLOAT)luaL_checknumber(L, 1);
-    FLOAT x2 = (FLOAT)luaL_checknumber(L, 2);
-    FLOAT y1 = (FLOAT)luaL_checknumber(L, 3);
-    FLOAT y2 = (FLOAT)luaL_checknumber(L, 4);
-    FLOAT z1 = (FLOAT)luaL_checknumber(L, 5);
-    FLOAT z2 = (FLOAT)luaL_checknumber(L, 6);
-    DWORD color = (DWORD)luaL_checkinteger(L, 7);
+	FLOAT x1 = (FLOAT)luaL_checknumber(L, 1);
+	FLOAT x2 = (FLOAT)luaL_checknumber(L, 2);
+	FLOAT y1 = (FLOAT)luaL_checknumber(L, 3);
+	FLOAT y2 = (FLOAT)luaL_checknumber(L, 4);
+	FLOAT z1 = (FLOAT)luaL_checknumber(L, 5);
+	FLOAT z2 = (FLOAT)luaL_checknumber(L, 6);
+	DWORD color = (DWORD)luaL_checkinteger(L, 7);
 
-    RENDERER->DrawQuad3D(x1, x2, y1, y2, z1, z2, color);
-    return 0;
+	RENDERER->DrawQuad3D(x1, x2, y1, y2, z1, z2, color);
+	return 0;
 }
 LUAF(Rend, DrawPolygon)
 {
-    VERTEX a = *(VERTEX*)luaL_checkudata(L, 1, L_VERTEX);
+	VERTEX a = *(VERTEX*)luaL_checkudata(L, 1, L_VERTEX);
 	VERTEX b = *(VERTEX*)luaL_checkudata(L, 2, L_VERTEX);
 	VERTEX c = *(VERTEX*)luaL_checkudata(L, 3, L_VERTEX);
 
-    RENDERER->DrawPolygon(a, b, c);
-    return 0;
+	RENDERER->DrawPolygon(a, b, c);
+	return 0;
 }
 LUAF(Rend, CullMode)
 {
@@ -753,8 +765,8 @@ LUAF(Rend, FillScreen)
 		flipY = (BOOL)lua_toboolean(L, 2);
 
 	RECT res = RENDERER->GetResolution();
-    RENDERER->DrawQuad(0, (FLOAT)res.right, 0, (FLOAT)res.bottom, color, flipY);
-    return 0;
+	RENDERER->DrawQuad(0, (FLOAT)res.right, 0, (FLOAT)res.bottom, color, flipY);
+	return 0;
 }
 LUAF(Rend, RegisterFontFile)
 {
@@ -831,12 +843,12 @@ VOID CLuaBindings::BindRenderer(lua_State* L)
 		REGE(CLEARFLAG_STENCIL);
 		REGE(CLEARFLAG_STANDARD);
 
-        REGN(TEXTURESLOT_ALBEDO, TEXTURESLOT_ALBEDO + 1);
-        REGN(TEXTURESLOT_SPECULAR, TEXTURESLOT_SPECULAR + 1);
-        REGN(TEXTURESLOT_NORMAL, TEXTURESLOT_NORMAL + 1);
-        REGN(TEXTURESLOT_DISPLACE, TEXTURESLOT_DISPLACE + 1);
-        REGN(TEXTURESLOT_USER_END, TEXTURESLOT_USER_END + 1);
-        REGN(MAX_TEXTURE_SLOTS, MAX_TEXTURE_SLOTS + 1);
+		REGN(TEXTURESLOT_ALBEDO, TEXTURESLOT_ALBEDO + 1);
+		REGN(TEXTURESLOT_SPECULAR, TEXTURESLOT_SPECULAR + 1);
+		REGN(TEXTURESLOT_NORMAL, TEXTURESLOT_NORMAL + 1);
+		REGN(TEXTURESLOT_DISPLACE, TEXTURESLOT_DISPLACE + 1);
+		REGN(TEXTURESLOT_USER_END, TEXTURESLOT_USER_END + 1);
+		REGN(MAX_TEXTURE_SLOTS, MAX_TEXTURE_SLOTS + 1);
 
 		REGN(FOGKIND_NONE, 0);
 		REGN(FOGKIND_EXP, 1);
@@ -848,9 +860,9 @@ VOID CLuaBindings::BindRenderer(lua_State* L)
 		REGN(VIEW, MATRIXKIND_VIEW);
 		REGN(PROJ, MATRIXKIND_PROJECTION);
 
-        REGN(CULLKIND_NONE, 1);
-        REGN(CULLKIND_CW, 2);
-        REGN(CULLKIND_CCW, 3);
+		REGN(CULLKIND_NONE, 1);
+		REGN(CULLKIND_CW, 2);
+		REGN(CULLKIND_CCW, 3);
 
 		// render states
 #define _X(NAME, VALUE) REGN(NAME, VALUE);
@@ -887,8 +899,8 @@ static DWORD GetScanCodeFromLua(lua_State* L)
 
 		if (isdigit(c))
 		{
-            CHAR dist = c - '0';
-            return (0x30 + dist);
+			CHAR dist = c - '0';
+			return (0x30 + dist);
 		}
 	}
 
@@ -897,14 +909,14 @@ static DWORD GetScanCodeFromLua(lua_State* L)
 
 LUAF(Input, IsCursorVisible)
 {
-    lua_pushboolean(L, INPUT->GetCursor());
-    return 1;
+	lua_pushboolean(L, INPUT->GetCursor());
+	return 1;
 }
 LUAF(Input, ShowCursor)
 {
 	BOOL state = (BOOL)lua_toboolean(L, 1);
-    INPUT->SetCursor(state);
-    return 0;
+	INPUT->SetCursor(state);
+	return 0;
 }
 LUAF(Input, GetKey)
 {
@@ -921,26 +933,26 @@ LUAF(Input, GetKeyDown)
 LUAF(Input, GetKeyUp)
 {
 	DWORD code = GetScanCodeFromLua(L);
-    lua_pushboolean(L, INPUT->GetKeyUp(code));
-    return 1;
+	lua_pushboolean(L, INPUT->GetKeyUp(code));
+	return 1;
 }
 LUAF(Input, GetMouse)
 {
-    DWORD code = (DWORD)luaL_checkinteger(L, 1);
-    lua_pushboolean(L, INPUT->GetMouse(code));
-    return 1;
+	DWORD code = (DWORD)luaL_checkinteger(L, 1);
+	lua_pushboolean(L, INPUT->GetMouse(code));
+	return 1;
 }
 LUAF(Input, GetMouseDown)
 {
-    DWORD code = (DWORD)luaL_checkinteger(L, 1);
-    lua_pushboolean(L, INPUT->GetMouseDown(code));
-    return 1;
+	DWORD code = (DWORD)luaL_checkinteger(L, 1);
+	lua_pushboolean(L, INPUT->GetMouseDown(code));
+	return 1;
 }
 LUAF(Input, GetMouseUp)
 {
-    DWORD code = (DWORD)luaL_checkinteger(L, 1);
-    lua_pushboolean(L, INPUT->GetMouseUp(code));
-    return 1;
+	DWORD code = (DWORD)luaL_checkinteger(L, 1);
+	lua_pushboolean(L, INPUT->GetMouseUp(code));
+	return 1;
 }
 LUAF(Input, GetMouseXY)
 {
@@ -948,33 +960,33 @@ LUAF(Input, GetMouseXY)
 	lua_newtable(L);
 
 	// x
-    lua_pushinteger(L, 1);
-    lua_pushnumber(L, pos.x);
-    lua_settable(L, -3);
+	lua_pushinteger(L, 1);
+	lua_pushnumber(L, pos.x);
+	lua_settable(L, -3);
 
 	// y
-    lua_pushinteger(L, 2);
-    lua_pushnumber(L, pos.y);
-    lua_settable(L, -3);
+	lua_pushinteger(L, 2);
+	lua_pushnumber(L, pos.y);
+	lua_settable(L, -3);
 
-    return 1;
+	return 1;
 }
 LUAF(Input, GetMouseDelta)
 {
-    POINT pos = INPUT->GetMouseDelta();
-    lua_newtable(L);
+	POINT pos = INPUT->GetMouseDelta();
+	lua_newtable(L);
 
-    // x
-    lua_pushinteger(L, 1);
-    lua_pushnumber(L, pos.x);
-    lua_settable(L, -3);
+	// x
+	lua_pushinteger(L, 1);
+	lua_pushnumber(L, pos.x);
+	lua_settable(L, -3);
 
-    // y
-    lua_pushinteger(L, 2);
-    lua_pushnumber(L, pos.y);
-    lua_settable(L, -3);
+	// y
+	lua_pushinteger(L, 2);
+	lua_pushnumber(L, pos.y);
+	lua_settable(L, -3);
 
-    return 1;
+	return 1;
 }
 LUAF(Input, SetMouseXY)
 {
@@ -982,18 +994,18 @@ LUAF(Input, SetMouseXY)
 	SHORT y = (SHORT)luaL_checkinteger(L, 2);
 	INPUT->SetMouseXY(x, y);
 
-    return 0;
+	return 0;
 }
 LUAF(Input, GetCursorMode)
 {
 	lua_pushinteger(L, INPUT->GetCursorMode());
-    return 1;
+	return 1;
 }
 LUAF(Input, SetCursorMode)
 {
 	UCHAR mode = (UCHAR)luaL_checkinteger(L, 1);
 	INPUT->SetCursorMode(mode);
-    return 0;
+	return 0;
 }
 ///<END
 
@@ -1026,10 +1038,10 @@ VOID CLuaBindings::BindInput(lua_State* L)
 	// mouse buttons
 	{
 		REGN(MOUSE_LEFT_BUTTON, CInput::MOUSE_LEFT_BUTTON);
-        REGN(MOUSE_MIDDLE_BUTTON, CInput::MOUSE_MIDDLE_BUTTON);
-        REGN(MOUSE_RIGHT_BUTTON, CInput::MOUSE_RIGHT_BUTTON);
-        REGN(MOUSE_WHEEL_UP, CInput::MOUSE_WHEEL_UP);
-        REGN(MOUSE_WHEEL_DOWN, CInput::MOUSE_WHEEL_DOWN);
+		REGN(MOUSE_MIDDLE_BUTTON, CInput::MOUSE_MIDDLE_BUTTON);
+		REGN(MOUSE_RIGHT_BUTTON, CInput::MOUSE_RIGHT_BUTTON);
+		REGN(MOUSE_WHEEL_UP, CInput::MOUSE_WHEEL_UP);
+		REGN(MOUSE_WHEEL_DOWN, CInput::MOUSE_WHEEL_DOWN);
 	}
 
 	// cursor modes

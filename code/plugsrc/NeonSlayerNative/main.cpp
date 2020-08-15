@@ -30,6 +30,25 @@ INT tankrespawnref = 0;
 #define SLAYER_RADIUS 30.0f
 #define MAX_TRAILS 200
 #define TRAILS_PERCENT 0.99
+#define SLAYER_COLORS (sizeof(sl_colors)/sizeof(sl_colors[0]))
+
+static uint32_t sl_colors[] = {
+    0xe6194b,
+    0x3cb44b,
+    0xffe119,
+    0x4363d8,
+    0xf58231,
+    0x911eb4,
+    0x46f0f0,
+    0xf032e6,
+    0xbcf60c,
+    0xD47D7D,
+    0xe6beff,
+    0x6B461C,
+    0x800000,
+    0x404040,
+    0x000075,
+};
 
 /// helpers
 template <typename T>
@@ -215,7 +234,7 @@ typedef struct {
 
 typedef struct {
     float x, y, z, r;
-    int c;
+    uint32_t color;
     NEArray<ne_vec3> *trail;
     int alive;
     float collision_resolve_time;
@@ -266,7 +285,7 @@ bool ne_check_collision(ne_vec3 p1, ne_vec3 p2, float cx, float cy, float cz) {
 }
 
 void ne_server_update(lua_State* L) {
-    static int color_counter = 11;
+    static int color_counter = 0;
     ENetEvent event = {0};
     while (enet_host_service(server, &event, 2) > 0) {
         switch (event.type) {
@@ -275,10 +294,9 @@ void ne_server_update(lua_State* L) {
                 uint16_t entity_id = event.peer->incomingPeerID;
 
                 /* allocate and store entity data in the data part of peer */
-                color_counter = (color_counter + 1) % 12;
                 ne_data _ent = { 0 }; _ent.peer = event.peer;
                 ne_server_data[entity_id] = _ent;
-                ne_server_data[entity_id].c = color_counter * 30;
+                ne_server_data[entity_id].color = sl_colors[color_counter++ % SLAYER_COLORS];
                 ne_server_data[entity_id].alive = 1;
                 ne_server_data[entity_id].ticker = 0;
                 ne_server_data[entity_id].trail = new NEArray<ne_vec3>();
@@ -287,7 +305,7 @@ void ne_server_update(lua_State* L) {
 
                 char buffer[512] = { 0 };
                 *((uint16_t*)(buffer)+0) = 4;
-                *((uint16_t*)(buffer)+1) = (uint16_t)ne_server_data[entity_id].c;
+                *((uint32_t*)(buffer)+1) = (uint32_t)ne_server_data[entity_id].color;
 
                 /* create packet with actual length, and send it */
                 ENetPacket* packet = enet_packet_create(buffer, sizeof(uint16_t)*2, ENET_PACKET_FLAG_RELIABLE);
@@ -453,7 +471,7 @@ void ne_server_update(lua_State* L) {
             *(float*)(buffer + offset) = it->second.y; offset += sizeof(float);
             *(float*)(buffer + offset) = it->second.z; offset += sizeof(float);
             *(float*)(buffer + offset) = it->second.r; offset += sizeof(float);
-            *(uint16_t*)(buffer + offset) = it->second.c; offset += sizeof(uint16_t);
+            *(uint32_t*)(buffer + offset) = it->second.color; offset += sizeof(uint32_t);
             *(uint8_t*)(buffer + offset) = (currentPeer->incomingPeerID == it->first); offset += sizeof(uint8_t);
 
 #ifdef DEBUG_LINES
@@ -511,7 +529,7 @@ void ne_client_update(lua_State* L) {
                         float y = *(float*)(buffer + offset); offset += sizeof(float);
                         float z = *(float*)(buffer + offset); offset += sizeof(float);
                         float r = *(float*)(buffer + offset); offset += sizeof(float);
-                        uint16_t c = *(uint16_t*)(buffer + offset); offset += sizeof(uint16_t);
+                        uint32_t color = *(uint32_t*)(buffer + offset); offset += sizeof(uint32_t);
                         uint8_t islocal = *(uint8_t*)(buffer + offset); offset += sizeof(uint8_t);
 
                         // UI->PushLog(CString::Format("update: %ld: [%f %f %f] %f %d\n", entity_id, x, y, z, r, c).Str());
@@ -527,7 +545,7 @@ void ne_client_update(lua_State* L) {
                         lua_pushnumber(L, y);
                         lua_pushnumber(L, z);
                         lua_pushnumber(L, r);
-                        lua_pushnumber(L, c);
+                        lua_pushnumber(L, color);
                         lua_pushnumber(L, islocal);
 
 #ifdef DEBUG_LINES
@@ -596,9 +614,9 @@ void ne_client_update(lua_State* L) {
                     tankcollideref = luaL_ref(L, LUA_REGISTRYINDEX);
                 }
                 else if (packetid == 4) {
-                    int color = *((uint16_t*)(buffer)+1);
-                    UI->PushLog(CString::Format("setting my own color: %d\n", color).Str());
-                    REGN(localPlayerColor, color);
+                    uint32_t color = *((uint32_t*)(buffer)+1);
+                    // UI->PushLog(CString::Format("setting my own color: %d\n", color).Str());
+                    // REGN(localPlayerColor, color);
                 }
                 else if (packetid == 5) {
                     UI->PushLog("RECEIVED SPAWN MESSAGE\n");
