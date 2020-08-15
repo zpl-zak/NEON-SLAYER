@@ -15,15 +15,15 @@ set "proj=basic"
 :begin
 	cls
 
-	echo Lines game
+	echo NEON SLAYER game
 	echo =======================
 	echo  1. Exit
 	echo  2. Build
 	echo  3. Debug
-	echo  4. Deploy (itch.io)
-	echo  5. Open in VS
-	echo  6. Open in VS Code
-	echo  7. Open in lite
+	echo  4. Deploy - Staging
+	echo  5. Deploy - Prod
+	echo  6. Open in VS
+	echo  7. Open in VS Code
 	echo  8. Pull upstream
 	echo  9. itch.io build log
 	echo  A. Open shell
@@ -41,9 +41,9 @@ set "proj=basic"
 	if %errorlevel%==2 call :build
 	if %errorlevel%==3 call :debug
 	if %errorlevel%==4 call :deploy
-	if %errorlevel%==5 call :open_in_vs
-	if %errorlevel%==6 call :open_in_vscode
-	if %errorlevel%==7 call :open_in_lite
+	if %errorlevel%==5 call :deploy_prod
+	if %errorlevel%==6 call :open_in_vs
+	if %errorlevel%==7 call :open_in_vscode
 	if %errorlevel%==8 call :git_pull
 	if %errorlevel%==9 call :butler_builds
 	if %errorlevel%==10 call :shell
@@ -108,9 +108,9 @@ exit /B 0
 	echo.
 
 	:package_prompt
-		echo LINES DEPLOY
+		echo NEON SLAYER DEPLOY
 		echo =======================
-		echo  1. Upload to itch.io
+		echo  1. Proceed with upload
 		echo  2. Cancel deployment
 		echo  3. Test it first
 		echo =======================
@@ -121,6 +121,8 @@ exit /B 0
 		if %errorlevel%==3 (
 			pushd build\deploy\
 				player.exe data
+				rem Delete save files
+				del /Q /F data\save.neon
 			popd
 		)
 	cls
@@ -136,13 +138,65 @@ goto :package_prompt
 	rem Upload process
 	pushd build\
 		echo Deploying to itch.io ...
+		butler push deploy zaklaus/neon-slayer:win32-test
+	popd
+	pause
+exit /B 0
+
+:deploy_prod
+	call :build_release
+	if %errorlevel%==0 exit /B 0
+
+	call :package
+	if %errorlevel%==0 exit /B 0
+	cls
+
+	:deploy_version
+		echo NEON SLAYER VERSION
+		echo =======================
+		echo  1. Major
+		echo  2. Minor
+		echo  3. Patch
+		echo  4. Cancel deployment
+		echo =======================
+		choice /C 1234 /N /M "Your choice:"
+		set ch=%errorlevel%
+		set /P AREYOUSURE="Are you sure (Y/[N])? "
+		IF /I "%AREYOUSURE%" NEQ "Y" exit /B 0
+		echo.
+		if %ch%==1 (
+			call npm run release-major
+		)
+		if %ch%==2 (
+			call npm run release-minor
+		)
+		if %ch%==3 (
+			call npm run release-patch
+		)
+		if %ch%==4 exit /B 0
+
+		echo.
+		echo NEON SLAYER RELEASE
+		echo =======================
+		echo  1. RELEASE IT!!!
+		echo  2. Cancel deployment
+		echo =======================
+		choice /C 12 /N /M "Your choice:"
+		echo.
+
+		if %errorlevel%==2 exit /B 0
+	cls
+
+	rem Upload process
+	pushd build\
+		echo Deploying to itch.io ...
 		butler push deploy zaklaus/neon-slayer:win32-release
 	popd
 	pause
 exit /B 0
 
 :butler_builds
-	butler status zaklaus/neon-86
+	butler status zaklaus/neon-slayer
 	pause
 exit /B 0
 

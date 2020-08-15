@@ -35,9 +35,9 @@ class "Tank" {
         self.hover = Vector3()
         self.vel = Vector()
         self.rot = Matrix()
-        self.trails = {}
+        self.tails = {}
         self.serverTrail = {}
-        self.trailTime = 0
+        self.tailTime = 0
         self.crot = 0
         self.health = 100
         self.alive = true
@@ -63,32 +63,30 @@ class "Tank" {
     end,
 
     refreshMaterial = function (self)
-        local trailMaterial = Material("assets/trail.png")
-        self.material = trailMaterial
-
+        self.material = Material()
         self.material:setDiffuse(self.color)
         self.material:setEmission(self.color)
         self.material:setAmbient(self.color)
 
-        self.trailMaterial = Material("assets/trail.png")
-        self.trailMaterial:setDiffuse(self.color)
-        self.trailMaterial:setEmission(self.color)
-        self.trailMaterial:setAmbient(self.color)
-        self.trailMaterial:setOpacity(1)
-        self.trailMaterial:setShaded(false)
-        self.trailMaterial:alphaIsTransparency(true)
+        self.tailMaterial = Material("assets/tail.png")
+        self.tailMaterial:setDiffuse(self.color)
+        self.tailMaterial:setEmission(self.color)
+        self.tailMaterial:setAmbient(self.color)
+        self.tailMaterial:setOpacity(1)
+        self.tailMaterial:setShaded(false)
+        self.tailMaterial:alphaIsTransparency(true)
     end,
 
     updateTrail = function (self)
-        if self.trailTime < time and self.alive then
-            self.trailTime = time + TRAIL_TIME
+        if self.tailTime < time and self.alive then
+            self.tailTime = time + TRAIL_TIME
 
-            if #self.trails > MAX_TRAILS then
-                table.remove(self.trails, 1)
+            if #self.tails > MAX_TRAILS then
+                table.remove(self.tails, 1)
             end
 
             if self.pos:magSq() > 0.01 then
-                table.insert(self.trails, getTrailPos(self))
+                table.insert(self.tails, getTrailPos(self))
             end
         end
     end,
@@ -149,22 +147,6 @@ class "Tank" {
                 self.vel:y(0)
             end
 
-            -- TODO handle proper shit
-            local vel = Vector3(self.vel:x(), 0, self.vel:z())
-
-            for _, ot in pairs(tanks) do
-                if ot.isLocal or not ot.alive or self.bounceTime > getTime() then goto _ end
-                local dist = (ot.pos - self.pos):mag()
-
-                if dist <= SPHERE_BOUNCE_RADIUS then
-                    self.vel:x(-self.vel:x()*1.5)
-                    self.vel:z(-self.vel:z()*1.5)
-                    self.bounceTime = getTime() + 0.5
-                    playSFX(borderHitSound, 0.25)
-                end
-                ::_::
-            end
-
             -- IMPORTANT: send data to server
             nativedll.send(self.pos:x(), self.pos:y(), self.pos:z(), 0)
         end
@@ -185,30 +167,30 @@ class "Tank" {
             BindTexture(0, self.material)
             tankModel:draw(Matrix():scale(20.0,20.0,20.0):translate(self.pos+Vector3(0, 15, 0)))
             BindTexture(0)
-            self:drawTrails(self.trails, 20)
+            self:drawTrails(self.tails, 20)
             ToggleWireframe(true)
             self:drawTrails(self.serverTrail, 30)
             ToggleWireframe(false)
         end
     end,
 
-    drawTrails = function (self, trails, height)
-        for i=1,#trails,1 do
-            local tr1 = trails[i]
-            local tr2 = trails[i+1]
+    drawTrails = function (self, tails, height)
+        for i=1,#tails,1 do
+            local tr1 = tails[i]
+            local tr2 = tails[i+1]
 
             local alpha = math.min(i, 20.0) / 20.0
 
             if tr1 ~= nil then
-                if #trails > MAX_TRAILS then
-                        self.trailMaterial:setOpacity(alpha)
+                if #tails > MAX_TRAILS then
+                        self.tailMaterial:setOpacity(alpha)
                 end
                 if tr2 == nil then
                         tr2 = getTrailPos(self)
-                        self.trailMaterial:setOpacity(1)
+                        self.tailMaterial:setOpacity(1)
                 end
 
-                BindTexture(0, self.trailMaterial)
+                BindTexture(0, self.tailMaterial)
                 Matrix():bind(WORLD)
                 CullMode(CULLKIND_NONE)
                 AmbientColor(255, 255, 255)

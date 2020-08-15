@@ -1,0 +1,42 @@
+{
+  "name": "neon-slayer",
+  "version": "0.1.8",
+  "description": "NEON SLAYER is an action-packed fast-paced deathmatch arena, where your only weapons are reflexes.",
+  "main": "data/init.lua",
+  "scripts": {
+    "release-patch": "release-it patch --ci",
+    "release-minor": "release-it minor --ci",
+    "release-major": "release-it major --ci"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zaklaus/neon-lines.git"
+  },
+  "keywords": [
+    "game",
+    "3d",
+    "retro",
+    "lua",
+    "neon86"
+  ],
+  "author": "MafiaHub",
+  "license": "BSD-3-Clause",
+  "bugs": {
+    "url": "https://github.com/zaklaus/neon-lines/issues"
+  },
+  "homepage": "https://zaklaus.itch.io/neon-slayer",
+  "devDependencies": {
+    "release-it": "^13.6.6"
+  },
+  "release-it": {
+    "npm": {
+      "publish": false
+    },
+    "github": {
+      "release": false
+    },
+    "plugins": {
+      "./scripts/release-bump.js": {}
+    }
+  }
+}

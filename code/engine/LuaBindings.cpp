@@ -106,8 +106,6 @@ D3DCOLORVALUE luaH_getcolorlinear(lua_State* L, UINT offset)
 			b = (BYTE)((encodedColor & 0x000000FF) >> 0);
 		}
 
-		PushLog(CString::Format("decoded color: [%d %d %d %d]\n", a, r, g, b).Str());
-
 		color = { (FLOAT)r / 0xFF, (FLOAT)g / 0xFF, (FLOAT)b / 0xFF, (FLOAT)a / 0xFF };
 	}
 	else if ((UINT)lua_gettop(L) == 3+offset)
