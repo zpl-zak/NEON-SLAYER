@@ -6,9 +6,9 @@ cols = require "collisions"
 dofile("utils.lua")
 
 config = {
-    hostPort = "27666",
-    host = "127.0.0.1",
-    port = "27666",
+    hostPort = "",
+    host = "",
+    port = "",
     nickname = "",
     volume = {
         music = 0.50,
