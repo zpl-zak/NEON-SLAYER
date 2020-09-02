@@ -6,9 +6,9 @@ cols = require "collisions"
 dofile("utils.lua")
 
 config = {
-    hostPort = "8000",
-    host = "lab.zakto.pw",
-    port = "8000",
+    hostPort = "27666",
+    host = "127.0.0.1",
+    port = "27666",
     nickname = "",
     volume = {
         music = 0.50,

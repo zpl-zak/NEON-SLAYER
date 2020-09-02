@@ -15,11 +15,6 @@ return class "MenuState" (AbstractState) {
         local buttonHeight = 50
         local yoffset = 200
 
-        -- self.layout = {
-        --     "clientPort" = ui.Input("Port: 27666", self.resolution[1]/2-100, yoffset, 200, 50),
-
-        -- }
-
         yoffset = yoffset + buttonHeight + padding
         local inpHostPort = uiInput("Port: 27666", self.resolution[1]/2-100, yoffset, 200, 50)
 
@@ -54,13 +49,6 @@ return class "MenuState" (AbstractState) {
         end)
 
         yoffset = yoffset + groupMargin
-
-        -- yoffset = yoffset + buttonHeight + padding
-        -- local nickname = uiInput("Nickname", self.resolution[1]/2-100, yoffset, 200, 50, function(self, value)
-        --     config.nickname = value
-        --     SaveState(encode(config))
-        -- end)
-        -- nickname.value = config.nickname
 
         yoffset = yoffset + buttonHeight + padding
         local btnSettings = uiButton("Sound Settings", self.resolution[1]/2-100, yoffset, 200, 50, function()
