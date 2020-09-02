@@ -1,6 +1,6 @@
 {
   "name": "neon-slayer",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "NEON SLAYER is an action-packed fast-paced deathmatch arena, where your only weapons are reflexes.",
   "main": "data/init.lua",
   "scripts": {
