@@ -16,7 +16,7 @@ local function getTrailPos(t)
 end
 
 local function playHitBorderSound()
-    if state.is("game") then playSFX(borderHitSound, 0.25) end
+    if state.is("game") then playSFX(borderHitSound, 0.45) end
 end
 
 local class = require "class"
