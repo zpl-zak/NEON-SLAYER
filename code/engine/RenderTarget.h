@@ -6,28 +6,27 @@
 
 #include "RenderData.h"
 
-class CRenderTarget: public CAllocable<CRenderTarget>, public CReferenceCounter
+class CRenderTarget : public CAllocable<CRenderTarget>, public CReferenceCounter
 {
 public:
     CRenderTarget();
-    CRenderTarget(UINT w, UINT h, UCHAR kind=RTKIND_COLOR);
-    ~CRenderTarget() { Release(); }
+    CRenderTarget(unsigned int w, unsigned int h, UCHAR kind = RTKIND_COLOR);
+    ~CRenderTarget();
 
-    VOID Release(VOID);
+    void Release(void);
 
-    inline LPDIRECT3DTEXTURE9 GetTextureHandle() { return mTextureHandle; }
-    inline LPDIRECT3DSURFACE9 GetSurfaceHandle() { return mSurfaceHandle; }
+    auto GetTextureHandle() const -> LPDIRECT3DTEXTURE9 { return mTextureHandle; }
+    auto GetSurfaceHandle() const -> LPDIRECT3DSURFACE9 { return mSurfaceHandle; }
 
-    inline LPDIRECT3DSURFACE9 GetDepthStencilSurfaceHandle() { return mDepthStencilSurfaceHandle; }
-    inline UCHAR GetKind() { return mKind; }
+    auto GetDepthStencilSurfaceHandle() const -> LPDIRECT3DSURFACE9 { return mDepthStencilSurfaceHandle; }
+    auto GetKind() const -> UCHAR { return mKind; }
 
-    VOID Bind(VOID);
+    void Bind(void);
 
 private:
-    UCHAR mKind;
-    LPDIRECT3DTEXTURE9 mTextureHandle;
-    LPDIRECT3DSURFACE9 mSurfaceHandle, mDepthStencilSurfaceHandle;
+    UCHAR mKind{};
+    LPDIRECT3DTEXTURE9 mTextureHandle{};
+    LPDIRECT3DSURFACE9 mSurfaceHandle{}, mDepthStencilSurfaceHandle{};
 
-    VOID CreateRenderTarget(UINT w, UINT h, UCHAR kind=RTKIND_COLOR);
+    void CreateRenderTarget(unsigned int w, unsigned int h, UCHAR kind = RTKIND_COLOR);
 };
-

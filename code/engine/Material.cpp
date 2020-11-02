@@ -6,37 +6,42 @@
 #include "Renderer.h"
 #include "FileSystem.h"
 
-CMaterial::CMaterial(UINT slot, LPSTR texName): CMaterial()
+CMaterial::CMaterial(unsigned int slot, LPSTR texName): CMaterial()
 {
     CreateTextureForSlot(slot, texName);
 }
 
-CMaterial::CMaterial(UINT slot, UINT w, UINT h): CMaterial()
+CMaterial::CMaterial(unsigned int slot, unsigned int w, unsigned int h): CMaterial()
 {
-    CreateTextureForSlot(slot, NULL, w, h);
+    CreateTextureForSlot(slot, nullptr, w, h);
 }
 
-CMaterial::CMaterial(): CAllocable()
+CMaterial::CMaterial()
 {
     ZeroMemory(mTextureHandle, sizeof(mTextureHandle));
     ZeroMemory(mStats, sizeof(mStats));
     DefaultMaterial();
 }
 
-CMaterial::CMaterial(UINT slot, LPVOID data, UINT size): CMaterial()
+CMaterial::~CMaterial()
+{
+    Release();
+}
+
+CMaterial::CMaterial(unsigned int slot, LPVOID data, unsigned int size): CMaterial()
 {
     CreateEmbeddedTextureForSlot(slot, data, size);
 }
 
-VOID CMaterial::DefaultMaterial(VOID)
+void CMaterial::DefaultMaterial()
 {
     ZeroMemory(&mMaterialData, sizeof(mMaterialData));
 
-    mMaterialData.Ambient.r = mMaterialData.Ambient.g = mMaterialData.Ambient.b = mMaterialData.Ambient.a = 1.0f;
-    mMaterialData.Specular.r = mMaterialData.Specular.g = mMaterialData.Specular.b = mMaterialData.Specular.a = 1.0f;
-    mMaterialData.Diffuse.r = mMaterialData.Diffuse.g = mMaterialData.Diffuse.b = mMaterialData.Diffuse.a = 1.0f;
-    mMaterialData.Opacity = 1.0f;
-    mMaterialData.Power = 1.0f;
+    mMaterialData.Ambient.r = mMaterialData.Ambient.g = mMaterialData.Ambient.b = mMaterialData.Ambient.a = 1.0F;
+    mMaterialData.Specular.r = mMaterialData.Specular.g = mMaterialData.Specular.b = mMaterialData.Specular.a = 1.0F;
+    mMaterialData.Diffuse.r = mMaterialData.Diffuse.g = mMaterialData.Diffuse.b = mMaterialData.Diffuse.a = 1.0F;
+    mMaterialData.Opacity = 1.0F;
+    mMaterialData.Power = 1.0F;
     mMaterialData.Shaded = TRUE;
     mMaterialData.AlphaRef = 127;
 
@@ -46,11 +51,11 @@ VOID CMaterial::DefaultMaterial(VOID)
     SetSamplerState(D3DSAMP_MAXANISOTROPY, 16);
 }
 
-VOID CMaterial::Release(VOID)
+void CMaterial::Release()
 {
     if (DelRef())
     {
-        for (UINT i = 0; i < MAX_TEXTURE_SLOTS; i++)
+        for (unsigned int i = 0; i < MAX_TEXTURE_SLOTS; i++)
         {
             SAFE_RELEASE(mTextureHandle[i]);
         }
@@ -59,16 +64,18 @@ VOID CMaterial::Release(VOID)
     }
 }
 
-VOID CMaterial::CreateTextureForSlot(UINT slot, LPSTR texName, UINT w, UINT h)
+void CMaterial::CreateTextureForSlot(unsigned int slot, LPSTR texName, unsigned int w, unsigned int h)
 {
     LPDIRECT3DDEVICE9 dev = RENDERER->GetDevice();
 
-    if (!texName)
+    if (texName == nullptr)
+    {
         D3DXCreateTexture(dev, w, h, 0, 0, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED, &mTextureHandle[slot]);
+    }
     else
     {
         FDATA img = FILESYSTEM->GetResource(texName);
-        if (!img.data)
+        if (img.data == nullptr)
         {
             VM->PostError(CString::Format("Image not found: %s", texName));
             return;
@@ -77,11 +84,11 @@ VOID CMaterial::CreateTextureForSlot(UINT slot, LPSTR texName, UINT w, UINT h)
     }
 }
 
-VOID CMaterial::CreateEmbeddedTextureForSlot(UINT slot, LPVOID data, UINT size)
+void CMaterial::CreateEmbeddedTextureForSlot(unsigned int slot, LPVOID data, unsigned int size)
 {
     LPDIRECT3DDEVICE9 dev = RENDERER->GetDevice();
 
-    if (!data)
+    if (data == nullptr)
     {
         VM->PostError(CString("Embedded image is empty!"));
         return;
@@ -90,7 +97,7 @@ VOID CMaterial::CreateEmbeddedTextureForSlot(UINT slot, LPVOID data, UINT size)
     D3DXCreateTextureFromFileInMemory(dev, data, size, &mTextureHandle[slot]);
 }
 
-VOID CMaterial::SetUserTexture(UINT userSlot, LPDIRECT3DTEXTURE9 handle)
+void CMaterial::SetUserTexture(unsigned int userSlot, LPDIRECT3DTEXTURE9 handle)
 {
     if (userSlot >= (MAX_TEXTURE_SLOTS))
     {
@@ -101,92 +108,103 @@ VOID CMaterial::SetUserTexture(UINT userSlot, LPDIRECT3DTEXTURE9 handle)
     mTextureHandle[userSlot] = handle;
 }
 
-VOID CMaterial::Bind(DWORD stage)
+void CMaterial::Bind(DWORD stage)
 {
     RENDERER->SetMaterial(stage, this);
 
     /* Exit early if this is a NULL material. */
     /* Exit if we use shaders as well. Shaders use their own sampler properties. */
-    if (this == nullptr || RENDERER->GetActiveEffect())
-        return;
-
-    for (UINT i = 0; i < MAX_SAMPLER_STATES; i++)
+    if (RENDERER->GetActiveEffect())
     {
-        RENDERER->SetSamplerState(stage, (D3DSAMPLERSTATETYPE)i, mStats[i]);
+        return;
+    }
+
+    for (unsigned int i = 0; i < MAX_SAMPLER_STATES; i++)
+    {
+        RENDERER->SetSamplerState(stage, static_cast<D3DSAMPLERSTATETYPE>(i), mStats[i]);
     }
 }
 
-VOID CMaterial::Unbind(DWORD stage)
+void CMaterial::Unbind(DWORD stage)
 {
-    RENDERER->SetMaterial(stage, NULL);
+    RENDERER->SetMaterial(stage, nullptr);
 }
 
-LPVOID CMaterial::Lock(UINT slot)
+auto CMaterial::Lock(int& pitch, unsigned int slot) -> LPVOID
 {
     D3DLOCKED_RECT r;
-    mTextureHandle[slot]->LockRect(0, &r, NULL, 0);
+    mTextureHandle[slot]->LockRect(0, &r, nullptr, 0);
+    pitch = r.Pitch;
     return r.pBits;
 }
 
-VOID CMaterial::UploadARGB(UINT slot, VOID* data, UINT size)
+auto CMaterial::LockRect(RECT zone, int& pitch, unsigned slot) -> LPVOID
 {
     D3DLOCKED_RECT r;
-    mTextureHandle[slot]->LockRect(0, &r, NULL, D3DLOCK_DISCARD);
-    ::memcpy(r.pBits, data, size);
+    mTextureHandle[slot]->LockRect(0, &r, &zone, 0);
+    pitch = r.Pitch;
+    return r.pBits;
+}
+
+void CMaterial::UploadARGB(unsigned int slot, void* data, unsigned int size)
+{
+    D3DLOCKED_RECT r;
+    mTextureHandle[slot]->LockRect(0, &r, nullptr, D3DLOCK_DISCARD);
+    memcpy(r.pBits, data, size);
     mTextureHandle[slot]->UnlockRect(0);
 }
 
-VOID CMaterial::Unlock(UINT slot)
+void CMaterial::Unlock(unsigned int slot)
 {
     mTextureHandle[slot]->UnlockRect(0);
 }
 
-VOID CMaterial::SetAmbient(D3DCOLORVALUE color)
+void CMaterial::SetAmbient(D3DCOLORVALUE color)
 {
-    ::memcpy(&mMaterialData.Ambient, &color, sizeof(D3DCOLORVALUE));
+    memcpy(&mMaterialData.Ambient, &color, sizeof(D3DCOLORVALUE));
 }
 
-VOID CMaterial::SetDiffuse(D3DCOLORVALUE color)
+void CMaterial::SetDiffuse(D3DCOLORVALUE color)
 {
-    ::memcpy(&mMaterialData.Diffuse, &color, sizeof(D3DCOLORVALUE));
+    memcpy(&mMaterialData.Diffuse, &color, sizeof(D3DCOLORVALUE));
 }
 
-VOID CMaterial::SetSpecular(D3DCOLORVALUE color)
+void CMaterial::SetSpecular(D3DCOLORVALUE color)
 {
-    ::memcpy(&mMaterialData.Specular, &color, sizeof(D3DCOLORVALUE));
+    memcpy(&mMaterialData.Specular, &color, sizeof(D3DCOLORVALUE));
 }
 
-VOID CMaterial::SetEmission(D3DCOLORVALUE color)
+void CMaterial::SetEmission(D3DCOLORVALUE color)
 {
-    ::memcpy(&mMaterialData.Emissive, &color, sizeof(D3DCOLORVALUE));
+    memcpy(&mMaterialData.Emissive, &color, sizeof(D3DCOLORVALUE));
 }
 
-VOID CMaterial::SetPower(FLOAT val)
+void CMaterial::SetPower(float val)
 {
     mMaterialData.Power = val;
 }
 
-VOID CMaterial::SetOpacity(FLOAT val)
+void CMaterial::SetOpacity(float val)
 {
     mMaterialData.Opacity = val;
 }
 
-VOID CMaterial::SetShaded(BOOL state)
+void CMaterial::SetShaded(bool state)
 {
     mMaterialData.Shaded = state;
 }
 
-VOID CMaterial::SetAlphaIsTransparency(BOOL state)
+void CMaterial::SetAlphaIsTransparency(bool state)
 {
     mMaterialData.AlphaIsTransparency = state;
 }
 
-VOID CMaterial::SetEnableAlphaTest(BOOL state)
+void CMaterial::SetEnableAlphaTest(bool state)
 {
     mMaterialData.AlphaTestEnabled = TRUE;
 }
 
-VOID CMaterial::SetAlphaRef(DWORD refval)
+void CMaterial::SetAlphaRef(DWORD refval)
 {
     mMaterialData.AlphaRef = refval;
 }

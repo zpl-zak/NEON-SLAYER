@@ -12,13 +12,15 @@
 
 CScene::CScene(LPCSTR modelPath)
 {
-    mRootNode = NULL;
+    mRootNode = nullptr;
 
-    if (modelPath)
+    if (modelPath != nullptr)
+    {
         LoadScene(modelPath);
+    }
 }
 
-VOID CScene::Release()
+void CScene::Release()
 {
     if (DelRef())
     {
@@ -32,9 +34,9 @@ VOID CScene::Release()
     }
 }
 
-BOOL CScene::LoadScene(LPCSTR modelPath, BOOL loadMaterials, BOOL optimizeMesh)
+auto CScene::LoadScene(LPCSTR modelPath, bool loadMaterials, bool optimizeMesh) -> bool
 {
-    BOOL ok = CSceneLoader::LoadScene(modelPath, this, loadMaterials, optimizeMesh);
+    bool ok = CSceneLoader::LoadScene(modelPath, this, loadMaterials, optimizeMesh);
 
     if (!ok)
     {
@@ -45,4 +47,3 @@ BOOL CScene::LoadScene(LPCSTR modelPath, BOOL loadMaterials, BOOL optimizeMesh)
     mRootNode = mNodes[0];
     return TRUE;
 }
-

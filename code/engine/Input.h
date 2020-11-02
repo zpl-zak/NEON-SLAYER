@@ -4,47 +4,52 @@
 
 #define INPUT CEngine::the()->GetInput()
 
-enum {
+enum
+{
     CURSORMODE_DEFAULT,
     CURSORMODE_CENTERED,
     CURSORMODE_WRAPPED,
 };
 
-class ENGINE_API CInput {
+class ENGINE_API CInput
+{
 public:
-    CInput(VOID);
-    VOID Release(VOID);
+    CInput(void);
+    void Release(void);
 
-    inline BOOL GetKey(DWORD code) const { return mKeys[code]; }
-    inline BOOL GetKeyDown(DWORD code) const { return mKeysDown[code]; }
-    inline BOOL GetKeyUp(DWORD code) const { return mKeysUp[code]; }
-    inline BOOL GetMouse(DWORD code) const { return mMouseInputs[code]; }
-    inline BOOL GetMouseDown(DWORD code) const { return mMouseDown[code]; }
-    inline BOOL GetMouseUp(DWORD code) const { return mMouseUp[code]; }
-    inline BOOL GetLastKey(VOID) const { return mLastKey; }
-    POINT GetMouseXY(VOID) const;
-    inline POINT GetMouseDelta(VOID) const { return mMouseDelta; };
+    auto GetKey(DWORD code) const -> bool { return mKeys[code]; }
+    auto GetKeyDown(DWORD code) const -> bool { return mKeysDown[code]; }
+    auto GetKeyUp(DWORD code) const -> bool { return mKeysUp[code]; }
+    auto GetMouse(DWORD code) const -> bool { return mMouseInputs[code]; }
+    auto GetMouseDown(DWORD code) const -> bool { return mMouseDown[code]; }
+    auto GetMouseUp(DWORD code) const -> bool { return mMouseUp[code]; }
+    auto GetLastKey(void) const -> bool { return mLastKey; }
+    static auto GetMouseXY(void) -> POINT;
+    auto GetMouseDelta(void) const -> POINT { return mMouseDelta; };
 
-    VOID SetCursor(BOOL state);
-    BOOL GetCursor(VOID);
-    inline UCHAR GetCursorMode() { return mCursorMode; }
-    VOID SetCursorMode(UCHAR mode);
+    void SetCursor(bool state) const;
+    static auto GetCursor(void) -> bool;
+    auto GetCursorMode() const -> UCHAR { return mCursorMode; }
+    void SetCursorMode(UCHAR mode);
 
-    inline VOID SetKey(DWORD code, BOOL state) { mKeys[code] = state; }
-    inline VOID SetKeyDown(DWORD code, BOOL state) { mKeysDown[code] = state; }
-    inline VOID SetKeyUp(DWORD code, BOOL state) { mKeysUp[code] = state; }
+    void SetKey(DWORD code, bool state) { mKeys[code] = state; }
+    void SetKeyDown(DWORD code, bool state) { mKeysDown[code] = state; }
+    void SetKeyUp(DWORD code, bool state) { mKeysUp[code] = state; }
 
-    inline VOID SetMouseButton(DWORD code, BOOL state) {
+    void SetMouseButton(DWORD code, bool state)
+    {
         mMouseInputs[code] = state;
     }
-    inline VOID SetMouseDown(DWORD code, BOOL state) { mMouseDown[code] = state; }
-    inline VOID SetMouseUp(DWORD code, BOOL state) { mMouseUp[code] = state; }
-    VOID SetMouseXY(SHORT x, SHORT y);
 
-    inline VOID ClearKey(VOID) { mLastKey = -1; }
-    VOID Update(VOID);
+    void SetMouseDown(DWORD code, bool state) { mMouseDown[code] = state; }
+    void SetMouseUp(DWORD code, bool state) { mMouseUp[code] = state; }
+    static void SetMouseXY(short x, short y);
 
-    enum {
+    void ClearKey(void) { mLastKey = -1; }
+    void Update(void);
+
+    enum
+    {
         MOUSE_LEFT_BUTTON = 1,
         MOUSE_MIDDLE_BUTTON = 2,
         MOUSE_RIGHT_BUTTON = 3,
@@ -56,17 +61,17 @@ public:
     static const int NUM_MOUSEBUTTONS = 256;
 
 private:
-    BOOL mKeys[NUM_KEYS], mKeysDown[NUM_KEYS], mKeysUp[NUM_KEYS];
+    bool mKeys[NUM_KEYS], mKeysDown[NUM_KEYS], mKeysUp[NUM_KEYS];
     DWORD mLastKey;
 
-    BOOL mMouseInputs[NUM_MOUSEBUTTONS], mMouseDown[NUM_MOUSEBUTTONS],
-        mMouseUp[NUM_MOUSEBUTTONS];
+    bool mMouseInputs[NUM_MOUSEBUTTONS], mMouseDown[NUM_MOUSEBUTTONS],
+         mMouseUp[NUM_MOUSEBUTTONS];
     UCHAR mCursorMode;
 
     POINT mMouseDelta;
     POINT mLastMousePos;
 
-#ifdef _DEBUG
-    BOOL mForceMouseCursor;
-#endif
+    #ifdef _DEBUG
+    bool mForceMouseCursor;
+    #endif
 };

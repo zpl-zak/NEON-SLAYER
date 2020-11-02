@@ -22,25 +22,25 @@
 #define EXPAND_COL4(q) { q.r, q.g, q.b, q.a }
 #define EXPAND_COLX(q) { q.r, q.g, q.b, 1.0f }
 
-ENGINE_API extern FLOAT GetTime();
-ENGINE_API extern FLOAT ScaleBetween(FLOAT x, FLOAT a, FLOAT b, FLOAT na, FLOAT nb);
+ENGINE_API extern auto GetTime() -> float;
+ENGINE_API extern auto ScaleBetween(float x, float a, float b, float na, float nb) -> float;
 
 extern UINT64 gMemUsed, gMemUsedLua, gMemPeak, gResourceCount;
-extern VOID neon_mempeak_update();
-extern ENGINE_API LPVOID neon_malloc(size_t size);
-extern ENGINE_API LPVOID neon_realloc(LPVOID mem, size_t newSize);
-extern ENGINE_API VOID neon_free(LPVOID mem);
+extern void neon_mempeak_update();
+extern ENGINE_API auto neon_malloc(size_t size) -> LPVOID;
+extern ENGINE_API auto neon_realloc(LPVOID mem, size_t newSize) -> LPVOID;
+extern ENGINE_API void neon_free(LPVOID mem);
 
 /// panic handling
-#define NEON_PANIC_FN(name) VOID name(HWND window, LPCSTR text, LPCSTR caption, DWORD style);
+#define NEON_PANIC_FN(name) void name(HWND window, LPCSTR text, LPCSTR caption, DWORD style);
 typedef NEON_PANIC_FN(neon_panic_ptr);
 extern neon_panic_ptr* gPanicHandler;
 extern void HandlePanic(HWND window, LPCSTR text, LPCSTR caption, DWORD style);
 
-extern VOID PushLog(LPCSTR msg, BOOL noHist=FALSE);
+extern void PushLog(LPCSTR msg, bool noHist = FALSE);
 
-extern int b64_decode(const char* in, unsigned char* out, size_t outlen);
-extern char* b64_encode(const unsigned char* in, size_t len);
+extern auto b64_decode(const char* in, unsigned char* out, size_t outlen) -> int;
+extern auto b64_encode(const unsigned char* in, size_t len) -> char*;
 
 /// zpl
 #include "zpl_macros.h"
@@ -62,7 +62,7 @@ public:
     {
         mCapacity = 4;
         mCount = 0;
-        mData = (T*)neon_malloc(mCapacity * sizeof(T));
+        mData = static_cast<T*>(neon_malloc(mCapacity * sizeof(T)));  // NOLINT(bugprone-sizeof-expression)
         mIsOwned = TRUE;
     }
 
@@ -79,10 +79,10 @@ public:
         Release();
     }
 
-    iterator begin() const { return &mData[0]; }
-    iterator end() const { return &mData[mCount]; }
+    auto begin() const -> iterator { return &mData[0]; }
+    auto end() const -> iterator { return &mData[mCount]; }
 
-    inline VOID Release()
+    void Release()
     {
         if (mIsOwned)
         {
@@ -92,15 +92,15 @@ public:
         }
     }
 
-    inline HRESULT Push(T elem)
+    auto Push(T elem) -> HRESULT
     {
         if (!mData)
-            mData = (T*)neon_realloc(mData, mCapacity * sizeof(T));
+            mData = static_cast<T*>(neon_realloc(mData, mCapacity * sizeof(T)));
 
         if (mCount >= mCapacity)
         {
             mCapacity += 4;
-            mData = (T*)neon_realloc(mData, mCapacity * sizeof(T));
+            mData = static_cast<T*>(neon_realloc(mData, mCapacity * sizeof(T)));
 
             if (!mData)
             {
@@ -112,9 +112,9 @@ public:
         return ERROR_SUCCESS;
     }
 
-    inline T Find(LPCSTR name) const
+    auto Find(LPCSTR name) const -> T
     {
-        for (UINT i = 0; i < mCount; i++)
+        for (unsigned int i = 0; i < mCount; i++)
         {
             if (!strcmp(name, mData[i]->GetName().Str()))
                 return mData[i];
@@ -123,12 +123,14 @@ public:
         return NULL;
     }
 
-    inline VOID RemoveByValue(T val) {
-        UINT idx = -1;
+    void RemoveByValue(T val)
+    {
+        unsigned int idx = -1;
 
-        for (UINT i=0; i<mCount; i++)
+        for (unsigned int i = 0; i < mCount; i++)
         {
-            if (mData[idx] == val) {
+            if (mData[idx] == val)
+            {
                 idx = i;
                 break;
             }
@@ -138,84 +140,103 @@ public:
             RemoveByIndex(idx);
     }
 
-    inline T RemoveByIndex(UINT idx) {
-        T* ptr = (mData + idx);
+    auto RemoveByIndex(unsigned int idx) -> T
+    {
+        T* ptr = mData + idx;
         ::memmove(mData + idx, mData + idx + 1, (mCount - idx - 1) * sizeof(T));
         mCount--;
 
         return *ptr;
     }
 
-    inline VOID Clear() { mCount = 0; }
+    void Clear() { mCount = 0; }
 
-    inline UINT GetCount() const { return mCount; }
-    inline UINT GetCapacity() const { return mCapacity; }
+    auto GetCount() const -> unsigned int { return mCount; }
+    auto GetCapacity() const -> unsigned int { return mCapacity; }
 
-    inline T operator[] (UINT index) const { return mData[index]; }
-    inline T* GetData() const { return mData; }
+    auto operator[](unsigned int index) const -> T { return mData[index]; }
+    auto GetData() const -> T* { return mData; }
 
 private:
     T* mData;
-    UINT mCapacity;
-    UINT mCount;
-    BOOL mIsOwned;
+    unsigned int mCapacity;
+    unsigned int mCount;
+    bool mIsOwned;
 };
 
-class ENGINE_API CString {
+class ENGINE_API CString
+{
 public:
-    CString() {
-        mStr = NULL;
+    CString()
+    {
+        mStr = nullptr;
         mSize = 0;
     };
-    CString(LPCSTR str) {
+
+    CString(LPCSTR str)
+    {
         Assign(str);
     }
-    CString(const CString& rhs) {
+
+    CString(const CString& rhs)
+    {
         Assign(rhs.mStr);
     }
-    CString(CString* s1, CString s2) {
+
+    CString(CString* s1, CString s2)
+    {
         Concatenate(s1->Str(), s2.Str());
     }
 
-    ~CString() {
+    ~CString()
+    {
         SAFE_DELETE_ARRAY(mStr);
     }
 
-    SSIZE_T Length() {
+    auto Length() const -> SSIZE_T
+    {
         return mSize;
     }
 
-    LPCSTR Str() {
+    auto Str() const -> LPCSTR
+    {
         return mStr;
     }
 
-    LPCSTR Find(LPCSTR str) {
-        LPCSTR out = ::strstr(mStr, str);
-        return out ? out : NULL;
+    auto Find(LPCSTR str) const -> LPCSTR
+    {
+        const LPCSTR out = strstr(mStr, str);
+        return out ? out : nullptr;
     }
 
-    BOOL operator== (LPCSTR str) {
-        return (::strcmp(mStr, str) == 0);
+    auto operator==(LPCSTR str) const -> bool
+    {
+        return strcmp(mStr, str) == 0;
     }
 
-    BOOL operator!= (LPCSTR str) {
+    auto operator!=(LPCSTR str) const -> bool
+    {
         return !(mStr == str);
     }
 
-    VOID operator= (LPCSTR str) {
+    void operator=(LPCSTR str)
+    {
         Assign(str);
     }
 
-    VOID operator= (CString str) {
+    void operator=(CString str)
+    {
         Assign(str.Str());
     }
 
-    CString operator+= (CString str) {
+    auto operator+=(CString str) -> CString
+    {
         return CString(this, str);
     }
 
-    static CString Format(LPCSTR fmt, ...) {
-        CHAR buf[4096] = { 0 };
+    static auto Format(LPCSTR fmt, ...) -> CString
+    {
+        CHAR buf[4096] = {0};
         va_list va;
         va_start(va, fmt);
         vsnprintf_s(buf, 4096, fmt, va);
@@ -223,20 +244,41 @@ public:
 
         return CString(buf);
     }
+
 private:
     LPSTR mStr;
     SSIZE_T mSize;
 
-    VOID Assign(LPCSTR str) {
-        mSize = ::strlen(str);
+    void Assign(LPCSTR str)
+    {
+        mSize = strlen(str);
         mStr = new CHAR[mSize + 1];
-        ::strcpy_s(mStr, mSize + 1, str);
+        strcpy_s(mStr, mSize + 1, str);
     }
 
-    VOID Concatenate(LPCSTR s1, LPCSTR s2) {
-        mSize = ::strlen(s1) + ::strlen(s2);
+    void Concatenate(LPCSTR s1, LPCSTR s2)
+    {
+        mSize = strlen(s1) + strlen(s2);
         mStr = new CHAR[mSize + 1];
-        ::strcat_s(mStr, mSize + 1, s1);
-        ::strcat_s(mStr, mSize + 1, s2);
+        strcat_s(mStr, mSize + 1, s1);
+        strcat_s(mStr, mSize + 1, s2);
     }
+};
+
+class ENGINE_API NoCopy
+{
+public:
+    NoCopy(){}
+    NoCopy(const NoCopy&) = delete;
+};
+
+class ENGINE_API NoAssign
+{
+public:
+    NoAssign(){}
+    NoAssign& operator=(const NoAssign&) = delete;
+};
+
+class ENGINE_API NoCopyAssign: NoCopy, NoAssign {
+
 };

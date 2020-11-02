@@ -1,4 +1,3 @@
-
 #include "StdAfx.h"
 #include "AudioSystem.h"
 #include "Music.h"
@@ -9,9 +8,9 @@
 CAudioSystem::CAudioSystem()
 {
     mIsInitialized = FALSE;
-    mDirectSound = NULL;
-    mPrimaryBuffer = NULL;
-    mListener = NULL;
+    mDirectSound = nullptr;
+    mPrimaryBuffer = nullptr;
+    mListener = nullptr;
     mTrackId = 0;
 }
 
@@ -20,7 +19,7 @@ CAudioSystem::~CAudioSystem()
     mIsInitialized = FALSE;
 }
 
-VOID CAudioSystem::Update()
+void CAudioSystem::Update()
 {
     for (auto track : mTracks)
         track->Update();
@@ -32,7 +31,7 @@ HRESULT CAudioSystem::CreateDevice(HWND window)
     DSBUFFERDESC bufferDesc;
     WAVEFORMATEX waveFormat;
 
-    result = DirectSoundCreate8(NULL, &mDirectSound, NULL);
+    result = DirectSoundCreate8(nullptr, &mDirectSound, nullptr);
     if (FAILED(result))
     {
         Release();
@@ -50,10 +49,10 @@ HRESULT CAudioSystem::CreateDevice(HWND window)
     bufferDesc.dwFlags = DSBCAPS_PRIMARYBUFFER | DSBCAPS_CTRLVOLUME | DSBCAPS_CTRL3D;
     bufferDesc.dwBufferBytes = 0;
     bufferDesc.dwReserved = 0;
-    bufferDesc.lpwfxFormat = NULL;
+    bufferDesc.lpwfxFormat = nullptr;
     bufferDesc.guid3DAlgorithm = GUID_NULL;
 
-    result = mDirectSound->CreateSoundBuffer(&bufferDesc, &mPrimaryBuffer, NULL);
+    result = mDirectSound->CreateSoundBuffer(&bufferDesc, &mPrimaryBuffer, nullptr);
     if (FAILED(result))
     {
         Release();
@@ -86,21 +85,21 @@ HRESULT CAudioSystem::CreateDevice(HWND window)
     return ERROR_SUCCESS;
 }
 
-VOID CAudioSystem::Release()
+void CAudioSystem::Release()
 {
     SAFE_RELEASE(mPrimaryBuffer);
     SAFE_RELEASE(mDirectSound);
     mIsInitialized = FALSE;
 }
 
-UINT CAudioSystem::RegisterTrack(CMusic* track)
+unsigned int CAudioSystem::RegisterTrack(CMusic* track)
 {
     if (!mIsInitialized) return INT_MAX;
     mTracks.Push(track);
     return mTrackId++;
 }
 
-VOID CAudioSystem::UnregisterTrack(UINT idx)
+void CAudioSystem::UnregisterTrack(unsigned int idx)
 {
     if (!mIsInitialized) return;
     mTracks.RemoveByIndex(idx);

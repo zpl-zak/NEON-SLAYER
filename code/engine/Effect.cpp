@@ -10,15 +10,16 @@
 #include "BuiltinShaders.h"
 #include <cstdio>
 
-class CD3DIncludeImpl: ID3DXInclude
+class CD3DIncludeImpl : ID3DXInclude
 {
 public:
     CD3DIncludeImpl();
-    HRESULT _stdcall Open(D3DXINCLUDE_TYPE IncludeType, LPCSTR pFileName, LPCVOID pParentData, LPCVOID* ppData, UINT* pBytes) override;
+    HRESULT _stdcall Open(D3DXINCLUDE_TYPE IncludeType, LPCSTR pFileName, LPCVOID pParentData, LPCVOID* ppData,
+                          unsigned int* pBytes) override;
     HRESULT _stdcall Close(LPCVOID pData) override;
 
 private:
-    BOOL mIsSystemInclude;
+    bool mIsSystemInclude;
 };
 
 CD3DIncludeImpl::CD3DIncludeImpl()
@@ -26,16 +27,17 @@ CD3DIncludeImpl::CD3DIncludeImpl()
     mIsSystemInclude = FALSE;
 }
 
-HRESULT CD3DIncludeImpl::Open(D3DXINCLUDE_TYPE IncludeType, LPCSTR pFileName, LPCVOID pParentData, LPCVOID* ppData, UINT* pBytes)
+auto CD3DIncludeImpl::Open(D3DXINCLUDE_TYPE IncludeType, LPCSTR pFileName, LPCVOID pParentData, LPCVOID* ppData,
+                           unsigned int* pBytes) -> HRESULT
 {
     if (IncludeType == D3DXINC_SYSTEM)
     {
         mIsSystemInclude = TRUE;
 
-        if (!strcmp(pFileName, "neon") || !strcmp(pFileName, "common.fx"))
+        if ((strcmp(pFileName, "neon") == 0) || (strcmp(pFileName, "common.fx") == 0))
         {
             *ppData = _shader_common;
-            *pBytes = (UINT)strlen(_shader_common);
+            *pBytes = static_cast<unsigned int>(strlen(_shader_common));
             return S_OK;
         }
 
@@ -44,8 +46,10 @@ HRESULT CD3DIncludeImpl::Open(D3DXINCLUDE_TYPE IncludeType, LPCSTR pFileName, LP
 
     FDATA f = FILESYSTEM->GetResource(pFileName);
 
-    if (!f.data)
+    if (f.data == nullptr)
+    {
         return E_FAIL;
+    }
 
     *ppData = f.data;
     *pBytes = f.size;
@@ -53,122 +57,145 @@ HRESULT CD3DIncludeImpl::Open(D3DXINCLUDE_TYPE IncludeType, LPCSTR pFileName, LP
     return S_OK;
 }
 
-HRESULT CD3DIncludeImpl::Close(LPCVOID pData)
+auto CD3DIncludeImpl::Close(LPCVOID pData) -> HRESULT
 {
     if (mIsSystemInclude)
+    {
         return S_OK;
+    }
 
-    FILESYSTEM->FreeResource((LPVOID)pData);
+    FILESYSTEM->FreeResource(const_cast<LPVOID>(pData));
     return S_OK;
 }
 
-CEffect::CEffect(): CAllocable()
+CEffect::CEffect()
 {
-    mEffect = NULL;
+    mEffect = nullptr;
 }
 
-VOID CEffect::LoadEffect(LPCSTR effectPath)
+void CEffect::LoadEffect(LPCSTR effectPath, bool debugMode)
 {
     FDATA f = FILESYSTEM->GetResource(effectPath);
 
-    if (!f.data)
+    if (f.data == nullptr)
     {
         VM->PostError(CString::Format("No effect found: %s", effectPath));
         return;
     }
 
     DWORD shaderFlags = D3DXFX_NOT_CLONEABLE | D3DXSHADER_NO_PRESHADER;
-    //shaderFlags |= D3DXSHADER_FORCE_VS_SOFTWARE_NOOPT | D3DXSHADER_FORCE_PS_SOFTWARE_NOOPT | D3DXSHADER_DEBUG;
+
+    if (debugMode)
+    {
+        shaderFlags |= D3DXSHADER_DEBUG;
+    }
 
     CD3DIncludeImpl inclHandler;
 
-    LPD3DXBUFFER errors = NULL;
+    LPD3DXBUFFER errors = nullptr;
     HRESULT hr = D3DXCreateEffect(
         RENDERER->GetDevice(),
-        (LPCSTR)f.data,
-        (UINT)f.size,
-        NULL,
-        (LPD3DXINCLUDE)&inclHandler,
+        static_cast<LPCSTR>(f.data),
+        static_cast<unsigned int>(f.size),
+        nullptr,
+        reinterpret_cast<LPD3DXINCLUDE>(&inclHandler),
         shaderFlags,
-        NULL,
+        nullptr,
         &mEffect,
         &errors);
 
     if (FAILED(hr))
     {
-        if (errors)
+        if (errors != nullptr)
         {
-            VM->PostError((LPCSTR)errors->GetBufferPointer());
+            VM->PostError(static_cast<LPCSTR>(errors->GetBufferPointer()));
             errors->Release();
         }
 
         return;
     }
 
-    if (errors)
+    if (errors != nullptr)
+    {
         errors->Release();
+    }
 }
 
-VOID CEffect::Release()
+void CEffect::Release()
 {
-    SAFE_RELEASE(mEffect);
+    if (DelRef())
+        SAFE_RELEASE(mEffect);
 }
 
-UINT CEffect::Begin(LPCSTR technique)
+auto CEffect::Begin(LPCSTR technique) -> unsigned int
 {
-    if (!mEffect)
+    if (mEffect == nullptr)
+    {
         return 0;
+    }
 
-    UINT numPasses=0;
-    D3DXHANDLE techniqueID = mEffect->GetTechniqueByName(technique);
+    unsigned int numPasses = 0;
+    const D3DXHANDLE techniqueID = mEffect->GetTechniqueByName(technique);
 
     if (FAILED(mEffect->SetTechnique(techniqueID)))
+    {
         return 0;
+    }
 
     HRESULT ok = mEffect->Begin(&numPasses, 0);
 
     if (FAILED(ok))
+    {
         return 0;
+    }
 
     RENDERER->SetActiveEffect(this);
     return numPasses;
 }
 
-HRESULT CEffect::End()
+auto CEffect::End() const -> HRESULT
 {
-    if (!mEffect)
+    if (mEffect == nullptr)
+    {
         return -1;
+    }
 
-    RENDERER->SetActiveEffect(NULL);
+    RENDERER->SetActiveEffect(nullptr);
     return mEffect->End();
 }
 
-UINT CEffect::FindPass(LPCSTR passName)
+auto CEffect::FindPass(LPCSTR passName) const -> unsigned int
 {
-    if (!mEffect)
+    if (mEffect == nullptr)
+    {
         return 0;
+    }
 
     D3DXHANDLE curTech = mEffect->GetCurrentTechnique();
     D3DXTECHNIQUE_DESC td;
     mEffect->GetTechniqueDesc(curTech, &td);
 
-    for (UINT i=0; i<td.Passes;i++)
+    for (unsigned int i = 0; i < td.Passes; i++)
     {
         D3DXHANDLE h = mEffect->GetPass(curTech, i);
         D3DXPASS_DESC pd;
         mEffect->GetPassDesc(h, &pd);
 
-        if (!strcmp(passName, pd.Name))
+        if (strcmp(passName, pd.Name) == 0)
+        {
             return i;
+        }
     }
 
-    return (UINT)-1;
+    return static_cast<unsigned int>(-1);
 }
 
-HRESULT CEffect::BeginPass(UINT passID)
+auto CEffect::BeginPass(unsigned int passID) const -> HRESULT
 {
-    if (!mEffect)
+    if (mEffect == nullptr)
+    {
         return -1;
+    }
 
     HRESULT ok = mEffect->BeginPass(passID);
     SetDefaults();
@@ -176,125 +203,160 @@ HRESULT CEffect::BeginPass(UINT passID)
     return ok;
 }
 
-HRESULT CEffect::EndPass()
+auto CEffect::EndPass() const -> HRESULT
 {
-    if (!mEffect)
+    if (mEffect == nullptr)
+    {
         return -1;
+    }
 
     return mEffect->EndPass();
 }
 
-HRESULT CEffect::CommitChanges()
+void CEffect::CommitChanges() const
 {
-    if (!mEffect)
-        return -1;
+    if (mEffect == nullptr)
+    {
+        return;
+    }
 
-    return mEffect->CommitChanges();
+    const auto res = mEffect->CommitChanges();
+
+    if (FAILED(res))
+    {
+        VM->PostError(CString::Format("CEffect::CommitChanges error: %d\n", res));
+    }
 }
 
-VOID CEffect::SetInteger(LPCSTR name, DWORD value)
+void CEffect::SetInteger(LPCSTR name, DWORD value) const
 {
-    if (!mEffect)
+    if (mEffect == nullptr)
+    {
         return;
+    }
 
     mEffect->SetInt(name, value);
 }
 
-VOID CEffect::SetFloat(LPCSTR name, FLOAT value)
+void CEffect::SetFloat(LPCSTR name, float value) const
 {
-    if (!mEffect)
+    if (mEffect == nullptr)
+    {
         return;
+    }
 
     mEffect->SetFloat(name, value);
 }
 
-VOID CEffect::SetMatrix(LPCSTR name, D3DXMATRIX value, BOOL transpose)
+void CEffect::SetMatrix(LPCSTR name, const D3DXMATRIX& value, bool transpose) const
 {
-    if (!mEffect)
+    if (mEffect == nullptr)
+    {
         return;
+    }
 
     if (transpose)
+    {
         mEffect->SetMatrixTranspose(name, &value);
+    }
     else
+    {
         mEffect->SetMatrix(name, &value);
+    }
 }
 
-VOID CEffect::SetColor(LPCSTR name, D3DCOLORVALUE value)
+void CEffect::SetColor(LPCSTR name, D3DCOLORVALUE value) const
 {
-    if (!mEffect)
+    if (mEffect == nullptr)
+    {
         return;
+    }
 
     mEffect->SetValue(name, &value, sizeof(value));
 }
 
-VOID CEffect::SetTexture(LPCSTR name, IDirect3DTexture9* value)
+void CEffect::SetTexture(LPCSTR name, IDirect3DTexture9* value) const
 {
-    if (!mEffect)
+    if (mEffect == nullptr)
+    {
         return;
+    }
 
     mEffect->SetTexture(name, value);
 }
 
-VOID CEffect::SetLight(LPCSTR name, CLight* value)
+void CEffect::SetLight(LPCSTR name, CLight* value) const
 {
-    if (!mEffect)
+    if (mEffect == nullptr)
+    {
         return;
-
-    if (value) {
-        SetBool(GetUniformName(name, "IsEnabled"), TRUE);
-        SetInteger(GetUniformName(name, "Type"), value->GetLightData().Type);
-        SetVector3(GetUniformName(name, "Position"), value->GetLightData().Position);
-        SetVector3(GetUniformName(name, "Direction"), value->GetLightData().Direction);
-        SetColor(GetUniformName(name, "Diffuse"), value->GetLightData().Diffuse);
-        SetColor(GetUniformName(name, "Ambient"), value->GetLightData().Ambient);
-        SetColor(GetUniformName(name, "Specular"), value->GetLightData().Specular);
-        SetFloat(GetUniformName(name, "Falloff"), value->GetLightData().Falloff);
-        SetFloat(GetUniformName(name, "Range"), value->GetLightData().Range);
-        SetFloat(GetUniformName(name, "ConstantAtten"), value->GetLightData().Attenuation0);
-        SetFloat(GetUniformName(name, "LinearAtten"), value->GetLightData().Attenuation1);
-        SetFloat(GetUniformName(name, "QuadraticAtten"), value->GetLightData().Attenuation2);
     }
-    else {
-        SetBool(GetUniformName(name, "IsEnabled"), FALSE);
+
+    if (value != nullptr)
+    {
+        SetBool(GetUniformName(name, "IsEnabled").Str(), TRUE);
+        SetInteger(GetUniformName(name, "Type").Str(), value->GetLightData().Type);
+        SetVector3(GetUniformName(name, "Position").Str(), value->GetLightData().Position);
+        SetVector3(GetUniformName(name, "Direction").Str(), value->GetLightData().Direction);
+        SetColor(GetUniformName(name, "Diffuse").Str(), value->GetLightData().Diffuse);
+        SetColor(GetUniformName(name, "Ambient").Str(), value->GetLightData().Ambient);
+        SetColor(GetUniformName(name, "Specular").Str(), value->GetLightData().Specular);
+        SetFloat(GetUniformName(name, "Falloff").Str(), value->GetLightData().Falloff);
+        SetFloat(GetUniformName(name, "Range").Str(), value->GetLightData().Range);
+        SetFloat(GetUniformName(name, "ConstantAtten").Str(), value->GetLightData().Attenuation0);
+        SetFloat(GetUniformName(name, "LinearAtten").Str(), value->GetLightData().Attenuation1);
+        SetFloat(GetUniformName(name, "QuadraticAtten").Str(), value->GetLightData().Attenuation2);
+    }
+    else
+    {
+        SetBool(GetUniformName(name, "IsEnabled").Str(), FALSE);
     }
 }
 
-VOID CEffect::SetVector3(LPCSTR name, D3DXVECTOR3 value)
+void CEffect::SetVector3(LPCSTR name, D3DXVECTOR3 value) const
 {
-    if (!mEffect)
+    if (mEffect == nullptr)
+    {
         return;
+    }
 
-    D3DXVECTOR4 vec4 = D3DXVECTOR4(value, 1.0f);
+    D3DXVECTOR4 vec4 = D3DXVECTOR4(value, 1.0F);
     mEffect->SetVector(name, &vec4);
 }
 
-VOID CEffect::SetVector4(LPCSTR name, D3DXVECTOR4 value)
+void CEffect::SetVector4(LPCSTR name, D3DXVECTOR4 value) const
 {
-    if (!mEffect)
+    if (mEffect == nullptr)
+    {
         return;
+    }
 
     mEffect->SetVector(name, &value);
 }
 
-VOID CEffect::SetBool(LPCSTR name, BOOL value)
+void CEffect::SetBool(LPCSTR name, bool value) const
 {
-    if (!mEffect)
+    if (mEffect == nullptr)
+    {
         return;
+    }
 
-    mEffect->SetBool(name, value);
+    mEffect->SetBool(name, static_cast<BOOL>(value));
 }
 
-VOID CEffect::SetDefaults()
+void CEffect::SetDefaults() const
 {
-    if (!mEffect)
+    if (mEffect == nullptr)
+    {
         return;
+    }
 
-    D3DXMATRIX p = RENDERER->GetDeviceMatrix(MATRIXKIND_PROJECTION);
-    D3DXMATRIX v = RENDERER->GetDeviceMatrix(MATRIXKIND_VIEW);
+    const D3DXMATRIX p = RENDERER->GetDeviceMatrix(MATRIXKIND_PROJECTION);
+    const D3DXMATRIX v = RENDERER->GetDeviceMatrix(MATRIXKIND_VIEW);
     D3DXMATRIX w;
     D3DXMatrixIdentity(&w);
 
-    D3DXMATRIX mvp = w * v * p;
+    const D3DXMATRIX mvp = w * v * p;
     SetMatrix("NEON.Proj", p);
     SetMatrix("NEON.View", v);
     SetMatrix("NEON.World", w);
@@ -303,10 +365,7 @@ VOID CEffect::SetDefaults()
     RENDERER->SetDefaultRenderStates();
 }
 
-LPCSTR CEffect::GetUniformName(LPCSTR base, LPCSTR field)
+auto CEffect::GetUniformName(LPCSTR base, LPCSTR field) -> CString
 {
-    static char buffer[512] = { 0 };
-
-    sprintf_s(buffer, 512, "%s.%s", base, field);
-    return (LPCSTR)buffer;
+    return CString::Format("%s.%s", base, field);
 }

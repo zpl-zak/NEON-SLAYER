@@ -11,17 +11,21 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-CMesh::CMesh(VOID): CAllocable()
-{
+CMesh::CMesh() = default;
 
+CMesh::~CMesh()
+{
+    Release();
 }
 
-VOID CMesh::Release(VOID)
+void CMesh::Release()
 {
     if (DelRef())
     {
         for (auto& a : mFaceGroups)
+        {
             a->Release();
+        }
 
         mFaceGroups.Release();
         mTransforms.Release();
@@ -30,47 +34,51 @@ VOID CMesh::Release(VOID)
     }
 }
 
-VOID CMesh::AddFaceGroup(CFaceGroup* mesh, const D3DXMATRIX& mat)
+void CMesh::AddFaceGroup(CFaceGroup* mesh, const D3DXMATRIX& mat)
 {
-    if (!mesh)
+    if (mesh == nullptr)
+    {
         return;
+    }
 
     if (FAILED(mFaceGroups.Push(mesh)))
     {
-        MessageBoxA(NULL, "Can't add face group to mesh!", "Out of memory error", MB_OK);
+        MessageBoxA(nullptr, "Can't add face group to mesh!", "Out of memory error", MB_OK);
         ENGINE->Shutdown();
         return;
     }
 
     if (FAILED(mTransforms.Push(mat)))
     {
-        MessageBoxA(NULL, "Can't add transform to mesh!", "Out of memory error", MB_OK);
+        MessageBoxA(nullptr, "Can't add transform to mesh!", "Out of memory error", MB_OK);
         ENGINE->Shutdown();
-        return;
     }
 }
 
-CMesh* CMesh::Clone()
+auto CMesh::Clone() -> CMesh*
 {
-    CMesh* clonedMesh = new CMesh();
-    UINT i = 0;
+    auto* clonedMesh = new CMesh();
+    unsigned int i = 0;
 
-    for (auto fg : mFaceGroups)
+    for (auto* fg : mFaceGroups)
+    {
         clonedMesh->AddFaceGroup(fg->Clone(), mTransforms[i++]);
+    }
 
     return clonedMesh;
 }
 
-VOID CMesh::Draw(const D3DXMATRIX& wmat)
+void CMesh::Draw(const D3DXMATRIX& wmat) const
 {
-    for (UINT i = 0; i < mFaceGroups.GetCount(); i++)
+    for (unsigned int i = 0; i < mFaceGroups.GetCount(); i++)
     {
-        D3DXMATRIX mat = (GetOwner() ? mTransforms[i] * GetOwner()->GetFinalTransform() : mTransforms[i]) * wmat;
+        auto mat = (GetOwner() != nullptr ? mTransforms[i] * GetOwner()->GetFinalTransform() : mTransforms[i]) *
+                wmat;
         mFaceGroups[i]->Draw(&mat);
     }
 }
 
-VOID CMesh::Clear(VOID)
+void CMesh::Clear()
 {
     mFaceGroups.Clear();
     mTransforms.Clear();

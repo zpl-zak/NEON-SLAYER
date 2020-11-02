@@ -2,40 +2,40 @@
 
 #include "ProfileManager.h"
 
-CProfiler::CProfiler(CString name)
+CProfiler::CProfiler(const CString& name)
 {
     mName = name;
-    mStartTime = 0.0f;
+    mStartTime = 0.0F;
     Reset();
 }
 
-VOID CProfiler::Reset()
+void CProfiler::Reset()
 {
     mNumInvocations = 0;
-    mTotalTime = 0.0f;
+    mTotalTime = 0.0F;
 }
 
-VOID CProfiler::StartInvocation()
+void CProfiler::StartInvocation()
 {
     mStartTime = GetTime();
 }
 
-VOID CProfiler::StopInvocation()
+void CProfiler::StopInvocation()
 {
     mNumInvocations++;
-    mTotalTime += (GetTime() - mStartTime);
-    mStartTime = 0.0f;
+    mTotalTime += GetTime() - mStartTime;
+    mStartTime = 0.0F;
 }
 
-FLOAT CProfiler::DisplayAndReset(FLOAT divisor, BOOL logStats)
+auto CProfiler::DisplayAndReset(float divisor, bool logStats) -> float
 {
-    divisor = (divisor == 0.0f) ? (FLOAT)mNumInvocations : divisor;
-    mDeltaTime = (mTotalTime == 0.0f && divisor == 0.0f) ? 0.0f : (1000.0f * mTotalTime) / divisor;
+    divisor = divisor == 0.0F ? static_cast<float>(mNumInvocations) : divisor;
+    mDeltaTime = mTotalTime == 0.0F && divisor == 0.0F ? 0.0F : 1000.0F * mTotalTime / divisor;
     Reset();
 
     if (logStats)
     {
-        CString stats = CString::Format("%s Time: %f ms", mName.Str(), mDeltaTime);
+        const auto stats = CString::Format("%s Time: %f ms", mName.Str(), mDeltaTime);
         PushLog(stats.Str(), TRUE);
     }
 

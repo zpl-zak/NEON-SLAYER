@@ -5,38 +5,37 @@
 #include "Engine.h"
 #include "Renderer.h"
 
-CLight::CLight(UINT slot)
+CLight::CLight(unsigned int slot)
 {
     mSlot = slot;
     SetDefaults();
 }
 
-VOID CLight::Release()
+void CLight::Release()
 {
     if (DelRef())
     {
         SetDefaults();
-        Enable(FALSE);
         delete this;
     }
 }
 
-VOID CLight::Enable(BOOL state)
+void CLight::Enable(bool state)
 {
     LPDIRECT3DDEVICE9 dev = RENDERER->GetDevice();
 
     dev->SetLight(mSlot, &mLightData);
-    dev->LightEnable(mSlot, state);
+    dev->LightEnable(mSlot, static_cast<BOOL>(state));
 }
 
-VOID CLight::SetSlot(UINT slot)
+void CLight::SetSlot(unsigned int slot)
 {
     mSlot = slot;
 }
 
-CLight* CLight::Clone()
+auto CLight::Clone() -> CLight*
 {
-    CLight* lit = new CLight();
+    auto* lit = new CLight();
 
     lit->mSlot = mSlot;
     lit->mLightData = mLightData;
@@ -44,73 +43,73 @@ CLight* CLight::Clone()
     return lit;
 }
 
-VOID CLight::SetType(UINT type)
+void CLight::SetType(unsigned int type)
 {
-    mLightData.Type = (D3DLIGHTTYPE)type;
+    mLightData.Type = static_cast<D3DLIGHTTYPE>(type);
 }
 
-VOID CLight::SetAmbient(D3DCOLORVALUE color)
+void CLight::SetAmbient(D3DCOLORVALUE color)
 {
     memcpy(&mLightData.Ambient, &color, sizeof(D3DCOLORVALUE));
 }
 
-VOID CLight::SetDiffuse(D3DCOLORVALUE color)
+void CLight::SetDiffuse(D3DCOLORVALUE color)
 {
     memcpy(&mLightData.Diffuse, &color, sizeof(D3DCOLORVALUE));
 }
 
-VOID CLight::SetSpecular(D3DCOLORVALUE color)
+void CLight::SetSpecular(D3DCOLORVALUE color)
 {
     memcpy(&mLightData.Specular, &color, sizeof(D3DCOLORVALUE));
 }
 
-VOID CLight::SetDirection(D3DXVECTOR3 dir)
+void CLight::SetDirection(D3DXVECTOR3 dir)
 {
     mLightData.Direction = dir;
 }
 
-VOID CLight::SetPosition(D3DXVECTOR3 pos)
+void CLight::SetPosition(D3DXVECTOR3 pos)
 {
     mLightData.Position = pos;
 }
 
-VOID CLight::SetAttenuation(FLOAT constant, FLOAT linear, FLOAT quadratic)
+void CLight::SetAttenuation(float constant, float linear, float quadratic)
 {
     mLightData.Attenuation0 = constant;
     mLightData.Attenuation1 = linear;
     mLightData.Attenuation2 = quadratic;
 }
 
-VOID CLight::SetFalloff(FLOAT falloff)
+void CLight::SetFalloff(float falloff)
 {
     mLightData.Falloff = falloff;
 }
 
-VOID CLight::SetRange(FLOAT range)
+void CLight::SetRange(float range)
 {
     mLightData.Range = range;
 }
 
-VOID CLight::SetInnerAngle(FLOAT theta)
+void CLight::SetInnerAngle(float theta)
 {
     mLightData.Theta = theta;
 }
 
-VOID CLight::SetOuterAngle(FLOAT phi)
+void CLight::SetOuterAngle(float phi)
 {
     mLightData.Phi = phi;
 }
 
-VOID CLight::SetDefaults()
+void CLight::SetDefaults()
 {
     ZeroMemory(&mLightData, sizeof(mLightData));
 
     mLightData.Type = D3DLIGHT_DIRECTIONAL;
 
-    mLightData.Diffuse = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
-    mLightData.Ambient = D3DXCOLOR(0.0f, 0.0f, 0.0f, 1.0f);
-    mLightData.Direction = D3DXVECTOR3(-1.0f, -0.3f, -1.0f);
-    mLightData.Specular = D3DXCOLOR(0.0f, 0.0f, 0.0f, 1.0f);
+    mLightData.Diffuse = D3DXCOLOR(1.0F, 1.0F, 1.0F, 1.0F);
+    mLightData.Ambient = D3DXCOLOR(0.0F, 0.0F, 0.0F, 1.0F);
+    mLightData.Direction = D3DXVECTOR3(-1.0F, -0.3F, -1.0F);
+    mLightData.Specular = D3DXCOLOR(0.0F, 0.0F, 0.0F, 1.0F);
 
     mLightData.Range = 0;
     mLightData.Falloff = 0;

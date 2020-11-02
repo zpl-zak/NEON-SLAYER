@@ -6,34 +6,34 @@
 
 class CLight;
 
-class ENGINE_API CEffect: public CAllocable<CEffect>
+class ENGINE_API CEffect : CReferenceCounter, public CAllocable<CEffect>
 {
 public:
     CEffect();
-    VOID LoadEffect(LPCSTR effectPath);
-    VOID Release();
+    void LoadEffect(LPCSTR effectPath, bool debugMode);
+    void Release();
 
-    UINT Begin(LPCSTR technique);
-    HRESULT End();
+    auto Begin(LPCSTR technique) -> unsigned int;
+    auto End() const -> HRESULT;
 
-    UINT FindPass(LPCSTR passName);
-    HRESULT BeginPass(UINT passID);
-    HRESULT EndPass();
-    HRESULT CommitChanges();
+    auto FindPass(LPCSTR passName) const -> unsigned int;
+    auto BeginPass(unsigned int passID) const -> HRESULT;
+    auto EndPass() const -> HRESULT;
+    void CommitChanges() const;
 
     // Uniforms
-    VOID SetInteger(LPCSTR name, DWORD value);
-    VOID SetFloat(LPCSTR name, FLOAT value);
-    VOID SetMatrix(LPCSTR name, D3DXMATRIX value, BOOL transpose = FALSE);
-    VOID SetColor(LPCSTR name, D3DCOLORVALUE value);
-    VOID SetTexture(LPCSTR name, IDirect3DTexture9* value);
-    VOID SetLight(LPCSTR name, CLight* value);
-    VOID SetVector3(LPCSTR name, D3DXVECTOR3 value);
-    VOID SetVector4(LPCSTR name, D3DXVECTOR4 value);
-    VOID SetBool(LPCSTR name, BOOL value);
+    void SetInteger(LPCSTR name, DWORD value) const;
+    void SetFloat(LPCSTR name, float value) const;
+    void SetMatrix(LPCSTR name, const D3DXMATRIX& value, bool transpose = FALSE) const;
+    void SetColor(LPCSTR name, D3DCOLORVALUE value) const;
+    void SetTexture(LPCSTR name, IDirect3DTexture9* value) const;
+    void SetLight(LPCSTR name, CLight* value) const;
+    void SetVector3(LPCSTR name, D3DXVECTOR3 value) const;
+    void SetVector4(LPCSTR name, D3DXVECTOR4 value) const;
+    void SetBool(LPCSTR name, bool value) const;
 private:
     ID3DXEffect* mEffect;
 
-    VOID SetDefaults();
-    LPCSTR GetUniformName(LPCSTR base, LPCSTR field);
+    void SetDefaults() const;
+    static auto GetUniformName(LPCSTR base, LPCSTR field) -> CString;
 };

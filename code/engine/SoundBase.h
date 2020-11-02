@@ -6,17 +6,17 @@
 class CSoundBase
 {
 public:
-    VOID SetVolume(LONG vol);
-    LONG GetVolume();
-    virtual VOID Play();
-    virtual VOID Pause();
-    virtual VOID Stop();
-    VOID SetPan(LONG pan);
-    LONG GetPan();
-    virtual DWORD GetCurrentPosition();
-    virtual VOID SetCurrentPosition(DWORD cursor);
-    virtual BOOL IsPlaying();
-    virtual DWORD GetTotalSize();
+    void SetVolume(LONG vol);
+    auto GetVolume() -> LONG;
+    virtual void Play();
+    virtual void Pause();
+    virtual void Stop();
+    void SetPan(LONG pan);
+    auto GetPan() -> LONG;
+    virtual auto GetCurrentPosition() -> DWORD;
+    virtual void SetCurrentPosition(DWORD cursor);
+    virtual auto IsPlaying() -> bool;
+    virtual auto GetTotalSize() -> DWORD;
 
 protected:
     IDirectSoundBuffer8* mBuffer;

@@ -149,7 +149,7 @@ function uiInputImpl.draw(self)
     end
 
     if ui.focused == self then
-        local blinkerAlpha = 0x0058548e + Color(0, 0, 0, math.abs(math.sin(ui.blinker / 60)) * 255)
+        local blinkerAlpha = 0x0058548e + Color(0, 0, 0, math.floor(math.abs(math.sin(ui.blinker / 60)) * 255))
         local size = ui.font:measureText(self.value, 0)
         local cursorPos = x + padding + size[1] + 2
         DrawQuad(cursorPos, cursorPos+2, y+brd+16, h-brd-16, blinkerAlpha, 0)

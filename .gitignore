@@ -19,6 +19,8 @@ node_modules
 .lite_workspace.lua
 *.code-workspace
 
+code/_ReSharper.Caches
+
 /neon86.ncb
 *.dsp
 *.mak

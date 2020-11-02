@@ -3,111 +3,122 @@
 #include "engine.h"
 #include "Renderer.h"
 
-CInput::CInput(VOID)
+CInput::CInput()
 {
-    ZeroMemory(mKeys, NUM_KEYS * sizeof(BOOL));
-    ZeroMemory(mKeysDown, NUM_KEYS * sizeof(BOOL));
-    ZeroMemory(mKeysUp, NUM_KEYS * sizeof(BOOL));
+    ZeroMemory(mKeys, NUM_KEYS * sizeof(bool));
+    ZeroMemory(mKeysDown, NUM_KEYS * sizeof(bool));
+    ZeroMemory(mKeysUp, NUM_KEYS * sizeof(bool));
 
-    ZeroMemory(mMouseInputs, NUM_MOUSEBUTTONS * sizeof(BOOL));
-    ZeroMemory(mMouseDown, NUM_MOUSEBUTTONS * sizeof(BOOL));
-    ZeroMemory(mMouseUp, NUM_MOUSEBUTTONS * sizeof(BOOL));
+    ZeroMemory(mMouseInputs, NUM_MOUSEBUTTONS * sizeof(bool));
+    ZeroMemory(mMouseDown, NUM_MOUSEBUTTONS * sizeof(bool));
+    ZeroMemory(mMouseUp, NUM_MOUSEBUTTONS * sizeof(bool));
 
     mLastKey = -1;
     mCursorMode = CURSORMODE_DEFAULT;
-    mMouseDelta = { 0,0 };
+    mMouseDelta = {0, 0};
     mLastMousePos = GetMouseXY();
 
-#ifdef _DEBUG
+    #ifdef _DEBUG
     mForceMouseCursor = FALSE;
-#endif
+    #endif
 }
 
-VOID CInput::Release(VOID)
+void CInput::Release()
 {
-
 }
 
-POINT CInput::GetMouseXY(VOID) const
+auto CInput::GetMouseXY() -> POINT
 {
-    POINT newPos = { 0 };
+    POINT newPos = {0};
     GetCursorPos(&newPos);
     ScreenToClient(RENDERER->GetWindow(), &newPos);
 
     return newPos;
 }
 
-VOID CInput::SetCursor(BOOL state)
+void CInput::SetCursor(bool state) const
 {
     if (GetCursor() == state)
+    {
         return;
+    }
 
-#ifdef _DEBUG
+    #ifdef _DEBUG
     if (mForceMouseCursor)
+    {
         return;
-#endif
+    }
+    #endif
 
-    ShowCursor(state);
+    ShowCursor(static_cast<BOOL>(state));
 }
 
-BOOL CInput::GetCursor(VOID)
+auto CInput::GetCursor() -> bool
 {
-    CURSORINFO pci = { 0 };
+    CURSORINFO pci = {0};
     pci.cbSize = sizeof(CURSORINFO);
     GetCursorInfo(&pci);
 
     return pci.flags == CURSOR_SHOWING;
 }
 
-VOID CInput::SetCursorMode(UCHAR mode)
+void CInput::SetCursorMode(UCHAR mode)
 {
     if (mCursorMode == mode)
+    {
         return;
+    }
 
-#ifdef _DEBUG
+    #ifdef _DEBUG
     if (mForceMouseCursor)
+    {
         return;
-#endif
+    }
+    #endif
 
     mCursorMode = mode;
 
     if (mCursorMode == CURSORMODE_CENTERED || mCursorMode == CURSORMODE_WRAPPED)
     {
-        RECT res = RENDERER->GetResolution();
-        SetMouseXY((SHORT)(res.right / 2.0f), (SHORT)(res.bottom / 2.0f));
+        const auto res = RENDERER->GetResolution();
+        SetMouseXY(static_cast<short>(res.right / 2.0F), static_cast<short>(res.bottom / 2.0F));
         mLastMousePos = GetMouseXY();
     }
 }
 
-VOID CInput::SetMouseXY(SHORT x, SHORT y)
+void CInput::SetMouseXY(short x, short y)
 {
-    POINT pos = { x,y };
+    POINT pos = {x, y};
     ClientToScreen(RENDERER->GetWindow(), &pos);
     SetCursorPos(pos.x, pos.y);
 }
 
-VOID CInput::Update(VOID)
+void CInput::Update()
 {
-#ifdef _DEBUG
+    #ifdef _DEBUG
     if (this->GetKeyDown(VK_F1))
     {
-        BOOL lastState = mForceMouseCursor;
+        const auto lastState = mForceMouseCursor;
         if (lastState)
+        {
             mForceMouseCursor = FALSE;
+        }
         this->SetCursor(!this->GetCursor());
-        this->SetCursorMode(1-this->GetCursorMode());
-        if (lastState == FALSE)
+        this->SetCursorMode(1 - this->GetCursorMode());
+        if (static_cast<int>(lastState) == FALSE)
+        {
             mForceMouseCursor = TRUE;
+        }
     }
-#endif
+    #endif
 
-    for (UINT i = 0; i < NUM_MOUSEBUTTONS; i++)
+    for (unsigned int i = 0; i < NUM_MOUSEBUTTONS; i++)
     {
         SetMouseDown(i, FALSE);
         SetMouseUp(i, FALSE);
     }
 
-    for (UINT i = 0; i < NUM_KEYS; i++)
+    for (unsigned int i = 0; i < NUM_KEYS; i++)
     {
         SetKeyDown(i, FALSE);
         SetKeyUp(i, FALSE);
@@ -115,48 +126,57 @@ VOID CInput::Update(VOID)
 
     ClearKey();
 
-    POINT mousePos = GetMouseXY();
+    auto mousePos = GetMouseXY();
     mMouseDelta.x = -(mLastMousePos.x - mousePos.x);
     mMouseDelta.y = -(mLastMousePos.y - mousePos.y);
 
     switch (mCursorMode)
     {
-        case CURSORMODE_CENTERED:
+    case CURSORMODE_CENTERED:
         {
-            RECT res = RENDERER->GetResolution();
-            POINT pos = {
-                (LONG)(res.right/2.0f),
-                (LONG)(res.bottom/2.0f)
+            const auto res = RENDERER->GetResolution();
+            const POINT pos = {
+                static_cast<LONG>(res.right / 2.0F),
+                static_cast<LONG>(res.bottom / 2.0F)
             };
-            SetMouseXY((SHORT)pos.x, (SHORT)pos.y);
+            SetMouseXY(static_cast<short>(pos.x), static_cast<short>(pos.y));
             mousePos = pos;
-        } break;
-        case CURSORMODE_WRAPPED:
+        }
+        break;
+    case CURSORMODE_WRAPPED:
         {
-            RECT res = RENDERER->GetLocalCoordinates();
-            POINT pos = mousePos;
+            const auto res = RENDERER->GetLocalCoordinates();
+            auto pos = mousePos;
             ClientToScreen(RENDERER->GetWindow(), &pos);
 
             while (pos.x > res.right)
+            {
                 pos.x -= res.right;
+            }
 
             while (pos.y > res.bottom)
+            {
                 pos.y -= res.bottom;
+            }
 
             while (pos.x < res.left)
+            {
                 pos.x += res.left;
+            }
 
             while (pos.y < res.top)
+            {
                 pos.y += res.top;
+            }
 
             ScreenToClient(RENDERER->GetWindow(), &pos);
 
-            SetMouseXY((SHORT)pos.x, (SHORT)pos.y);
+            SetMouseXY(static_cast<short>(pos.x), static_cast<short>(pos.y));
             mousePos = pos;
         }
-            break;
-        default:
-            break;
+        break;
+    default:
+        break;
     }
 
     mLastMousePos = mousePos;

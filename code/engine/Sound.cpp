@@ -7,25 +7,28 @@
 
 CSound::CSound(LPSTR wavPath): CAllocable()
 {
-    mBuffer = NULL;
+    mBuffer = nullptr;
     mIsLooping = FALSE;
-    mData = NULL;
+    mData = nullptr;
     mDataSize = 0;
 
     CString path(wavPath);
 
-    if (path.Find(".ogg")) {
+    if (path.Find(".ogg"))
+    {
         CSoundLoader::LoadOGG(wavPath, &mBuffer, &mData, &mDataSize, &mWaveInfo);
     }
-    if (path.Find(".wav")) {
+    if (path.Find(".wav"))
+    {
         CSoundLoader::LoadWAV(wavPath, &mBuffer, &mData, &mDataSize, &mWaveInfo);
     }
-    else {
+    else
+    {
         VM->PostError(CString::Format("Unsupported sound file: %s !", path).Str());
     }
 }
 
-VOID CSound::Release()
+void CSound::Release()
 {
     if (DelRef())
     {
@@ -35,23 +38,23 @@ VOID CSound::Release()
     }
 }
 
-VOID CSound::Play()
+void CSound::Play()
 {
     mBuffer->Play(0, 0, mIsLooping ? DSBPLAY_LOOPING : 0);
 }
 
-VOID CSound::Pause()
+void CSound::Pause()
 {
     mBuffer->Stop();
 }
 
-VOID CSound::Stop()
+void CSound::Stop()
 {
     Pause();
     SetCurrentPosition(0);
 }
 
-VOID CSound::SetFrequency(DWORD freq)
+void CSound::SetFrequency(DWORD freq)
 {
     if (freq == 0)
     {
@@ -68,7 +71,7 @@ DWORD CSound::GetFrequency()
     return freq;
 }
 
-VOID CSound::SetLoop(BOOL state)
+void CSound::SetLoop(bool state)
 {
     mIsLooping = state;
 
@@ -79,7 +82,7 @@ VOID CSound::SetLoop(BOOL state)
     }
 }
 
-BOOL CSound::IsLooping()
+bool CSound::IsLooping()
 {
     return mIsLooping;
 }

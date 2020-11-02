@@ -1,4 +1,3 @@
-#include "StdAfx.h"
 // dear imgui: Renderer for DirectX9
 // This needs to be used along with a Platform Binding (e.g. Win32)
 
@@ -25,12 +24,6 @@
 
 #include "imgui.h"
 #include "imgui_impl_dx9.h"
-
-#include "VM.h"
-#include "Renderer.h"
-#include "UserInterface.h"
-#include "engine.h"
-#include "ProfileManager.h"
 
 // DirectX
 #include <d3d9.h>
@@ -147,9 +140,9 @@ void ImGui_ImplDX9_RenderDrawData(ImDrawData* draw_data)
     //  2) to avoid repacking vertices: #define IMGUI_OVERRIDE_DRAWVERT_STRUCT_LAYOUT struct ImDrawVert { ImVec2 pos; float z; ImU32 col; ImVec2 uv; }
     CUSTOMVERTEX* vtx_dst;
     ImDrawIdx* idx_dst;
-    if (g_pVB->Lock(0, (UINT)(draw_data->TotalVtxCount * sizeof(CUSTOMVERTEX)), (void**)&vtx_dst, D3DLOCK_DISCARD) < 0)
+    if (g_pVB->Lock(0, (unsigned int)(draw_data->TotalVtxCount * sizeof(CUSTOMVERTEX)), (void**)&vtx_dst, D3DLOCK_DISCARD) < 0)
         return;
-    if (g_pIB->Lock(0, (UINT)(draw_data->TotalIdxCount * sizeof(ImDrawIdx)), (void**)&idx_dst, D3DLOCK_DISCARD) < 0)
+    if (g_pIB->Lock(0, (unsigned int)(draw_data->TotalIdxCount * sizeof(ImDrawIdx)), (void**)&idx_dst, D3DLOCK_DISCARD) < 0)
         return;
     for (int n = 0; n < draw_data->CmdListsCount; n++)
     {
@@ -178,19 +171,6 @@ void ImGui_ImplDX9_RenderDrawData(ImDrawData* draw_data)
     // Setup desired DX state
     ImGui_ImplDX9_SetupRenderState(draw_data);
 
-    // NEON86: Render 2D
-    IDirect3DStateBlock9* neonsbt = NULL;
-    RENDERER->GetDevice()->CreateStateBlock(D3DSBT_ALL, &neonsbt);
-    neonsbt->Capture();
-    {
-        CProfileScope scope(ENGINE->DefaultProfiling.INTERNAL_GetRender2DProfiler());
-        UI->RenderHook();
-        VM->Render2D();
-    }
-
-    neonsbt->Apply();
-    neonsbt->Release();
-
     // Render command lists
     // (Because we merged all buffers into a single one, we maintain our own offset into them)
     int global_vtx_offset = 0;
@@ -217,7 +197,7 @@ void ImGui_ImplDX9_RenderDrawData(ImDrawData* draw_data)
                 const LPDIRECT3DTEXTURE9 texture = (LPDIRECT3DTEXTURE9)pcmd->TextureId;
                 g_pd3dDevice->SetTexture(0, texture);
                 g_pd3dDevice->SetScissorRect(&r);
-                g_pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, pcmd->VtxOffset + global_vtx_offset, 0, (UINT)cmd_list->VtxBuffer.Size, pcmd->IdxOffset + global_idx_offset, pcmd->ElemCount/3);
+                g_pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, pcmd->VtxOffset + global_vtx_offset, 0, (unsigned int)cmd_list->VtxBuffer.Size, pcmd->IdxOffset + global_idx_offset, pcmd->ElemCount/3);
             }
         }
         global_idx_offset += cmd_list->IdxBuffer.Size;

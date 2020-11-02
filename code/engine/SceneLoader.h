@@ -16,9 +16,11 @@ struct aiMaterial;
 class ENGINE_API CSceneLoader
 {
 public:
-    static VOID LoadNodesRecursively(const aiScene* impScene, const aiNode* impNode, CScene* scene, CNode* node, BOOL loadMaterials);
-    static BOOL LoadScene(LPCSTR modelPath, CScene* scene, BOOL loadMaterials, BOOL optimizeMeshes);
-    static CFaceGroup* LoadFaceGroup(const aiScene* scene, const aiMesh* mesh, BOOL loadMaterials);
-    static CLight* LoadLight(const aiNode* impNode, const aiLight* impLight);
-    static VOID LoadTextureMap(const aiScene* scene, const aiMaterial* mat, CMaterial* newMaterial, UINT slot, UINT texType);
+    static void LoadNodesRecursively(const aiScene* impScene, const aiNode* impNode, CScene* scene, CNode* node,
+                                     bool loadMaterials);
+    static auto LoadScene(LPCSTR modelPath, CScene* scene, bool loadMaterials, bool optimizeMeshes) -> bool;
+    static auto LoadFaceGroup(const aiScene* scene, const aiMesh* mesh, bool loadMaterials) -> CFaceGroup*;
+    static auto LoadLight(const aiNode* impNode, const aiLight* impLight) -> CLight*;
+    static void LoadTextureMap(const aiScene* scene, const aiMaterial* mat, CMaterial* newMaterial, unsigned int slot,
+                               unsigned int texType);
 };

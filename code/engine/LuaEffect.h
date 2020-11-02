@@ -5,194 +5,202 @@
 
 #include <lua/lua.hpp>
 
-INT effect_new(lua_State* L)
+auto effect_new(lua_State* L) -> int
 {
-    LPCSTR effectPath = luaL_checkstring(L, 1);
+    const auto* const effectPath = LuaGetInline<LPCSTR>(L);
+    const auto debugMode = LuaGetInline<bool>(L);
 
-    CEffect** fx = (CEffect**)lua_newuserdata(L, sizeof(CEffect*));
+    auto* const fx = static_cast<CEffect**>(lua_newuserdata(L, sizeof(CEffect*)));
     *fx = new CEffect();
-    (*fx)->LoadEffect(effectPath);
+    (*fx)->LoadEffect(effectPath, debugMode);
 
     luaL_setmetatable(L, L_EFFECT);
     return 1;
 }
 
-static INT effect_begin(lua_State* L)
+static auto effect_begin(lua_State* L) -> int
 {
-    CEffect* fx = *(CEffect**)luaL_checkudata(L, 1, L_EFFECT);
-    LPCSTR technique = luaL_checkstring(L, 2);
+    auto* fx = LuaGetInline<CEffect*>(L);
+    const auto* const technique = LuaGetInline<LPCSTR>(L);
 
     lua_pushinteger(L, fx->Begin(technique));
     return 1;
 }
 
-static INT effect_end(lua_State* L)
+static auto effect_end(lua_State* L) -> int
 {
-    CEffect* fx = *(CEffect**)luaL_checkudata(L, 1, L_EFFECT);
+    auto* fx = LuaGetInline<CEffect*>(L);
 
     lua_pushinteger(L, fx->End());
     return 1;
 }
 
-static INT effect_beginpass(lua_State* L)
+static auto effect_beginpass(lua_State* L) -> int
 {
-    CEffect* fx = *(CEffect**)luaL_checkudata(L, 1, L_EFFECT);
-    UINT pass = -1;
+    auto* fx = LuaGetInline<CEffect*>(L);
+    unsigned int pass = -1;
 
-    if (!lua_isinteger(L, 2))
+    if (lua_isinteger(L, 1) == 0)
     {
-        LPCSTR passName = luaL_checkstring(L, 2);
+        const auto* const passName = LuaGetInline<LPCSTR>(L);
         pass = fx->FindPass(passName);
     }
-    else pass = (UINT)luaL_checkinteger(L, 2) - 1;
+    else
+    {
+        pass = LuaGetInline<uint32_t>(L) - 1;
+    }
 
     lua_pushinteger(L, fx->BeginPass(pass));
     return 1;
 }
 
-static INT effect_endpass(lua_State* L)
+static auto effect_endpass(lua_State* L) -> int
 {
-    CEffect* fx = *(CEffect**)luaL_checkudata(L, 1, L_EFFECT);
+    auto* fx = LuaGetInline<CEffect*>(L);
 
     lua_pushinteger(L, fx->EndPass());
     return 1;
 }
 
-static INT effect_commit(lua_State* L)
+static auto effect_commit(lua_State* L) -> int
 {
-    CEffect* fx = *(CEffect**)luaL_checkudata(L, 1, L_EFFECT);
+    auto* fx = LuaGetInline<CEffect*>(L);
 
-    lua_pushinteger(L, fx->CommitChanges());
-    return 1;
-}
-
-static INT effect_setbool(lua_State* L)
-{
-    CEffect* fx = *(CEffect**)luaL_checkudata(L, 1, L_EFFECT);
-    LPCSTR name = luaL_checkstring(L, 2);
-    FLOAT value = (FLOAT)lua_toboolean(L, 3);
-
-    fx->SetBool(name, value == 1.0f);
+    fx->CommitChanges();
     return 0;
 }
 
-static INT effect_setfloat(lua_State* L)
+static auto effect_setbool(lua_State* L) -> int
 {
-    CEffect* fx = *(CEffect**)luaL_checkudata(L, 1, L_EFFECT);
-    LPCSTR name = luaL_checkstring(L, 2);
-    FLOAT value = (FLOAT)luaL_checknumber(L, 3);
+    auto* fx = LuaGetInline<CEffect*>(L);
+    const auto* const name = LuaGetInline<LPCSTR>(L);
+    const auto value = LuaGetInline<bool>(L);
+
+    fx->SetBool(name, value);
+    return 0;
+}
+
+static auto effect_setfloat(lua_State* L) -> int
+{
+    auto* fx = LuaGetInline<CEffect*>(L);
+    const auto* const name = LuaGetInline<LPCSTR>(L);
+    const auto value = LuaGetInline<float>(L);
 
     fx->SetFloat(name, value);
     return 0;
 }
 
-static INT effect_setmatrix(lua_State* L)
+static auto effect_setmatrix(lua_State* L) -> int
 {
-    CEffect* fx = *(CEffect**)luaL_checkudata(L, 1, L_EFFECT);
-    LPCSTR name = luaL_checkstring(L, 2);
-    D3DXMATRIX* value = (D3DXMATRIX*)luaL_checkudata(L, 3, L_MATRIX);
+    auto* fx = LuaGetInline<CEffect*>(L);
+    const auto* const name = LuaGetInline<LPCSTR>(L);
+    auto const value = LuaGetInline<D3DXMATRIX>(L);
 
-    fx->SetMatrix(name, *value);
+    fx->SetMatrix(name, value);
     return 0;
 }
 
-static INT effect_setvector3(lua_State* L)
+static auto effect_setvector3(lua_State* L) -> int
 {
-    CEffect* fx = *(CEffect**)luaL_checkudata(L, 1, L_EFFECT);
-    LPCSTR name = luaL_checkstring(L, 2);
-    D3DXVECTOR3* value = (D3DXVECTOR3*)luaL_checkudata(L, 3, L_VECTOR);
+    auto* fx = LuaGetInline<CEffect*>(L);
+    const auto* const name = LuaGetInline<LPCSTR>(L);
+    auto const value = LuaGetInline<D3DXVECTOR3>(L);
 
-    fx->SetVector3(name, *value);
+    fx->SetVector3(name, value);
     return 0;
 }
 
-static INT effect_setinteger(lua_State* L)
+static auto effect_setinteger(lua_State* L) -> int
 {
-    CEffect* fx = *(CEffect**)luaL_checkudata(L, 1, L_EFFECT);
-    LPCSTR name = luaL_checkstring(L, 2);
-    DWORD value = (DWORD)luaL_checkinteger(L, 3);
+    auto* fx = LuaGetInline<CEffect*>(L);
+    const auto* const name = LuaGetInline<LPCSTR>(L);
+    const auto value = LuaGetInline<DWORD>(L);
 
     fx->SetInteger(name, value);
     return 0;
 }
 
-static INT effect_setlight(lua_State* L)
+static auto effect_setlight(lua_State* L) -> int
 {
-    CEffect* fx = *(CEffect**)luaL_checkudata(L, 1, L_EFFECT);
-    LPCSTR name = luaL_checkstring(L, 2);
-    CLight* value = NULL;
+    auto* fx = LuaGetInline<CEffect*>(L);
+    const auto* const name = LuaGetInline<LPCSTR>(L);
+    CLight* value = nullptr;
 
-    if (lua_gettop(L) == 3 && luaL_testudata(L, 3, L_LIGHT)) {
-        value = *(CLight**)lua_touserdata(L, 3);
+    if (LuaTestClass(L, L_LIGHT))
+    {
+        value = LuaGetInline<CLight*>(L);
     }
 
     fx->SetLight(name, value);
     return 0;
 }
 
-static INT effect_setvector4(lua_State* L)
+static auto effect_setvector4(lua_State* L) -> int
 {
-    CEffect* fx = *(CEffect**)luaL_checkudata(L, 1, L_EFFECT);
-    LPCSTR name = luaL_checkstring(L, 2);
+    auto* fx = LuaGetInline<CEffect*>(L);
+    const auto* const name = LuaGetInline<LPCSTR>(L);
 
-    if (lua_gettop(L) == 4)
+    if (LuaLength(L) >= 2)
     {
-        D3DXVECTOR3* value = (D3DXVECTOR3*)luaL_checkudata(L, 3, L_VECTOR);
-        FLOAT value2 = (FLOAT)lua_tonumber(L, 4);
-        fx->SetVector4(name, D3DXVECTOR4(*value, value2));
+        auto const value = LuaGetInline<D3DXVECTOR3>(L);
+        const auto value2 = LuaGetInline<float>(L);
+        fx->SetVector4(name, D3DXVECTOR4(value, value2));
     }
     else
     {
-        D3DXVECTOR4* value = (D3DXVECTOR4*)luaL_checkudata(L, 3, L_VECTOR);
-        fx->SetVector4(name, *value);
+        auto const value = LuaGetInline<D3DXVECTOR4>(L);
+        fx->SetVector4(name, value);
     }
-
 
     return 0;
 }
 
-static INT effect_settexture(lua_State* L)
+static auto effect_settexture(lua_State* L) -> int
 {
-    CEffect* fx = *(CEffect**)luaL_checkudata(L, 1, L_EFFECT);
-    LPCSTR name = luaL_checkstring(L, 2);
+    auto* fx = LuaGetInline<CEffect*>(L);
+    const auto* const name = LuaGetInline<LPCSTR>(L);
 
-    if (luaL_testudata(L, 3, L_RENDERTARGET))
+    if (LuaTestClass(L, L_RENDERTARGET))
     {
-        CRenderTarget* rtt = *(CRenderTarget**)lua_touserdata(L, 3);
+        auto* rtt = LuaGetInline<CRenderTarget*>(L);
 
         fx->SetTexture(name, rtt->GetTextureHandle());
     }
-    else if (luaL_testudata(L, 3, L_MATERIAL))
+    else if (LuaTestClass(L, L_MATERIAL))
     {
-        UINT slot = TEXTURESLOT_ALBEDO;
-        CMaterial* mat = *(CMaterial**)lua_touserdata(L, 3);
+        unsigned int slot = TEXTURESLOT_ALBEDO;
+        auto* mat = LuaGetInline<CMaterial*>(L);
 
-        if (lua_gettop(L) == 4)
-            slot = (UINT)luaL_checkinteger(L, 4) - 1;
+        if (LuaLength(L) >= 1)
+        {
+            slot = LuaGetInline<uint32_t>(L);
+        }
 
         fx->SetTexture(name, mat->GetTextureHandle(slot));
     }
-    else {
-        LPDIRECT3DTEXTURE9 handle = (LPDIRECT3DTEXTURE9)lua_touserdata(L, 3);
+    else
+    {
+        auto* const handle = LuaGetInline<LPDIRECT3DTEXTURE9>(L);
         fx->SetTexture(name, handle);
     }
 
     return 0;
 }
 
-static INT effect_delete(lua_State* L)
+static auto effect_delete(lua_State* L) -> int
 {
-    CEffect* fx = *(CEffect**)luaL_checkudata(L, 1, L_EFFECT);
+    auto* fx = LuaGetInline<CEffect*>(L);
 
     fx->Release();
     return 0;
 }
 
-static VOID LuaEffect_register(lua_State* L)
+static void LuaEffect$Register(lua_State* L)
 {
     lua_register(L, L_EFFECT, effect_new);
     luaL_newmetatable(L, L_EFFECT);
-    lua_pushvalue(L, -1); lua_setfield(L, -2, "__index");
+    lua_pushvalue(L, -1);
+    lua_setfield(L, -2, "__index");
 
     REGC("start", effect_begin);
     REGC("finish", effect_end);

@@ -116,8 +116,8 @@ class "MusicManager" {
         self.alpha = lerp(self.alpha, targetAlpha, 0.015)
 
         if self.playing then
-            nowPlayingFont:drawText(Color(255, 255, 255, self.alpha), "Now Playing", 15, 40, 0, 0, FONTFLAG_NOCLIP)
-            musicTitleFont:drawText(Color(255, 255, 255, self.alpha), self.playing[1], 30, 80, 0, 0, FONTFLAG_NOCLIP)
+            nowPlayingFont:drawText(Color(255, 255, 255, math.floor(self.alpha)), "Now Playing", 15, 40, 0, 0, FONTFLAG_NOCLIP)
+            musicTitleFont:drawText(Color(255, 255, 255, math.floor(self.alpha)), self.playing[1], 30, 80, 0, 0, FONTFLAG_NOCLIP)
         end
     end
 }

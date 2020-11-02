@@ -16,11 +16,11 @@ using METADATA = std::unordered_map<std::string, std::string>;
 
 struct METADATA_RESULT
 {
-    BOOL Found;
-    std::string Value;
+    bool found;
+    std::string value;
 };
 
-class ENGINE_API CNode: public CNodeComponent, public CReferenceCounter, CAllocable<CNode>
+class ENGINE_API CNode : public CNodeComponent, public CReferenceCounter, CAllocable<CNode>, NoCopyAssign
 {
 public:
     CNode(): CAllocable()
@@ -33,10 +33,10 @@ public:
         D3DXMatrixIdentity(mCachedTransform);
         SetName("(unknown)");
         mIsTransformDirty = TRUE;
-        mParent = NULL;
+        mParent = nullptr;
     }
 
-    CNode(D3DXMATRIX mat, CString name): CAllocable()
+    CNode(const D3DXMATRIX mat, const CString& name): CAllocable()
     {
         SetName(name);
         mTransform = new D3DXMATRIX(mat);
@@ -44,68 +44,77 @@ public:
         mMetadata = new METADATA();
         mMetadata->clear();
 
-        mParent = NULL;
+        mParent = nullptr;
         mIsTransformDirty = TRUE;
     }
 
-    VOID Release();
+    CNode(const CNode&&) = delete;
+    CNode& operator=(const CNode&&) = delete;
 
-    ~CNode() { Release(); }
+    auto Release() -> void;
 
-    VOID Draw(const D3DXMATRIX& wmat);
-    VOID DrawSubset(UINT subset, const D3DXMATRIX& wmat);
+    ~CNode() override { Release(); }
 
-    inline VOID SetMetadata(LPCSTR name, LPCSTR value) { (*mMetadata)[name] = value; }
-    inline METADATA_RESULT GetMetadata(LPCSTR name)
+    void Draw(const D3DXMATRIX& wmat);
+    void DrawSubset(unsigned int subset, const D3DXMATRIX& wmat);
+
+    void SetMetadata(LPCSTR name, LPCSTR value) const { (*mMetadata)[name] = value; }
+
+    auto GetMetadata(LPCSTR name) const -> METADATA_RESULT
     {
-        METADATA_RESULT res = { 0 };
-        auto e = mMetadata->find(name);
+        METADATA_RESULT res = {0};
+        const auto e = mMetadata->find(name);
 
         if (e == mMetadata->end())
         {
-            res.Found = FALSE;
-            res.Value = "";
+            res.found = FALSE;
+            res.value = "";
         }
         else
         {
-            res.Found = TRUE;
-            res.Value = e->second;
+            res.found = TRUE;
+            res.value = e->second;
         }
 
         return res;
     }
 
-    inline UINT GetNumMeshes() { return mMeshes.GetCount(); }
-    inline CArray<CMesh*> GetMeshes() { return mMeshes; }
-    inline CMesh** GetMeshData() { return mMeshes.GetData(); }
-    CMesh* FindMesh(LPCSTR name);
-    VOID AddMesh(CMesh* mg);
+    auto GetNumMeshes() const -> unsigned int { return mMeshes.GetCount(); }
+    auto GetMeshes() const -> CArray<CMesh*> { return mMeshes; }
+    auto GetMeshData() const -> CMesh** { return mMeshes.GetData(); }
+    auto FindMesh(LPCSTR name) -> CMesh*;
+    void AddMesh(CMesh* mg);
 
-    inline UINT GetNumLights() { return mLights.GetCount(); }
-    inline CLight** GetLightData() { return mLights.GetData(); }
-    CLight* FindLight(LPCSTR name);
-    VOID AddLight(CLight* lit);
+    auto GetNumLights() const -> unsigned int { return mLights.GetCount(); }
+    auto GetLightData() const -> CLight** { return mLights.GetData(); }
+    auto FindLight(LPCSTR name) -> CLight*;
+    void AddLight(CLight* lit);
 
-    inline UINT GetNumNodes() { return mNodes.GetCount(); }
-    inline CNode** GetNodeData() { return mNodes.GetData(); }
+    auto GetNumNodes() const -> unsigned int { return mNodes.GetCount(); }
+    auto GetNodeData() const -> CNode** { return mNodes.GetData(); }
 
-    CNode* FindNode(LPCSTR name);
+    auto FindNode(LPCSTR name) -> CNode*;
 
-    VOID AddNode(CNode* tgt);
+    void AddNode(CNode* tgt);
 
-    CNode* Clone();
+    auto Clone() -> CNode*;
 
-    BOOL IsEmpty();
+    auto IsEmpty() -> bool;
 
-    inline VOID SetTransform(D3DXMATRIX transform) { *mTransform = transform; InvalidateTransformRecursively(); }
-    inline D3DXMATRIX GetTransform() { return *mTransform; }
+    void SetTransform(D3DXMATRIX transform)
+    {
+        *mTransform = transform;
+        InvalidateTransformRecursively();
+    }
 
-    inline VOID SetParent(CNode* node) { if (node != this) mParent = node; }
-    inline CNode* GetParent() { return mParent; }
+    auto GetTransform() const -> D3DXMATRIX { return *mTransform; }
 
-    D3DXMATRIX GetFinalTransform();
-    inline VOID InvalidateTransform() { mIsTransformDirty = TRUE; }
-    VOID InvalidateTransformRecursively();
+    void SetParent(CNode* node) { if (node != this) mParent = node; }
+    auto GetParent() const -> CNode* { return mParent; }
+
+    auto GetFinalTransform() -> D3DXMATRIX;
+    void InvalidateTransform() { mIsTransformDirty = TRUE; }
+    void InvalidateTransformRecursively();
 
 protected:
     CArray<CMesh*> mMeshes;
@@ -114,7 +123,7 @@ protected:
     CNode* mParent;
 
 private:
-    BOOL mIsTransformDirty;
-    D3DXMATRIX* mTransform, *mCachedTransform;
-    METADATA *mMetadata;
+    bool mIsTransformDirty;
+    D3DXMATRIX *mTransform, *mCachedTransform;
+    METADATA* mMetadata;
 };

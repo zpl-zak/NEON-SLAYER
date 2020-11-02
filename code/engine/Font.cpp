@@ -6,9 +6,9 @@
 #include "FileSystem.h"
 #include "engine.h"
 
-CFont::CFont(LPCSTR name, INT size, INT boldness, BOOL isItalic)
+CFont::CFont(LPCSTR name, int size, int boldness, bool isItalic)
 {
-    mFontHandle = NULL;
+    mFontHandle = nullptr;
 
     D3DXCreateFontA(
         RENDERER->GetDevice(),
@@ -16,17 +16,17 @@ CFont::CFont(LPCSTR name, INT size, INT boldness, BOOL isItalic)
         0,
         boldness,
         0,
-        isItalic,
+        static_cast<BOOL>(isItalic),
         DEFAULT_CHARSET,
         OUT_DEFAULT_PRECIS,
         ANTIALIASED_QUALITY,
-        DEFAULT_PITCH|FF_DONTCARE,
+        DEFAULT_PITCH | FF_DONTCARE,
         name,
         &mFontHandle
     );
 }
 
-VOID CFont::Release()
+void CFont::Release()
 {
     if (DelRef())
     {
@@ -34,17 +34,22 @@ VOID CFont::Release()
     }
 }
 
-VOID CFont::RenderText(DWORD color, LPCSTR text, UINT x, UINT y, UINT w, UINT h, DWORD flags)
+void CFont::RenderText(DWORD color, LPCSTR text, unsigned int x, unsigned int y, unsigned int w, unsigned int h,
+                       DWORD flags)
 {
-    if (!mFontHandle)
+    if (mFontHandle == nullptr)
+    {
         return;
+    }
 
     RECT rect;
     rect.left = x;
     rect.top = y;
 
-    if ((w == 0 || h == 0) && flags & ~FF_NOCLIP)
+    if ((w == 0 || h == 0) && ((flags & ~FF_NOCLIP) != 0u))
+    {
         CalculateRect(text, &rect);
+    }
     else
     {
         rect.right = x + w;
@@ -57,12 +62,12 @@ VOID CFont::RenderText(DWORD color, LPCSTR text, UINT x, UINT y, UINT w, UINT h,
     UI->GetTextSurface()->End();
 }
 
-BOOL CFont::AddFontToDatabase(LPCSTR path)
+auto CFont::AddFontToDatabase(LPCSTR path) -> bool
 {
-    return AddFontResourceExA(FILESYSTEM->ResourcePath(path), FR_PRIVATE, 0) > 0;
+    return AddFontResourceExA(FILESYSTEM->ResourcePath(path), FR_PRIVATE, nullptr) > 0;
 }
 
-VOID CFont::CalculateRect(LPCSTR text, LPRECT rect, DWORD flags)
+void CFont::CalculateRect(LPCSTR text, LPRECT rect, DWORD flags)
 {
-    mFontHandle->DrawTextA(NULL, text, -1, rect, flags|DT_CALCRECT, 0);
+    mFontHandle->DrawTextA(nullptr, text, -1, rect, flags | DT_CALCRECT, 0);
 }
