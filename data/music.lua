@@ -10,6 +10,17 @@ local FADE_IN = 1
 local FADE_STAY = 2
 local FADE_OUT = 3
 
+local tween = require "tween"
+local musicTransition = tween.Layer("ui")
+local musicAction = tween.Action(false)
+local musicAnim = tween.Tween()
+musicTransition:add(tween.Keyframe(0, tween.FramePose():withProp(0)))
+musicTransition:add(tween.Keyframe(DURATION_FADEINOUT, tween.FramePose():withProp(255)))
+musicTransition:add(tween.Keyframe(DURATION_FADESTAY, tween.FramePose():withProp(255)))
+musicTransition:add(tween.Keyframe(DURATION_FADESTAY+DURATION_FADEINOUT, tween.FramePose():withProp(0)))
+musicAction:add("ui", musicTransition)
+
+
 local function shuffle(tbl)
     for i = #tbl, 2, -1 do
         local j = math.random(i)
@@ -46,8 +57,6 @@ class "MusicManager" {
         end
 
         self.playing = nil
-        self.fade = 0
-        self.fadestate = 1
         self.time = 0
         self.alpha = 0
     end,
@@ -74,45 +83,15 @@ class "MusicManager" {
             self.playing = self.music[self.trackId]
             self.playing[2]:play()
             self.time = 0
-            self.fade = self.time + DURATION_FADEINOUT
-            self.fadestate = FADE_IN
+            musicAnim:play(musicAction)
         end
 
         self.playing[2]:setVolume(math.floor(config.volume.music*100))
+        musicAnim:update(dt)
     end,
 
     draw2d = function (self)
-        local targetAlpha = 0
-        if self.fade > 0 and self.fadestate == FADE_IN then
-            local t = self.time/self.fade
-            targetAlpha = 255
-
-            if t > 1 then
-                self.fadestate = FADE_STAY
-                self.fade = self.time+DURATION_FADESTAY
-            end
-        end
-
-        if self.fade > 0 and self.fadestate == FADE_OUT then
-            local t = (self.time/self.fade)
-            targetAlpha = 0
-
-            if t > 1 then
-                self.fadestate = FADE_IN
-                self.fade = 0
-            end
-        end
-
-        if self.fade > 0 and self.fadestate == FADE_STAY then
-            local t = self.time/self.fade
-            targetAlpha = 255
-
-            if t > 1 then
-                self.fadestate = FADE_OUT
-                self.fade = self.time+DURATION_FADEINOUT
-            end
-        end
-
+        local targetAlpha = musicAnim:getPose("ui"):getProp()
         self.alpha = lerp(self.alpha, targetAlpha, 0.015)
 
         if self.playing then
