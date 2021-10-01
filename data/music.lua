@@ -6,10 +6,6 @@ local musicTitleFont = Font("Silkscreen", 35)
 local DURATION_FADEINOUT = 2
 local DURATION_FADESTAY = 5
 
-local FADE_IN = 1
-local FADE_STAY = 2
-local FADE_OUT = 3
-
 local tween = require "tween"
 local musicTransition = tween.Layer("ui")
 local musicAction = tween.Action(false)
@@ -19,7 +15,6 @@ musicTransition:add(tween.Keyframe(DURATION_FADEINOUT, tween.FramePose():withPro
 musicTransition:add(tween.Keyframe(DURATION_FADESTAY, tween.FramePose():withProp(255)))
 musicTransition:add(tween.Keyframe(DURATION_FADESTAY+DURATION_FADEINOUT, tween.FramePose():withProp(0)))
 musicAction:add("ui", musicTransition)
-
 
 local function shuffle(tbl)
     for i = #tbl, 2, -1 do
