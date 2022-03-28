@@ -44,9 +44,16 @@ class "Player" {
 
         self.tank.rot = Matrix():rotate(self.heading+math.rad(90),0,0)
 
-        if not state:is("game") then
+        if state:is("pause") or state:is("settings") then
             self.cam = Matrix():lookAt(
                 Vector3(0,800,0),
+                Vector3((WORLD_SIZE*WORLD_TILES[1])/2, 0, (WORLD_SIZE*WORLD_TILES[2])/2),
+                Vector3(0,1,0)
+            )
+        elseif not state:is("game") then
+            CameraPerspective(42, 1.0, 25000)
+            self.cam = Matrix():lookAt(
+                Vector3(10,200,10),
                 Vector3((WORLD_SIZE*WORLD_TILES[1])/2, 0, (WORLD_SIZE*WORLD_TILES[2])/2),
                 Vector3(0,1,0)
             )
@@ -71,17 +78,7 @@ class "Player" {
         self.tank.movedir = Vector()
         self.tank.movedir = self.tank.movedir + fwd*SPEED*dt*0.5
 
-        if not state:is("game") then
-            self.heading = self.heading + 1.65 * dt
-            self.tank.movedir = self.tank.movedir + fwd*SPEED*dt*0.5
-            self.tank.rot = Matrix():rotate(self.heading+math.rad(90),0,0)
-
-            self.cam = Matrix():lookAt(
-                Vector3(0,800,0),
-                Vector3((WORLD_SIZE*WORLD_TILES[1])/2, 0, (WORLD_SIZE*WORLD_TILES[2])/2),
-                Vector3(0,1,0)
-            )
-        else
+        if state:is("game") then
             if not GetMouse(MOUSE_RIGHT_BUTTON) then
                 self.heading = hh.lerp(self.heading, self.angles[1], 0.1238772)
             end

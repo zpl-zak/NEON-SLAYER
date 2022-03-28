@@ -23,6 +23,7 @@ world = require "world"
 state = require "state"
 notify = require "notify"
 gameVersion = require "version"
+bots = require "ai"
 
 -- Game
 Tank = require "tank"
@@ -31,6 +32,9 @@ Player = require "player"
 -- Globals
 time = 0
 tanks = {}
+
+deaths = 0
+kills = 0
 
 local res = GetResolution()
 screenRT = RenderTarget(res[1], res[2])
@@ -44,6 +48,7 @@ invTexSize = Vector3(
 
 fxaaShader = Effect("fx/fxaa.fx")
 localPlayer = Player()
+isConnected = false
 
 sun = Light()
 sun:setDirection(Vector(-0.6,-1,-0.7))
@@ -58,6 +63,7 @@ RegisterFontFile("assets/slkscr.ttf")
 nativedll.setUpdate(function (entity_id, x, y, z, r, color, islocal, serverTrail)
     if state:is("connecting") then
         state:switch("game")
+        isConnected = true
     end
 
     if islocal == 1 then
@@ -97,20 +103,20 @@ nativedll.setUpdate(function (entity_id, x, y, z, r, color, islocal, serverTrail
 end)
 
 nativedll.setCollide(function(killer_id, victim_id)
-    -- ignore state switch when paused
-    if not state:is("game") then
-        return
-    end
-
     if victim_id == -1 then
-        state:switch("death")
-        LogString("BOOM WE GOT KILLED BY " .. killer_id)
-        playSFX(localPlayer.soundDeath, 0.25)
+        if state:is("game") then
+            state:switch("death")
+            LogString("BOOM WE GOT KILLED BY " .. killer_id)
+            playSFX(localPlayer.soundDeath, 0.25)
+        end
     else
         if tanks[victim_id] ~= nil then
             if tanks[-1].entity_id == killer_id then
-                notify:push("You've annihilated another player")
-                playSFX(localPlayer.soundKill, 0.25)
+                if state:is("game") then
+                    notify:push("You've annihilated another player")
+                    playSFX(localPlayer.soundKill, 0.25)
+                end
+                kills = kills + 1
             end
             tanks[victim_id].alive = false
             tanks[victim_id].tails = {}
@@ -121,6 +127,10 @@ end)
 nativedll.setRespawn(function(entity_id)
     LogString("SPAWNING PLAYERS STUFF: " .. entity_id)
     local tank = tanks[entity_id]
+
+    if entity_id == -1 then
+        deaths = deaths + 1
+    end
 
     if tank == nil then return end
     tank.alive = true
@@ -163,8 +173,10 @@ function _fixedUpdate(dt)
         SetCursorMode(CURSORMODE_DEFAULT)
     end
 
-    for _, t in pairs(tanks) do
-        t:update(dt)
+    if isConnected then
+        for _, t in pairs(tanks) do
+            t:update(dt)
+        end
     end
 
     localPlayer:update(dt)
@@ -190,12 +202,14 @@ function _render(dt)
     Matrix():bind(WORLD)
     localPlayer.cam:bind(VIEW)
     world:draw()
-    for _, t in pairs(tanks) do
-        t:draw()
+
+    if isConnected then
+        for _, t in pairs(tanks) do
+            t:draw()
+        end
     end
 
     local wmat = Matrix():scale(WORLD_TILES[1], WORLD_TILES[1], WORLD_TILES[1])
-    CullMode(CULLKIND_NONE)
     world.boundsMesh:draw(wmat)
     CullMode(CULLKIND_CCW)
     ClearTarget()

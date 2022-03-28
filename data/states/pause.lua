@@ -22,6 +22,7 @@ return class "PausedState" (AbstractState) {
         local btnDisconnect = uiButton("Disconnect", self.resolution[1]/2-100, yoffset, 200, 50, function()
             nativedll.disconnect()
             nativedll.serverStop()
+            isConnected = false
             state:switch("menu")
         end)
 

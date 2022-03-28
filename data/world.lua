@@ -75,6 +75,7 @@ class "World" {
     end,
 
     draw = function (self)
+        CullMode(CULLKIND_CCW)
         self.terrainShader:begin("Main")
         self.terrainShader:beginPass("Default")
         self.terrainShader:setFloat("time", time)
@@ -89,7 +90,6 @@ class "World" {
         self.terrainShader:done()
 
         local wmat = Matrix():scale(WORLD_TILES[1], WORLD_TILES[1], WORLD_TILES[1])
-        CullMode(CULLKIND_CCW)
         self.gradientMesh:draw(wmat)
         self.sunGlareMesh:draw(wmat)
         self.sunMesh:draw(wmat)

@@ -22,9 +22,32 @@ return class "GameState" (AbstractState) {
         if not notify:empty() then
             local msg = notify:current()
             local title = msg.text
-            local off = math.floor(self.resolution[2]/4.0)
+            local off = math.floor(self.resolution[2]/8.0)
             self.titleFont:drawText(ui.textShadowColor, title, 2, off+4, self.resolution[1], 25, FF_SINGLELINE|FF_CENTER|FF_NOCLIP)
             self.titleFont:drawText(ui.textColor, title, 0, off, self.resolution[1], 25, FF_SINGLELINE|FF_CENTER|FF_NOCLIP)
+        else
+            local title = "Kills: " .. kills .. " Deaths: " .. deaths
+            local off = math.floor(self.resolution[2]/16.0)
+            self.titleFont:drawText(ui.textShadowColor, title, 2, off+4, self.resolution[1], 25, FF_SINGLELINE|FF_CENTER|FF_NOCLIP)
+            self.titleFont:drawText(ui.textColor, title, 0, off, self.resolution[1], 25, FF_SINGLELINE|FF_CENTER|FF_NOCLIP)
+
+            off = off + 50
+            local desc = "You're doing well, keep it up!"
+            if deaths > 0 then
+                local ratio = kills / (deaths*2)
+
+                if ratio < 0.10 then
+                    desc = "Try avoiding other players' trails! :)"
+                elseif ratio < 0.25 then
+                    desc = "You're doing pretty bad, try harder!"
+                elseif ratio < 0.5 then
+                    desc = "You're losing your grip, focus!"
+                end
+            elseif kills == 0 then
+                desc = "Try to eliminate other players! :)"
+            end
+            self.uiFont:drawText(ui.textShadowColor, desc, 1, off+2, self.resolution[1], 25, FONTFLAG_SINGLELINE|FONTFLAG_CENTER|FONTFLAG_NOCLIP)
+            self.uiFont:drawText(ui.textColor, desc, 0, off, self.resolution[1], 25, FONTFLAG_SINGLELINE|FONTFLAG_CENTER|FONTFLAG_NOCLIP)
         end
     end,
 }

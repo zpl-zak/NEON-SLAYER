@@ -25,6 +25,7 @@ return class "MenuState" (AbstractState) {
             SaveState(encode(config))
             nativedll.serverStart(port)
             nativedll.connect("localhost", port)
+            isConnected = true
             state:switch("game")
         end)
 

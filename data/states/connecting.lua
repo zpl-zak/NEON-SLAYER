@@ -39,6 +39,8 @@ return class "ConnectingState" (AbstractState) {
 
     enter = function(self)
         state:setCursor(true)
+        deaths = 0
+        kills = 0
     end,
 
     update = function(self)
