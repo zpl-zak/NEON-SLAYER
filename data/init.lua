@@ -147,7 +147,7 @@ function _destroy()
     nativedll.serverStop()
 end
 
-function _update(dt)
+function _fixedUpdate(dt)
     nativedll.update()
     music:update(dt)
 
@@ -180,12 +180,13 @@ function _charInput(key)
     state:input(key)
 end
 
-function _render()
+function _render(dt)
     screenRT:bind()
     EnableLighting(true)
     ClearScene(15,0,15)
     AmbientColor(0x773377)
     CameraPerspective(75, 1.0, 25000)
+    localPlayer:lookUpdate(dt)
     Matrix():bind(WORLD)
     localPlayer.cam:bind(VIEW)
     world:draw()
