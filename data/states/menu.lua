@@ -15,11 +15,11 @@ return class "MenuState" (AbstractState) {
         local buttonHeight = 50
         local yoffset = 200
 
-        yoffset = yoffset + buttonHeight + padding
-        local inpHostPort = uiInput("Port: 27666", self.resolution[1]/2-100, yoffset, 200, 50)
+        local inpHostPort
+        local inpJoinHost
+        local inpJoinPort
 
-        yoffset = yoffset + buttonHeight + padding
-        local btnHostStart = uiButton("Host game", self.resolution[1]/2-100, yoffset, 200, 50, function()
+        local function hostGame()
             local port = inpHostPort.value ~= "" and tonumber(inpHostPort.value) or 27666
             config.hostPort = port
             SaveState(encode(config))
@@ -27,18 +27,9 @@ return class "MenuState" (AbstractState) {
             nativedll.connect("localhost", port)
             isConnected = true
             state:switch("game")
-        end)
+        end
 
-        yoffset = yoffset + groupMargin
-
-        yoffset = yoffset + buttonHeight + padding
-        local inpJoinHost = uiInput("Address: 127.0.0.1", self.resolution[1]/2-100, yoffset, 200, 50)
-
-        yoffset = yoffset + buttonHeight + padding
-        local inpJoinPort = uiInput("Port: 27666", self.resolution[1]/2-100, yoffset, 200, 50)
-
-        yoffset = yoffset + buttonHeight + padding
-        local btnJoinStart = uiButton("Join game", self.resolution[1]/2-100, yoffset, 200, 50, function()
+        local function joinGame()
             local host = inpJoinHost.value
             local port = inpJoinPort.value ~= "" and tonumber(inpJoinPort.value) or 27666
             config.host = host
@@ -47,7 +38,36 @@ return class "MenuState" (AbstractState) {
             nativedll.connect(host, port)
             state:switch("connecting")
             LogString("Connecting to " .. host .. ":" .. port)
+        end
+
+        yoffset = yoffset + buttonHeight + padding
+        inpHostPort = uiInput("Port: 27666", self.resolution[1]/2-100, yoffset, 200, 50, function ()
+            if GetKeyDown(KEY_RETURN) then
+                hostGame()
+            end
         end)
+
+        yoffset = yoffset + buttonHeight + padding
+        local btnHostStart = uiButton("Host game", self.resolution[1]/2-100, yoffset, 200, 50, hostGame)
+
+        yoffset = yoffset + groupMargin
+
+        yoffset = yoffset + buttonHeight + padding
+        inpJoinHost = uiInput("Address: 127.0.0.1", self.resolution[1]/2-100, yoffset, 200, 50, function ()
+            if GetKeyDown(KEY_RETURN) then
+                joinGame()
+            end
+        end)
+
+        yoffset = yoffset + buttonHeight + padding
+        inpJoinPort = uiInput("Port: 27666", self.resolution[1]/2-100, yoffset, 200, 50, function ()
+            if GetKeyDown(KEY_RETURN) then
+                joinGame()
+            end
+        end)
+
+        yoffset = yoffset + buttonHeight + padding
+        local btnJoinStart = uiButton("Join game", self.resolution[1]/2-100, yoffset, 200, 50, joinGame)
 
         yoffset = yoffset + groupMargin
 
@@ -71,24 +91,24 @@ return class "MenuState" (AbstractState) {
         inpHostPort.value = tostring(config.hostPort)
 
         table.insert(self.elements, inpHostPort)
+        table.insert(self.elements, btnHostStart)
         table.insert(self.elements, inpJoinHost)
         table.insert(self.elements, inpJoinPort)
-        table.insert(self.elements, btnHostStart)
         table.insert(self.elements, btnJoinStart)
         table.insert(self.elements, btnSettings)
         table.insert(self.elements, btnDiscord)
         -- table.insert(self.elements, nickname)
         table.insert(self.elements, btnQuit)
+
+        self.focusables = self.elements
     end,
 
     draw2d = function(self)
         local title = "Neon Slayer"
         local desc = "Description goes here (yes)"
 
-        self.titleFont:drawText(ui.textShadowColor, title, 2, 154, self.resolution[1], 25, FONTFLAG_SINGLELINE|FONTFLAG_CENTER|FONTFLAG_NOCLIP)
-        self.titleFont:drawText(ui.textColor, title, 0, 150, self.resolution[1], 25, FONTFLAG_SINGLELINE|FONTFLAG_CENTER|FONTFLAG_NOCLIP)
-        self.uiFont:drawText(ui.textShadowColor, desc, 1, 202, self.resolution[1], 25, FONTFLAG_SINGLELINE|FONTFLAG_CENTER|FONTFLAG_NOCLIP)
-        self.uiFont:drawText(ui.textColor, desc, 0, 200, self.resolution[1], 25, FONTFLAG_SINGLELINE|FONTFLAG_CENTER|FONTFLAG_NOCLIP)
+        ui.drawTextShadow(self.titleFont, title, 0, 150, self.resolution[1], 25, FONTFLAG_SINGLELINE|FONTFLAG_CENTER|FONTFLAG_NOCLIP)
+        ui.drawTextShadow(self.uiFont, desc, 0, 200, self.resolution[1], 25, FONTFLAG_SINGLELINE|FONTFLAG_CENTER|FONTFLAG_NOCLIP)
 
         for _,el in pairs(self.elements) do el:draw() end
     end,
@@ -97,7 +117,13 @@ return class "MenuState" (AbstractState) {
         for _,el in pairs(self.elements) do el:update(dt) end
     end,
 
+    leave = function (self)
+        ui.updateFocusables()
+    end,
+
     enter = function(self)
         state:setCursor(true)
+
+        ui.updateFocusables(self.focusables, 0)
     end,
 }

@@ -39,10 +39,13 @@ return class "SettingsState" (AbstractState) {
         table.insert(self.elements, a1)
         table.insert(self.elements, a2)
         table.insert(self.elements, btnQuit)
+
+        self.focusables = self.elements
     end,
 
     enter = function(self)
         state:setCursor(true)
+        ui.updateFocusables(self.focusables, 0)
     end,
 
     update = function(self)
@@ -54,8 +57,8 @@ return class "SettingsState" (AbstractState) {
         local desc = "volume, sound, musical perception and other names"
 
         BindTexture(0)
-        self.titleFont:drawText(ui.textColor, title, 0, self.offsety, self.resolution[1], 25, FONTFLAG_SINGLELINE|FONTFLAG_CENTER|FONTFLAG_NOCLIP)
-        self.uiFont:drawText(ui.textColor, desc, 0, self.offsety+50, self.resolution[1], 25, FONTFLAG_SINGLELINE|FONTFLAG_CENTER|FONTFLAG_NOCLIP)
+        ui.drawTextShadow(self.titleFont, title, 0, self.offsety, self.resolution[1], 25, FONTFLAG_SINGLELINE|FONTFLAG_CENTER|FONTFLAG_NOCLIP)
+        ui.drawTextShadow(self.uiFont, desc, 0, self.offsety+50, self.resolution[1], 25, FONTFLAG_SINGLELINE|FONTFLAG_CENTER|FONTFLAG_NOCLIP)
         for _,el in pairs(self.elements) do el:draw() end
     end,
 }

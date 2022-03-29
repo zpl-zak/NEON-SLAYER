@@ -30,8 +30,8 @@ return class "DeathState" (AbstractState) {
         local desc = "Restructuing the nano-matter combination..."
 
         local off = math.floor(self.resolution[2]/2.15)
-        self.titleFont:drawText(ui.textColor, title, 0, off, self.resolution[1], 25, FONTFLAG_SINGLELINE|FONTFLAG_CENTER|FONTFLAG_NOCLIP)
-        self.uiFont:drawText(ui.textColor, desc, 0, off+50, self.resolution[1], 25, FONTFLAG_SINGLELINE|FONTFLAG_CENTER|FONTFLAG_NOCLIP)
+        ui.drawTextShadow(self.titleFont, title, 0, off, self.resolution[1], 25, FONTFLAG_SINGLELINE|FONTFLAG_CENTER|FONTFLAG_NOCLIP)
+        ui.drawTextShadow(self.uiFont, desc, 0, off+50, self.resolution[1], 25, FONTFLAG_SINGLELINE|FONTFLAG_CENTER|FONTFLAG_NOCLIP)
     end,
 }
 

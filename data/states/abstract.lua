@@ -8,7 +8,10 @@ return class "State" {
     end,
 
     enter = function(self) end,
-    leave = function(self) end,
+    leave = function(self)
+        ui.focusableElements = {}
+        ui.tabIndex = 1
+    end,
 
     draw = function(self) end,
     draw2d = function(self) end,

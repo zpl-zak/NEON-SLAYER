@@ -102,7 +102,7 @@ nativedll.setUpdate(function (entity_id, x, y, z, r, color, islocal, serverTrail
     tank:updateTrail()
 end)
 
-nativedll.setCollide(function(killer_id, victim_id)
+nativedll.setCollide(function (killer_id, victim_id)
     if victim_id == -1 then
         if state:is("game") then
             state:switch("death")
@@ -157,6 +157,10 @@ function _destroy()
     nativedll.serverStop()
 end
 
+function _update (dt)
+    localPlayer:lookUpdate(dt)
+end
+
 function _fixedUpdate(dt)
     nativedll.update()
     music:update(dt)
@@ -198,7 +202,6 @@ function _render(dt)
     ClearScene(15,0,15)
     AmbientColor(0x773377)
     CameraPerspective(75, 1.0, 25000)
-    localPlayer:lookUpdate(dt)
     Matrix():bind(WORLD)
     localPlayer.cam:bind(VIEW)
     world:draw()
