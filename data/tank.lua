@@ -160,7 +160,7 @@ class "Tank" {
     end,
 
     draw = function (self)
-        if self.alive then
+        if self.alive and isConnected then
             self.light:setPosition(self.pos+Vector3(0,5,0))
             self.light:enable(true, self.id+2)
             Matrix():bind(WORLD)
@@ -171,6 +171,8 @@ class "Tank" {
             ToggleWireframe(true)
             self:drawTrails(self.serverTrail, 30)
             ToggleWireframe(false)
+        elseif not isConnected then
+            self.light:enable(false, self.id+2)
         end
     end,
 

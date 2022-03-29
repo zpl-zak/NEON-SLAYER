@@ -44,7 +44,7 @@ end
 function ui.update()
     -- special hanlding for input fields
     if ui.focused ~= nil then
-        if GetKeyDown(KEY_BACK) then
+        if GetKeyDown(KEY_BACK) and ui.focused.value ~= nil then
             ui.focused.value = ui.focused.value:sub(1, -2)
         end
 
@@ -82,7 +82,7 @@ function ui.update()
 end
 
 function ui.input(key)
-    if ui.focused ~= nil then
+    if ui.focused ~= nil and ui.focused.value ~= nil then
         ui.focused.value = ui.focused.value .. key
         if ui.focused.callback ~= nil then
             ui.focused:callback(ui.focused.value)

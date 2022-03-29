@@ -206,10 +206,8 @@ function _render(dt)
     localPlayer.cam:bind(VIEW)
     world:draw()
 
-    if isConnected then
-        for _, t in pairs(tanks) do
-            t:draw()
-        end
+    for _, t in pairs(tanks) do
+        t:draw()
     end
 
     local wmat = Matrix():scale(WORLD_TILES[1], WORLD_TILES[1], WORLD_TILES[1])
