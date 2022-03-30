@@ -22,8 +22,6 @@ INT tankupdateref = 0;
 INT tankcollideref = 0;
 INT tankrespawnref = 0;
 
-SHORT free_id = 0;
-
 // #define DEBUG_LINES
 #define SLAYER_DEATHTIME 5.0f
 #define SLAYER_GODTIME 3.0f
@@ -291,8 +289,7 @@ void ne_server_update(lua_State* L) {
         switch (event.type) {
             case ENET_EVENT_TYPE_CONNECT: {
                 UI->PushLog("[server] A new user connected.\n");
-                uint16_t entity_id = free_id++;
-                event.peer->data = (void*)entity_id;
+                uint16_t entity_id = event.peer->incomingPeerID;
 
                 /* allocate and store entity data in the data part of peer */
                 ne_data _ent = { 0 }; _ent.peer = event.peer;
@@ -317,7 +314,7 @@ void ne_server_update(lua_State* L) {
             case ENET_EVENT_TYPE_DISCONNECT:
             case ENET_EVENT_TYPE_DISCONNECT_TIMEOUT: {
                 UI->PushLog("[server]  A user disconnected.\n");
-                uint16_t entity_id = (uint16_t)event.peer->data;
+                uint16_t entity_id = event.peer->incomingPeerID;
                 // zpl_ring_ne_vec3_free(&ne_server_data[entity_id].trail);
                 delete ne_server_data[entity_id].tail;
 
@@ -326,7 +323,7 @@ void ne_server_update(lua_State* L) {
 
             case ENET_EVENT_TYPE_RECEIVE: {
                 /* handle a newly received event */
-                uint16_t entity_id = (uint16_t)event.peer->data;
+                uint16_t entity_id = event.peer->incomingPeerID;
                 char *buffer = (char *)event.packet->data;
                 int offset = 0;
 
@@ -437,7 +434,7 @@ void ne_server_update(lua_State* L) {
                 char buffer[512] = {0};
 
                 *((int16_t*)(buffer)+0) = 5;
-                *((int16_t*)(buffer)+1) = it->first == (uint16_t)currentPeer->data ? -1 : it->first;
+                *((int16_t*)(buffer)+1) = it->first == currentPeer->incomingPeerID ? -1 : it->first;
 
                 /* create packet with actual length, and send it */
                 ENetPacket *packet = enet_packet_create(buffer, sizeof(uint16_t)*2, ENET_PACKET_FLAG_RELIABLE);
@@ -473,7 +470,7 @@ void ne_server_update(lua_State* L) {
             *(float*)(buffer + offset) = it->second.z; offset += sizeof(float);
             *(float*)(buffer + offset) = it->second.r; offset += sizeof(float);
             *(uint32_t*)(buffer + offset) = it->second.color; offset += sizeof(uint32_t);
-            *(uint8_t*)(buffer + offset) = ((uint16_t)currentPeer->data == it->first); offset += sizeof(uint8_t);
+            *(uint8_t*)(buffer + offset) = (currentPeer->incomingPeerID == it->first); offset += sizeof(uint8_t);
 
 #ifdef DEBUG_LINES
             *(uint16_t*)(buffer + offset) = floor(it->second.tail->GetCount() * TRAILS_PERCENT); offset += sizeof(uint16_t);
