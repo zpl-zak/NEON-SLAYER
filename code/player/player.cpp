@@ -27,8 +27,8 @@ int APIENTRY WinMain(HINSTANCE hInstance,
     rect.left = CW_USEDEFAULT;
     rect.top = CW_USEDEFAULT;
 #ifndef DEV_WINDOWED
-    rect.right = 1600;
-    rect.bottom = 900;
+    rect.right = 1920;
+    rect.bottom = 1080;
     hWnd = BuildWindow(hInstance, FALSE, "NeonClass", "NEON SLAYER", rect);
 #else
     rect.right = GetSystemMetrics(SM_CXSCREEN);
