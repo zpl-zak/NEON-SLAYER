@@ -213,6 +213,11 @@ function _render(dt)
     local wmat = Matrix():scale(WORLD_TILES[1], WORLD_TILES[1], WORLD_TILES[1])
     world.boundsMesh:draw(wmat)
     CullMode(CULLKIND_CCW)
+
+    for _, t in pairs(tanks) do
+        t:drawTrailsScoped()
+    end
+
     ClearTarget()
 
     drawEffect(fxaaShader, "FXAA", function (fx)

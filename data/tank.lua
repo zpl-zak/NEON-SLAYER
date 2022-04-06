@@ -167,13 +167,16 @@ class "Tank" {
             BindTexture(0, self.material)
             tankModel:draw(Matrix():scale(20.0,20.0,20.0):translate(self.pos+Vector3(0, 15, 0)))
             BindTexture(0)
-            self:drawTrails(self.tails, 20)
-            ToggleWireframe(true)
-            self:drawTrails(self.serverTrail, 30)
-            ToggleWireframe(false)
         elseif not isConnected then
             self.light:enable(false, self.id+2)
         end
+    end,
+
+    drawTrailsScoped = function (self)
+        self:drawTrails(self.tails, 20)
+        ToggleWireframe(true)
+        self:drawTrails(self.serverTrail, 30)
+        ToggleWireframe(false)
     end,
 
     drawTrails = function (self, tails, height)

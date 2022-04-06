@@ -168,7 +168,7 @@ exit /B 0
 			call npm run release-major
 		)
 		if %ch%==2 (
-			call npm run release-minor
+			call npm run release-minor -VV
 		)
 		if %ch%==3 (
 			call npm run release-patch
