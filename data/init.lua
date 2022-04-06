@@ -1,6 +1,7 @@
 -- Deps
 hh = require "helpers".global()
 cols = require "collisions"
+sortedDraw = require "pipe"()
 
 -- Common
 dofile("utils.lua")
@@ -211,12 +212,16 @@ function _render(dt)
     end
 
     local wmat = Matrix():scale(WORLD_TILES[1], WORLD_TILES[1], WORLD_TILES[1])
-    world.boundsMesh:draw(wmat)
+    CullMode(CULLKIND_NONE)
+    sortedDraw:push(world.boundsMesh, wmat)
+    ToggleDepthWrite(false)
+    sortedDraw:draw()
     CullMode(CULLKIND_CCW)
 
     for _, t in pairs(tanks) do
         t:drawTrailsScoped()
     end
+    ToggleDepthWrite(true)
 
     ClearTarget()
 
