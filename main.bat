@@ -1,7 +1,10 @@
 @echo off
 
-cd %~dp0
+set cwd=%~dp0
 REM detect paths
+call setup_cl_generic.bat amd64
+cd /d %cwd%
+
 set msbuild_cmd=msbuild.exe
 where /q msbuild.exe
 if not %errorlevel%==0 set msbuild_cmd="C:\Program Files\Microsoft Visual Studio\2022\Preview\MSBuild\Current\Bin\MSBuild.exe"
@@ -215,8 +218,8 @@ exit /B 0
 exit /B 0
 
 :sync_engine
-	robocopy "W:\neon86\code\engine" "code\engine" /mir
-    copy "W:\neon86\typings.lua" /Y typings.lua
+	robocopy "C:\Projects\neon86\code\engine" "code\engine" /mir
+    copy "C:\Projects\neon86\typings.lua" /Y typings.lua
 	pause
 exit /B 0
 
