@@ -26,7 +26,7 @@
   },
   "homepage": "https://zaklaus.itch.io/neon-slayer",
   "devDependencies": {
-    "release-it": "^13.7.2"
+    "release-it": "^15.6.0"
   },
   "release-it": {
     "npm": {
